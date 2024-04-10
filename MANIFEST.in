@@ -1,0 +1,2 @@
+graft VBMicrolensing/lib
+include VBMicrolensing/data/*.*
