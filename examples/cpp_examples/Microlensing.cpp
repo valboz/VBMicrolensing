@@ -27,13 +27,16 @@ struct Point {
 //Here you can insert your specific configuration.
 
 const int n0 = 10; // Number of lenses inserted in the lists
-int n1 = 6;			// The calculations will consider the first "n1" lenses.
+int n1 = 4;			// The calculations will consider the first "n1" lenses.
 
 //q denotes the list of lens masses.
 //s represents the list of lens positions on the complex plane.
 
 double q[n0] = { 1.,1.e-1,1.1e-4,1.1e-6,1.5e-1,0.0015,0.001,0.001,0.001,0.0002 };
 complex s[n0] = { complex(0.,0.),complex(1.,-0.7),complex(2,0.7),complex(0.6,-.6), complex(0.3,0.),complex(-0.3,0.1),0.,0.,0.,0. };
+
+double s1[n0] = { 0.0, 1.0, 2.0, 0.6, 0.3, -0.3, 0.0, 0.0, 0.0, 0.0 };
+double s2[n0] = { 0.0, -0.7, 0.7, -0.6, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0 };
 
 _sols* images; //images
 complex y = complex(0.1, 0.04); // source position
@@ -45,32 +48,64 @@ VBMicrolensing VBML;
 
 int main()
 {
+	//////////////////////////////////
+	//// 
+	//// Microlensing magnification for a specific source position
+	////
+	/////////////////////////////////
+	// 
+	//double Mag;
+	//double Toll = 0.001;
+	//// Choose the algorithm you want to use (Nopoly, Multipoly, Singlepoly).
+	//VBML.SetMethod(VBMicrolensing::Method::Multipoly);
+	//
+	//// Call the function setLensGeometry, which initializes the arrays 
+	//// describing the geometric configuration of the lens system based 
+	//// on the chosen algorithm and configuration.
+	//VBML.SetLensGeometry(n1,q,s);
+
+	//// Accuracy control
+	//VBML.Tol = 1.e-2;
+	//VBML.RelTol = 1.e-3;
+
+	//// Call to the MultiMag function with these parameters
+	//Mag = VBML.MultiMag(y, rho, Toll, &images);
+	//printf("Microlensing Magnification = %lf\n", Mag);
+
+	//getchar();
+	//return 0;
+
 	////////////////////////////////
 	// 
-	// Microlensing magnification for a specific source position
+	// Draw lightcurve from standard parameters, TRIPLE LENS
 	//
 	///////////////////////////////
-	
-	double Mag;
-	double Toll = 0.001;
-	// Choose the algorithm you want to use (Nopoly, Multipoly, Singlepoly).
-	VBML.SelectedAlgorithm = Algorithm::Multipoly;
-	
-	// Call the function setLensGeometry, which initializes the arrays 
-	// describing the geometric configuration of the lens system based 
-	// on the chosen algorithm and configuration.
-	VBML.SetLensGeometry(n1,q,s);
+	const int np = 1000;
+	double tmin = -50., tmax = 50., t;
+	double pr[10] = { log(0.765),log(0.00066),0.0060,3.212,log(0.00567),log(50.13),0,log(1.5),log(0.000001),-1.5 };
+	double ts[np], y1s[np], y2s[np], mags[np];
+	char buffer[1024];
+	FILE* ff;
 
-	// Accuracy control
 	VBML.Tol = 1.e-2;
 	VBML.RelTol = 1.e-3;
+	//Method
+	VBML.SetMethod(VBMicrolensing::Method::Nopoly);
 
-	// Call to the MultiMag function with these parameters
-	Mag = VBML.MultiMag(y, rho, Toll, &images);
-	printf("Microlensing Magnification = %lf\n", Mag);
-
+	for (int i = 0; i < np; i++) {
+		t = pr[6] + tmin + i * (tmax - tmin) / np;
+		ts[i] = t;
+	}
+	VBML.TripleLightCurve(pr, ts, mags, y1s, y2s, np);
+	FILE* f = fopen("LightCurve.txt", "w");
+	printf("Done\n");
+	for (int i = 0; i < np; i++) {
+		fprintf(f, "%lf %lf\n", ts[i], mags[i]);
+	}
+	fclose(f);
+	PrintCau();
 	getchar();
-    return 0;
+	return 0;
 }
 
 
