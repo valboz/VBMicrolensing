@@ -15,13 +15,6 @@ VBMicrolensing VBM;
 PYBIND11_MODULE(VBMicrolensing, m) {
     py::options options;
     options.disable_function_signatures();
-
-    // Enumerazione Algorithm
-    py::enum_<Algorithm>(m, "Algorithm")
-        .value("Singlepoly", Algorithm::Singlepoly)
-        .value("Multipoly", Algorithm::Multipoly)
-        .value("Nopoly", Algorithm::Nopoly)
-        .export_values();
     
     py::class_<VBMicrolensing> vbm(m, "VBMicrolensing");
         vbm.def(py::init());
@@ -56,8 +49,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             "Exponent for the mass-luminosity relation: L = M^q; default value is q=4.0");
         vbm.def_readwrite("mass_radius_exponent", &VBMicrolensing::mass_radius_exponent,
             "Exponent for the mass-radius relation: R = M^q; default value is q=0.89");
-        vbm.def_readwrite("SelectedAlgorithm", &VBMicrolensing::SelectedAlgorithm,
-            "Select the algorithm: Nopoly, Multipoly, Singlepoly");
         vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
             """Loads a pre calculated binary table for extended source calculation.""");
         // Maginfication calculations
@@ -649,7 +640,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             Returns
             -------
             results: list[list[float],list[float],list[float],list[float],list[float]] 
-                [Magnification array, source 1 position y1 array, source 1 position y2 array, source 2 position y1 array, source 2 position y2 array]
+                [Magnification array, source 1 position y1 array, source 1 position y2 array, source 2 position y1 array,         source 2 position y2 array]
              )mydelimiter");
 
             vbm.def("BinSourceExtLightCurve",
@@ -750,11 +741,56 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 [Magnification array, y1 array, y2 array, separation-between-lenses array]
             )mydelimiter");
 
+            vbm.def("TripleLightCurve",
+                [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
+                {
+                    std::vector<double> mags(times.size());
+                    std::vector<double> y1s(times.size());
+                    std::vector<double> y2s(times.size());
+                    self.BinaryLightCurve(params.data(), times.data(), mags.data(),
+                        y1s.data(), y2s.data(), times.size());
+                    std::vector< std::vector<double> > results{ mags,y1s,y2s };
+                    return results;
+                },
+                R"mydelimiter(
+            Static binary lens light curve for a given set of parameters.
+            Uses the BinaryMag2 function.
 
+            Parameters
+            ----------
+            params : list[float]
+                List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0]
+            times : list[float] 
+                Array of times at which the magnification is calculated.
+ 
+            Returns
+            -------
+            results: list[list[float],list[float],list[float]] 
+                [Magnification array, source position y1 array, source position y2 array]
+            )mydelimiter");
 
         // Other functions
 
         vbm.def("PlotCritbin", &VBMicrolensing::PlotCritbin,
+            py::return_value_policy::reference,
+            R"mydelimiter(
+            Critical curves and caustics for given separation and mass ratio.
+
+            Parameters
+            ----------
+            s : float 
+                The projected separation of the binary lens in units of the 
+                Einstein radius corresponding to the total mass.
+            q : float 
+                Binary lens mass fraction q = m1/m2 such that m1<m2 
+
+            Returns
+            -------
+            solutions : _sols
+                List of critical curves and caustics.
+            )mydelimiter");
+
+        vbm.def("PlotCrit", &VBMicrolensing::PlotCrit,
             py::return_value_policy::reference,
             R"mydelimiter(
             Critical curves and caustics for given separation and mass ratio.
@@ -812,12 +848,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             Returns
             -------
             solutions : _sols
-                List of caustics.
-            )mydelimiter");
-
-        vbm.def("CriticalCurves",
-            [](VBMicrolensing& self, double s, double q)
-            {
                 _sols* critcau;
 
                 critcau = self.PlotCritbin(s, q);
@@ -867,8 +897,12 @@ PYBIND11_MODULE(VBMicrolensing, m) {
          //   self.SetUserLDprofile(f,1000);
          //   });
 
-     vbm.def("SetLensGeometry", &VBMicrolensing::SetLensGeometry,
-            py::return_value_policy::reference,    
+        vbm.def("SetLensGeometry",
+            [](VBMicrolensing& self, int nn, std::vector<double> q,
+                std::vector<double> s1, std::vector<double> s2) {
+                    self.SetLensGeometry_py(nn, q.data(), s1.data(), s2.data());
+            },
+            py::return_value_policy::reference,
             R"mydelimiter(
             Set the geometry of the system
 
@@ -877,13 +911,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             nn : int
                  Number of lenses.
             q : list[float]
-                array of lens masses.
-            s : list[complex]
-                array of lens positions represented as complex numbers.           
+                Array of lens masses.
+            s1 : list[float]
+                Array of lens positions represented as complex numbers (real parts).  
+            s2 : list[float]
+                Array of lens positions represented as complex numbers (imaginary parts).          
             )mydelimiter");
+
     
      vbm.def("MultiMag0",
-            (double (VBMicrolensing::*)(complex)) 
+            (double (VBMicrolensing::*)(double,double)) 
             &VBMicrolensing::MultiMag0,
             py::return_value_policy::reference,
             R"mydelimiter(
@@ -891,8 +928,11 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
             Parameters
             ----------
-            y : complex 
-                source position
+            y1 : float 
+                x-position of the source in the source plane.
+            y2 : float 
+                y-position of the source in the source plane.
+
             Returns
             -------
             float
@@ -921,7 +961,17 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         float
             The magnification.
         )pbdoc");
-        
+
+    vbm.def("SetMethod", 
+            &VBMicrolensing::SetMethod,
+            "User choice of Method");
+
+    //  Method: Singlepoly, Multipoly, Nopoly
+    py::enum_<VBMicrolensing::Method>(vbm, "Method")
+        .value("Singlepoly", VBMicrolensing::Method::Singlepoly)
+        .value("Multipoly", VBMicrolensing::Method::Multipoly)
+        .value("Nopoly", VBMicrolensing::Method::Nopoly)
+        .export_values();  
         
     //LDlinear, LDquadratic, LDsquareroot, LDlog, LDuser
     py::enum_<VBMicrolensing::LDprofiles>(vbm, "LDprofiles")
@@ -932,8 +982,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         .value("LDuser", VBMicrolensing::LDprofiles::LDuser)
         .export_values();
    
-
-
     py::class_<_theta>(m, "_theta")
         .def(py::init<double>()); //constructor 
 
@@ -956,4 +1004,11 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         .def(py::init()) //constructor
         .def_readwrite("first", &_sols::first)
         .def_readwrite("last", &_sols::last);
+
+    py::class_<complex>(m, "complex")
+        .def(py::init<double, double>())
+        .def(py::init<double>())
+        .def(py::init<>())
+        .def_readwrite("re", &complex::re)
+        .def_readwrite("im", &complex::im);
 }

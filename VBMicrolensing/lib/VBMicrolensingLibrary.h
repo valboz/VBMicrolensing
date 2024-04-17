@@ -28,12 +28,6 @@ class _theta;
 class complex;
 struct annulus;
 
-enum class Algorithm {
-	Singlepoly,
-	Multipoly,
-	Nopoly
-};
-
 class complex {
 public:
 	double re;
@@ -117,11 +111,14 @@ namespace VBMicrolensingLibrary {
 
 	public: 
 
-		Algorithm SelectedAlgorithm;
+
 		void SetLensGeometry(int n, double* q, complex* s);
-		double MultiMag0(complex y, _sols **Images);
+		void SetLensGeometry_py(int nn, double* q, double* s1, double* s2);
+		double MultiMag0(double y1,double y2, _sols **Images);
+		double MultiMag0(double y1, double y2);
 		double MultiMag(complex y, double rho, double accuracy, _sols **Images);
 		double MultiMag(complex y, double rho, double accuracy);
+		double MultiMag(double y1, double y2, double rho, double accuracy);
 		double rootaccuracy;
 		double samplingfactor;
 		bool squarecheck;
@@ -164,6 +161,10 @@ namespace VBMicrolensingLibrary {
 		void SetLDprofile(double(*UserLDprofile)(double), int tablesampling);
 		void SetLDprofile(LDprofiles);
 
+	// Method control
+		enum class Method { Singlepoly, Multipoly, Nopoly};
+		void SetMethod(Method);
+        
 	//ESPL functions
 		void LoadESPLTable(char *tablefilename);
 		double ESPLMag(double u, double rho);
@@ -223,7 +224,7 @@ namespace VBMicrolensingLibrary {
 
 		private:
 			LDprofiles curLDprofile;
-
+			Method SelectedMethod;
 	};
 
 	double VBDefaultCumulativeFunction(double r, double *a1);
