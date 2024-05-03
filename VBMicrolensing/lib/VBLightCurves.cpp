@@ -117,8 +117,8 @@ void VBMicrolensing::TripleLightCurve(double *pr, double *ts, double *mags, doub
 
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - pr[6]) * tE_inv;
-		y1s[i] = pr[2] * salpha - tn * calpha;
-		y2s[i] = -pr[2] * calpha - tn * salpha;
+		y1s[i] = -pr[2] * salpha + tn * calpha;
+		y2s[i] = +pr[2] * calpha + tn * salpha;
 		mindi = 1.e100;
 		for (int i = 0; i < n; i++) {
 			di = fabs(y1s[i] - s[i].re) + fabs(y2s[i] - s[i].im);
@@ -133,6 +133,48 @@ void VBMicrolensing::TripleLightCurve(double *pr, double *ts, double *mags, doub
 			mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
 		}
 	}
+}
+
+void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np, int nl) {
+	double rho = exp(pr[2]), tn, tE_inv = exp(-pr[1]), di, mindi;
+	double* q = (double*)malloc(nl * sizeof(double));
+	complex* s = (complex*)malloc(nl * sizeof(complex));
+
+	q[0] = 1.;
+	for (int i = 1; i < nl; ++i) {
+		q[i] = pr[i + 3 + 2 * nl];
+	}
+
+	s[0] = complex(0, pr[3]);
+	for (int i = 1; i < nl; ++i) {
+		s[i] = complex(pr[i + 3], pr[i + 3 + nl]);
+	}
+
+	
+	SetLensGeometry(nl, q, s);
+
+	for (int i = 0; i < np; i++) {
+		tn = (ts[i] - pr[0]) * tE_inv;
+		y1s[i] = -tn;
+		y2s[i] = 0.;
+		mindi = 1.e100;
+		/*for (int i = 0; i < n; i++) {
+			di = fabs(y1s[i] - s[i].re) + fabs(y2s[i] - s[i].im);
+			di /= sqrt(q[i]);
+			if (di < mindi) mindi = di;
+		}
+		if (mindi >= 10.) {
+
+			mags[i] = 1.;
+		}
+		else {
+			mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
+		}*/
+		mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
+	}
+
+	free(q);
+	free(s);
 }
 
 

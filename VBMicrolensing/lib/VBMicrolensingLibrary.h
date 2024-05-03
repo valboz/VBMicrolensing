@@ -194,6 +194,7 @@ namespace VBMicrolensingLibrary {
 		void BinSourceBinLensXallarap(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 
 		void TripleLightCurve(double *parameters, double *t_array, double *mag_array, double *y1_array, double *y2_array, int np);
+		void LightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np, int nl);
 
 	// Old (v1) light curve functions, for a single calculation
 		double PSPLLightCurve(double *parameters, double t);
