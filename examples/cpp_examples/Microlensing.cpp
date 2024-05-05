@@ -75,28 +75,80 @@ int main()
 	//getchar();
 	//return 0;
 
+	//////////////////////////////////
+	//// 
+	//// Draw lightcurve from standard parameters, TRIPLE LENS
+	////
+	/////////////////////////////////
+	//const int np = 1000;
+	//double tmin = -50., tmax = 50., t;
+	//double pr[10] = { log(0.765),log(0.00066),0.0060,3.212,log(0.00567),log(50.13),0,log(1.5),log(0.000001),-1.5 };
+	//double ts[np], y1s[np], y2s[np], mags[np];
+	//char buffer[1024];
+	//FILE* ff;
+
+	//VBML.Tol = 1.e-2;
+	//VBML.RelTol = 1.e-3;
+	////Method
+	//VBML.SetMethod(VBMicrolensing::Method::Nopoly);
+
+	//for (int i = 0; i < np; i++) {
+	//	t = pr[6] + tmin + i * (tmax - tmin) / np;
+	//	ts[i] = t;
+	//}
+	//VBML.TripleLightCurve(pr, ts, mags, y1s, y2s, np);
+	//FILE* f = fopen("LightCurve.txt", "w");
+	//printf("Done\n");
+	//for (int i = 0; i < np; i++) {
+	//	fprintf(f, "%lf %lf\n", ts[i], mags[i]);
+	//}
+	//fclose(f);
+	//PrintCau();
+	//getchar();
+	//return 0;
+
+
 	////////////////////////////////
 	// 
-	// Draw lightcurve from standard parameters, TRIPLE LENS
+	// Draw lightcurve from standard parameters, MULTIPLE LENS
 	//
 	///////////////////////////////
-	const int np = 1000;
+	const int np = 1000, nl = 4;
 	double tmin = -50., tmax = 50., t;
-	double pr[10] = { log(0.765),log(0.00066),0.0060,3.212,log(0.00567),log(50.13),0,log(1.5),log(0.000001),-1.5 };
+	double pr[3 * nl + 4];
 	double ts[np], y1s[np], y2s[np], mags[np];
 	char buffer[1024];
 	FILE* ff;
 
-	VBML.Tol = 1.e-2;
+	double q[nl-1] = { 1.e-1,1.1e-4,1.1e-6};//lens masses
+	double s1[nl-1] = { 1.0, 2.0, 0.6 }; //real part lens positions without first lens
+	double s2[nl-1] = { -0.7, 0.7, -0.6};//im part lens positions
+
+	pr[0] = 0.; // t0
+	pr[1] = 0.; // log(tE)
+	pr[2] = -2.52287874528; // log(rho)
+	pr[3] = 0.; // im position first lens 
+
+	for (int i = 4; i < 4+nl; ++i) {  
+		pr[i] = s1[i-4]; 
+	}
+	for (int i = 4+nl; i < 4 + 2*nl; ++i) { 
+		pr[i] = s2[i - 4-nl];
+	}
+	for (int i = 4+2*nl; i < 4 + 3*nl; ++i) { 
+		pr[i] = q[i - 4-2*nl];
+	}
+
+	VBML.Tol = 1.e-3;
 	VBML.RelTol = 1.e-3;
 	//Method
 	VBML.SetMethod(VBMicrolensing::Method::Nopoly);
 
 	for (int i = 0; i < np; i++) {
-		t = pr[6] + tmin + i * (tmax - tmin) / np;
+		t = pr[0] + tmin + i * (tmax - tmin) / np;
 		ts[i] = t;
 	}
-	VBML.TripleLightCurve(pr, ts, mags, y1s, y2s, np);
+	VBML.LightCurve(pr, ts, mags, y1s, y2s, np, nl);
 	FILE* f = fopen("LightCurve.txt", "w");
 	printf("Done\n");
 	for (int i = 0; i < np; i++) {
@@ -107,6 +159,8 @@ int main()
 	getchar();
 	return 0;
 }
+
+
 
 
 void PrintCau() {
