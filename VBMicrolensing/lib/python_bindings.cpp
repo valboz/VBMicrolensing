@@ -747,7 +747,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                     std::vector<double> mags(times.size());
                     std::vector<double> y1s(times.size());
                     std::vector<double> y2s(times.size());
-                    self.BinaryLightCurve(params.data(), times.data(), mags.data(),
+                    self.TripleLightCurve(params.data(), times.data(), mags.data(),
                         y1s.data(), y2s.data(), times.size());
                     std::vector< std::vector<double> > results{ mags,y1s,y2s };
                     return results;
@@ -762,6 +762,36 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0]
             times : list[float] 
                 Array of times at which the magnification is calculated.
+ 
+            Returns
+            -------
+            results: list[list[float],list[float],list[float]] 
+                [Magnification array, source position y1 array, source position y2 array]
+            )mydelimiter");
+
+            vbm.def("LightCurve",
+                [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times, int nl)
+                {
+                    std::vector<double> mags(times.size());
+                    std::vector<double> y1s(times.size());
+                    std::vector<double> y2s(times.size());
+                    self.LightCurve(params.data(), times.data(), mags.data(),
+                        y1s.data(), y2s.data(), times.size(), nl);
+                    std::vector< std::vector<double> > results{ mags,y1s,y2s };
+                    return results;
+                },
+                R"mydelimiter(
+            Static binary lens light curve for a given set of parameters.
+            Uses the BinaryMag2 function.
+
+            Parameters
+            ----------
+            params : list[float]
+                List of parameters [t0, log_tE, log_rho, s1_im, s2_real,....,s2_im,...., q2,...,qn]
+            times : list[float] 
+                Array of times at which the magnification is calculated.
+            nl: int 
+                Number of lens
  
             Returns
             -------
