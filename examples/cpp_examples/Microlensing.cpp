@@ -35,9 +35,6 @@ int n1 = 4;			// The calculations will consider the first "n1" lenses.
 double q[n0] = { 1.,1.e-1,1.1e-4,1.1e-6,1.5e-1,0.0015,0.001,0.001,0.001,0.0002 };
 complex s[n0] = { complex(0.,0.),complex(1.,-0.7),complex(2,0.7),complex(0.6,-.6), complex(0.3,0.),complex(-0.3,0.1),0.,0.,0.,0. };
 
-double s1[n0] = { 0.0, 1.0, 2.0, 0.6, 0.3, -0.3, 0.0, 0.0, 0.0, 0.0 };
-double s2[n0] = { 0.0, -0.7, 0.7, -0.6, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0 };
-
 _sols* images; //images
 complex y = complex(0.1, 0.04); // source position
 double rho = .0011; //source radius
@@ -129,14 +126,10 @@ int main()
 	pr[2] = -2.52287874528; // log(rho)
 	pr[3] = 0.; // im position first lens 
 
-	for (int i = 4; i < 4+nl; ++i) {  
-		pr[i] = s1[i-4]; 
-	}
-	for (int i = 4+nl; i < 4 + 2*nl; ++i) { 
-		pr[i] = s2[i - 4-nl];
-	}
-	for (int i = 4+2*nl; i < 4 + 3*nl; ++i) { 
-		pr[i] = q[i - 4-2*nl];
+	for (int i = 4, j = 0; i < 1 + 3*nl; i += 3, ++j) {
+		pr[i] = s1[j];
+		pr[i + 1] = s2[j];
+		pr[i + 2] = q[j];
 	}
 
 	VBML.Tol = 1.e-3;
