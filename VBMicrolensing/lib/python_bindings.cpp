@@ -759,7 +759,35 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             Parameters
             ----------
             params : list[float]
-                List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0]
+                List of parameters [log(s12), log(q2), u0, alpha, log(rho), log(tE), t0, log(s13), log(q3), psi]
+            times : list[float] 
+                Array of times at which the magnification is calculated.
+ 
+            Returns
+            -------
+            results: list[list[float],list[float],list[float]] 
+                [Magnification array, source position y1 array, source position y2 array]
+            )mydelimiter");
+
+            vbm.def("TripleLightCurveParallax",
+                [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
+                {
+                    std::vector<double> mags(times.size());
+                    std::vector<double> y1s(times.size());
+                    std::vector<double> y2s(times.size());
+                    self.TripleLightCurveParallax(params.data(), times.data(), mags.data(),
+                        y1s.data(), y2s.data(), times.size());
+                    std::vector< std::vector<double> > results{ mags,y1s,y2s };
+                    return results;
+                },
+                R"mydelimiter(
+            Static binary lens light curve for a given set of parameters.
+            Uses the BinaryMag2 function.
+
+            Parameters
+            ----------
+            params : list[float]
+                List of parameters [log(s12), log(q2), u0, alpha, log(rho), log(tE), t0, log(s13), log(q3), psi,px1,px2]
             times : list[float] 
                 Array of times at which the magnification is calculated.
  
@@ -770,13 +798,13 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             )mydelimiter");
 
             vbm.def("LightCurve",
-                [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times, int nl)
+                [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
                 {
                     std::vector<double> mags(times.size());
                     std::vector<double> y1s(times.size());
                     std::vector<double> y2s(times.size());
                     self.LightCurve(params.data(), times.data(), mags.data(),
-                        y1s.data(), y2s.data(), times.size(), nl);
+                        y1s.data(), y2s.data(), times.size(), (params.size()-4)/3+1);
                     std::vector< std::vector<double> > results{ mags,y1s,y2s };
                     return results;
                 },
@@ -790,8 +818,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 List of parameters [t0, log_tE, log_rho, s1_im, s2_real,....,s2_im,...., q2,...,qn]
             times : list[float] 
                 Array of times at which the magnification is calculated.
-            nl: int 
-                Number of lens
  
             Returns
             -------
@@ -840,6 +866,88 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             )mydelimiter");
 
         vbm.def("Caustics",
+            [](VBMicrolensing& self)
+            {
+                _sols *critcau;
+        
+                critcau = self.PlotCrit();
+                int ncaus = critcau->length / 2;
+                std::list <std::vector<std::vector<double>>> caustics{};
+                _curve* c = critcau->first;
+                for (int i = 0; i < ncaus; i++) c = c->next;
+                for (int i = 0; i < ncaus; i++) {
+                    std::vector<double> y(c->length);
+                    std::vector<std::vector<double>> cau(2, y);
+                    _point* p = c->first;
+                    for (int j = 0; j < c->length; j++) {
+                        cau[0][j] = p->x1;
+                        cau[1][j] = p->x2;
+                        p = p->next;
+                    }
+                    caustics.push_back(cau);
+                    c = c->next;
+                }
+                delete critcau;
+                return caustics;
+            },
+            R"mydelimiter(
+            Caustics for given separation and mass ratio.
+
+            Parameters
+            ----------
+            s : float 
+                The projected separation of the binary lens in units of the 
+                Einstein radius corresponding to the total mass.
+            q : float 
+                Binary lens mass fraction q = m1/m2 such that m1<m2 
+
+            Returns
+            -------
+            solutions : _sols
+                List of caustics.
+            )mydelimiter");
+
+        vbm.def("CriticalCurves",
+            [](VBMicrolensing& self)
+            {
+                _sols* critcau;
+
+                critcau = self.PlotCrit();
+                int ncrits = critcau->length / 2;
+                std::list <std::vector<std::vector<double>>> criticalcurves{};
+                _curve* c = critcau->first;
+                for (int i = 0; i < ncrits; i++) {
+                    std::vector<double> y(c->length);
+                    std::vector<std::vector<double>> crit(2, y);
+                    _point* p = c->first;
+                    for (int j = 0; j < c->length; j++) {
+                        crit[0][j] = p->x1;
+                        crit[1][j] = p->x2;
+                        p = p->next;
+                    }
+                    criticalcurves.push_back(crit);
+                    c = c->next;
+                }
+                delete critcau;
+                return criticalcurves;
+            },
+            R"mydelimiter(
+            Critical curves for given separation and mass ratio.
+
+            Parameters
+            ----------
+            s : float 
+                The projected separation of the binary lens in units of the 
+                Einstein radius corresponding to the total mass.
+            q : float 
+                Binary lens mass fraction q = m1/m2 such that m1<m2 
+
+            Returns
+            -------
+            solutions : _sols
+                List of critical curves.
+            )mydelimiter");
+        vbm.def("CausticsBin",
             [](VBMicrolensing& self, double s, double q)
             {
                 _sols *critcau;
@@ -878,6 +986,12 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             Returns
             -------
             solutions : _sols
+                List of caustics.
+            )mydelimiter");
+
+        vbm.def("CriticalCurvesBin",
+            [](VBMicrolensing& self, double s, double q)
+            {
                 _sols* critcau;
 
                 critcau = self.PlotCritbin(s, q);
@@ -928,9 +1042,9 @@ PYBIND11_MODULE(VBMicrolensing, m) {
          //   });
 
         vbm.def("SetLensGeometry",
-            [](VBMicrolensing& self, int nn, std::vector<double> q,
+            [](VBMicrolensing& self, std::vector<double> q,
                 std::vector<double> s1, std::vector<double> s2) {
-                    self.SetLensGeometry_py(nn, q.data(), s1.data(), s2.data());
+                    self.SetLensGeometry_py(q.size(), q.data(), s1.data(), s2.data());
             },
             py::return_value_policy::reference,
             R"mydelimiter(
@@ -938,8 +1052,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
             Parameters
             ----------
-            nn : int
-                 Number of lenses.
             q : list[float]
                 Array of lens masses.
             s1 : list[float]
