@@ -1,3 +1,5 @@
+# <span style="color:red">VBMicroLensing</span>
+
 [Back to **Accuracy Control**](AccuracyControl.md)
 
 # Light Curve Functions

@@ -1,3 +1,5 @@
+# <span style="color:red">VBMicroLensing</span>
+
 [Back to **Limb Darkening**](LimbDarkening.md)
 
 # Accuracy control
