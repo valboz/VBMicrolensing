@@ -118,7 +118,7 @@ namespace VBMicrolensingLibrary {
 		double MultiMag0(double y1, double y2);
 		double MultiMag(complex y, double rho, double accuracy, _sols **Images);
 		double MultiMag(complex y, double rho, double accuracy);
-		double MultiMag(double y1, double y2, double rho, double accuracy);
+		double MultiMag(double y1, double y2, double rho);
 		double rootaccuracy;
 		double samplingfactor;
 		bool squarecheck;
@@ -134,7 +134,7 @@ namespace VBMicrolensingLibrary {
 
 	// Critical curves and caustics calculation
 		_sols* PlotCrit();
-		_sols *PlotCritbin(double a,double q);
+		_sols *PlotCrit(double a,double q);
 	// Initialization for parallax calculation
 		void SetObjectCoordinates(char *Coordinates_file, char *Directory_for_satellite_tables);
 		void SetObjectCoordinates(char *CoordinateString);

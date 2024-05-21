@@ -624,10 +624,10 @@ double VBMicrolensing::MultiMag(complex y, double RSv, double Tol) {
 	return mag;
 }
 
-double VBMicrolensing::MultiMag(double y1, double y2, double RSv, double Tol) {
+double VBMicrolensing::MultiMag(double y1, double y2, double RSv) {
 	static _sols* images;
 	static double mag;
-	mag = MultiMag(complex(y1,y2), RSv, Tol, &images);
+	mag = MultiMag(complex(y1, y2), RSv, Tol, &images);
 	delete images;
 	return mag;
 }

@@ -97,7 +97,7 @@ _sols *VBMicrolensing::PlotCrit() {
 	return CriticalCurves;
 }
 
-_sols *VBMicrolensing::PlotCritbin(double a1, double q1) {
+_sols *VBMicrolensing::PlotCrit(double a1, double q1) {
 	complex  a, q, ej, zr[4], x1, x2;
 	int NPS = 200;
 	_sols *CriticalCurves;

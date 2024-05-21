@@ -202,7 +202,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 Magnification.
             )mydelimiter");
         vbm.def("BinaryMagMultiDark", 
-            (void (VBMicrolensing::*)(double, double, double, double, double, double *, int, double *, double)) 
+            (void (VBMicrolensing::*)(double, double, double, double, double,std::vector<double> a1_list, int, std::vector<double> mag_list, double)) 
             &VBMicrolensing::BinaryMagMultiDark,
             py::return_value_policy::reference,
             R"mydelimiter(
@@ -827,45 +827,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
         // Other functions
 
-        vbm.def("PlotCritbin", &VBMicrolensing::PlotCritbin,
-            py::return_value_policy::reference,
-            R"mydelimiter(
-            Critical curves and caustics for given separation and mass ratio.
 
-            Parameters
-            ----------
-            s : float 
-                The projected separation of the binary lens in units of the 
-                Einstein radius corresponding to the total mass.
-            q : float 
-                Binary lens mass fraction q = m1/m2 such that m1<m2 
-
-            Returns
-            -------
-            solutions : _sols
-                List of critical curves and caustics.
-            )mydelimiter");
-
-        vbm.def("PlotCrit", &VBMicrolensing::PlotCrit,
-            py::return_value_policy::reference,
-            R"mydelimiter(
-            Critical curves and caustics for given separation and mass ratio.
-
-            Parameters
-            ----------
-            s : float 
-                The projected separation of the binary lens in units of the 
-                Einstein radius corresponding to the total mass.
-            q : float 
-                Binary lens mass fraction q = m1/m2 such that m1<m2 
-
-            Returns
-            -------
-            solutions : _sols
-                List of critical curves and caustics.
-            )mydelimiter");
-
-        vbm.def("Caustics",
+        vbm.def("Multicaustics",
             [](VBMicrolensing& self)
             {
                 _sols *critcau;
@@ -907,7 +870,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 List of caustics.
             )mydelimiter");
 
-        vbm.def("CriticalCurves",
+        vbm.def("Multicriticalcurves",
             [](VBMicrolensing& self)
             {
                 _sols* critcau;
@@ -947,12 +910,12 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             solutions : _sols
                 List of critical curves.
             )mydelimiter");
-        vbm.def("CausticsBin",
+        vbm.def("Caustics",
             [](VBMicrolensing& self, double s, double q)
             {
                 _sols *critcau;
         
-                critcau = self.PlotCritbin(s,q);
+                critcau = self.PlotCrit(s,q);
                 int ncaus = critcau->length / 2;
                 std::list <std::vector<std::vector<double>>> caustics{};
                 _curve* c = critcau->first;
@@ -989,12 +952,12 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 List of caustics.
             )mydelimiter");
 
-        vbm.def("CriticalCurvesBin",
+        vbm.def("Criticalcurves",
             [](VBMicrolensing& self, double s, double q)
             {
                 _sols* critcau;
 
-                critcau = self.PlotCritbin(s, q);
+                critcau = self.PlotCrit(s, q);
                 int ncrits = critcau->length / 2;
                 std::list <std::vector<std::vector<double>>> criticalcurves{};
                 _curve* c = critcau->first;
@@ -1031,15 +994,13 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             )mydelimiter");
 
         // Limb darkening
-         
-        //vbm.def("SetLDprofile", 
-        //    &VBMicrolensing::SetLDprofile,
-        //    "User choice of LD profile");
-  
-         //vbm.def("SetUserLDprofile", 
-         //  []( VBMicrolensing &self, py::function f) {
-         //   self.SetUserLDprofile(f,1000);
-         //   });
+        /*vbm.def("SetLDprofile", (void (VBMicrolensing::*)(double(*)(double), int)) 
+                &VBMicrolensing::SetLDprofile, 
+                "Set LD profile using a user-defined function");*/
+            
+        vbm.def("SetLDprofile", (void (VBMicrolensing::*)(VBMicrolensing::LDprofiles)) 
+                &VBMicrolensing::SetLDprofile, 
+                "Set LD profile using a predefined profile");
 
         vbm.def("SetLensGeometry",
             [](VBMicrolensing& self, std::vector<double> q,
@@ -1066,7 +1027,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             &VBMicrolensing::MultiMag0,
             py::return_value_policy::reference,
             R"mydelimiter(
-            Magnification of a point-source by a binary lens.
+            Magnification of a point-source by a multiple lens.
 
             Parameters
             ----------
@@ -1081,22 +1042,24 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 Magnification.
             )mydelimiter");
     
-    vbm.def("MultiMag", [](VBMicrolensing &self, complex y, double rho, double accuracy) -> double {
-            return self.MultiMag(y, rho, accuracy);
-        }, py::arg("y"), py::arg("rho"), py::arg("accuracy"), 
+    vbm.def("MultiMag", 
+            (double (VBMicrolensing::*)(double,double,double)) 
+            &VBMicrolensing::MultiMag,
+            py::return_value_policy::reference, 
         R"pbdoc(
         Compute the magnification of a uniform brightness finite source 
-        by a binary lens.
+        by a multiple lens.
 
         Parameters
         ----------
-        y : complex
-            The position of the source in the source plane.
+        y1 : float 
+                x-position of the source in the source plane.
+        y2 : float 
+            y-position of the source in the source plane.
         rho : float 
             The source angular radius in units of the Einstein radius 
             corresponding to the total mass.
-        accuracy : float 
-            The absolute accuracy goal for the magnification calculation.
+        
 
         Returns
         -------
