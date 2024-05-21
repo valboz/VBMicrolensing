@@ -1,4 +1,4 @@
-# <span style="color:red">VBMicroLensing</span>
+# <span style="color:red">VBMicrolensing</span>
 
 [Back to **Single lenses**](SingleLenses.md)
 
@@ -11,7 +11,7 @@ $$ \vec{y} = \vec{x} - m_A \frac{\vec{x}- \vec{x}_A}{|\vec{x}- \vec{x}_A|^2} - m
 
 Here $\vec{y}\equiv (y_1,y_2)$ is the source position, $\vec{x}\equiv (x_1,x_2)$ is the image position, $\vec{x}_A$ and $\vec{x}_B$ are the positions of the two lenses, $m_A$ and $m_B$ are the mass fractions of the two lenses. All angular coordinates are in units of the total Einstein radius, defined in terms of the total mass of the system.
 
-The convention we use in VBMicroLensing for the binary lens is that the origin is placed in the barycenter of the system and that the two lenses are along the $x_1$ axis. Introducing the mass ratio $q\equiv m_B/m_A$, we have that all quantities are expressed in terms of two parameters: **the mass ratio $q$ and the separation between the two lenses $s$**:
+The convention we use in VBMicrolensing for the binary lens is that the origin is placed in the barycenter of the system and that the two lenses are along the $x_1$ axis. Introducing the mass ratio $q\equiv m_B/m_A$, we have that all quantities are expressed in terms of two parameters: **the mass ratio $q$ and the separation between the two lenses $s$**:
 
 $$ m_A= \frac{1}{1+q}$$
 
@@ -58,7 +58,7 @@ print(f"Binary lens Magnification = {Mag}\n")  # Output should be 18.28....
 
 ```
 
-By default the `BinaryMag2` function works with uniform-brightness sources. Any possible Limb Darkening laws can be implemented in VBMicroLensing, as shown in the [next section](LimbDarkening.md) of the documentation.
+By default the `BinaryMag2` function works with uniform-brightness sources. Any possible Limb Darkening laws can be implemented in VBMicrolensing, as shown in the [next section](LimbDarkening.md) of the documentation.
 
 The `BinaryMag2` function has a quite complicated flow that optimizes the calculation according to several tests. Users interested to discover more about its internal structure are invited to read until the [end of this documentation](AdvancedControl.md).
 
@@ -87,4 +87,4 @@ print(f"\nCentroid shift = ({VBML.astrox1 - y1},{VBML.astrox2 - y2})\n")  # Outp
 
 We note that ```VBML.astrox1``` and ```VBML.astrox2``` express the centroid position in the **frame centered in the barycenter of the lenses**. In order to obtain the **centroid with respect to the source position**, we just have to subtract `y1` and `y2` respectively.
 
-[Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
+[Go to **Multiple lenses**](MultipleLenses.md)

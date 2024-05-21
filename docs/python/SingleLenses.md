@@ -1,4 +1,4 @@
-# <span style="color:red">VBMicroLensing</span>
+# <span style="color:red">VBMicrolensing</span>
 
 [Back to **Documentation**](readme.md)
 
@@ -17,7 +17,7 @@ If the source is point-like, the magnification is given by the famous Paczynski 
 
 $$ \mu = \frac{u^2+2}{u\sqrt{u^2+4}}$$
 
-In VBMicroLensing, this formula is obtained through the function ```PSPLMag``` as follows:
+In VBMicrolensing, this formula is obtained through the function ```PSPLMag``` as follows:
 
 ```
 VBML = VBMicrolensing.VBMicrolensing()
@@ -29,7 +29,7 @@ print(f"PSPL Magnification = {Mag}") # Output should be 10.037...
 
 ## Extended-Source-Point-Lens
 
-For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicroLensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file should be loaded before any calculations involving Extended-Source-Point-Lenses (ESPL).
+For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicrolensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file should be loaded before any calculations involving Extended-Source-Point-Lenses (ESPL).
 
 ```
 VBML = VBMicrolensing.VBMicrolensing()
@@ -46,7 +46,7 @@ print(f"\nMagnification of Extended-source-point-lens = {Mag}\n")  # Output shou
 
 The current range for the pre-calculated table is $10^{-4} \leq \rho \leq 10^{+2}$. Sources smaller than the minimum are considered equal to the minimum. Sources larger than the maximum generate an error message. 
 
-By default, VBMicroLensing works with **uniform sources**. We will introduce **Limb Darkening** in a [later section](LimbDarkening.md): arbitrary Limb Darkening laws can be implemented in VBMicroLensing.
+By default, VBMicrolensing works with **uniform sources**. We will introduce **Limb Darkening** in a [later section](LimbDarkening.md): arbitrary Limb Darkening laws can be implemented in VBMicrolensing.
 
 ## Astrometry
 

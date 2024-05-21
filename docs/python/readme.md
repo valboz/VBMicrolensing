@@ -1,14 +1,14 @@
-# <span style="color:red">VBMicroLensing</span>
+# <span style="color:red">VBMicrolensing</span>
 
 # Documentation
 
-In this document we will describe all use cases of the VBMicroLensing library and provide ready-to-use examples that you can copy/paste to your code. 
+In this document we will describe all use cases of the VBMicrolensing library and provide ready-to-use examples that you can copy/paste to your code. 
 
 ## Quick start
 
 In a typical Python code, you will import the VBMicrolensing package in your project.
 
-An instance to the ```VBMicroLensing``` class should be declared in your program. The ```VBMicroLensing``` class contains all the properties and methods that the user needs to call for any microlensing computations. Here is a basic start up example with a binary lens:
+An instance to the ```VBMicrolensing``` class should be declared in your program. The ```VBMicrolensing``` class contains all the properties and methods that the user needs to call for any microlensing computations. Here is a basic start up example with a binary lens:
 
 ```
 import VBMicrolensing
@@ -29,15 +29,17 @@ print(f"Binary lens Magnification = {Mag}") # Output should be 18.28....
 
 ```
 
-In this example we have declared an instance to the ```VBMicroLensing``` class, assigned values to some parameters and then we have called ```VBML.BinaryMag2``` to perform a computation of magnification by a binary lens with these parameters. 
+In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBML.BinaryMag2``` to perform a computation of magnification by a binary lens with these parameters. 
 
 ## Summary
 
-In the following pages, we will describe all functionalities of VBMicroLensing in detail.
+In the following pages, we will describe all functionalities of VBMicrolensing in detail.
 
 - [Single lenses](SingleLenses.md)
 
 - [Binary lenses](BinaryLenses.md)
+
+- [Multiple lenses](MultipleLenses.md)
 
 - [Critical curves and caustics](CriticalCurvesAndCaustics.md)
 
