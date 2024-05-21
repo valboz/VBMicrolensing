@@ -1,2 +1,2 @@
-# VBMicroLensing
+# VBMicrolensing
 Microlensing computation code, including single, binary and multiple lenses
