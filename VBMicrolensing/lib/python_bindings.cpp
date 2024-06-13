@@ -52,6 +52,23 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
             """Loads a pre calculated binary table for extended source calculation.""");
         // Maginfication calculations
+        vbm.def("PSPLMag", &VBMicrolensing::PSPLMag,
+            py::return_value_policy::reference,
+            R"mydelimiter(
+            Point Source Point Lens magnification calculation.
+
+            Magnification of a point source by a single lens.
+
+            Parameters
+            ----------
+            u : float 
+                Distance of source from the center of the lens.
+
+            Returns
+            -------
+            float
+                Magnification.
+            )mydelimiter");
         vbm.def("ESPLMag", &VBMicrolensing::ESPLMag,
             py::return_value_policy::reference,
             R"mydelimiter(
@@ -1001,11 +1018,10 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         vbm.def("SetLDprofile", (void (VBMicrolensing::*)(VBMicrolensing::LDprofiles)) 
                 &VBMicrolensing::SetLDprofile, 
                 "Set LD profile using a predefined profile");
-
+    
         vbm.def("SetLensGeometry",
-            [](VBMicrolensing& self, std::vector<double> q,
-                std::vector<double> s1, std::vector<double> s2) {
-                    self.SetLensGeometry_py(q.size(), q.data(), s1.data(), s2.data());
+            [](VBMicrolensing& self, std::vector<double> pr) {
+                    self.SetLensGeometry_py(pr.size()/3, pr.data());
             },
             py::return_value_policy::reference,
             R"mydelimiter(
@@ -1013,28 +1029,27 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
             Parameters
             ----------
-            q : list[float]
-                Array of lens masses.
-            s1 : list[float]
-                Array of lens positions represented as complex numbers (real parts).  
-            s2 : list[float]
-                Array of lens positions represented as complex numbers (imaginary parts).          
+            pr : list[float]
+                List of parameters [z1_re, z1_im, q1, z2_re, z2_im, q2,....,zn_re,zn_im,qn]
+                
             )mydelimiter");
 
     
      vbm.def("MultiMag0",
-            (double (VBMicrolensing::*)(double,double)) 
-            &VBMicrolensing::MultiMag0,
+            [](VBMicrolensing& self, std::tuple<double, double> source) -> double {
+            double y1 = std::get<0>(source);
+            double y2 = std::get<1>(source);
+            return self.MultiMag0(y1, y2);
+            },
             py::return_value_policy::reference,
             R"mydelimiter(
             Magnification of a point-source by a multiple lens.
 
             Parameters
             ----------
-            y1 : float 
-                x-position of the source in the source plane.
-            y2 : float 
-                y-position of the source in the source plane.
+            source : tuple of floats
+                A tuple (y1, y2) where y1 is the real-position and y2 is the imaginary-position 
+                of the source in the source plane.
 
             Returns
             -------
@@ -1043,8 +1058,11 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             )mydelimiter");
     
     vbm.def("MultiMag", 
-            (double (VBMicrolensing::*)(double,double,double)) 
-            &VBMicrolensing::MultiMag,
+        [](VBMicrolensing& self, std::tuple<double, double> source, double rho) -> double {
+            double y1 = std::get<0>(source);
+            double y2 = std::get<1>(source);
+            return self.MultiMag(y1, y2, rho);
+            },
             py::return_value_policy::reference, 
         R"pbdoc(
         Compute the magnification of a uniform brightness finite source 

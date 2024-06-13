@@ -57,10 +57,16 @@
 // VBML::pza is Product(z-a[i]) (a polynomial of degree n)
 // VBML::pmza is an array of n polynomials m[i] * Product(z-a[j]) (polynomials of degree n-1)
 
-void VBMicrolensing::SetLensGeometry_py(int nn, double* q, double* s1, double* s2) {
-	complex* s = (complex*)malloc(nn * sizeof(complex));
-	for (int i = 0; i < nn; i++) {
-		s[i] = complex(s1[i], s2[i]);
+
+void VBMicrolensing::SetLensGeometry_py(int nn, double* pr) {
+	double* q = (double*)malloc(sizeof(double) * (nn));
+	complex* s = (complex*)malloc(sizeof(complex) * (nn));
+
+	for (int i = 0, j = 2; i < nn; ++i, j += 3) {
+		q[i] = pr[j];
+	}
+	for (int i = 0, j = 0; i < nn; ++i, j += 3) {
+		s[i] = complex(pr[j], pr[j + 1]);
 	}
 
 	switch (SelectedMethod)
