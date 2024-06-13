@@ -88,7 +88,7 @@ t = [7551.6]  # Time at which we want to calculate the magnification
 Mag = VBML.BinaryLightCurveParallax(pr, t)
 
 # Output the result
-print("Binary Light Curve with Parallax at time t: {}".format(Mag[0]))  # Output should be 31.01...
+print("Binary Light Curve with Parallax at time t: {}".format(Mag[0][0]))  # Output should be 31.01...
 
 ```
 

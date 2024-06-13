@@ -20,10 +20,10 @@ $$ \mu = \frac{u^2+2}{u\sqrt{u^2+4}}$$
 In VBMicrolensing, this formula is obtained through the function ```PSPLMag``` as follows:
 
 ```
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 u=0.1;  # Source-lens separation in Einstein radii
-Mag = VBML.PSPLMag(u)
+Mag = VBM.PSPLMag(u)
 print(f"PSPL Magnification = {Mag}") # Output should be 10.037...
 ```
 
@@ -32,14 +32,15 @@ print(f"PSPL Magnification = {Mag}") # Output should be 10.037...
 For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicrolensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file should be loaded before any calculations involving Extended-Source-Point-Lenses (ESPL).
 
 ```
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
-VBML.LoadESPLTable("ESPL.tbl") # Load the pre-calculated table (you only have to do this once)
+VBM.LoadESPLTable("ESPL.tbl") # Load the pre-calculated table (you only have to do this once)
+#The ESPL.dat file is located inside the data folder; copy it to your directory.
 
 u = 0.1 # Source-lens separation in Einstein radii
 rho = 0.01 # Source radius in units of the Einstein angle
 
-Mag = VBML.ESPLMag2(u, rho) # Call to the ESPLMag2 function with these parameters
+Mag = VBM.ESPLMag2(u, rho) # Call to the ESPLMag2 function with these parameters
 print(f"\nMagnification of Extended-source-point-lens = {Mag}\n")  # Output should be 10.050.....
 
 ```
@@ -54,24 +55,24 @@ For a Point-Source, in the reference frame in which the **lens is in the origin*
 
 $$ \bar x = \frac{u}{u^2+2} + u$$
 
-If you need astrometry calculations together with magnification, you have to turn astrometry on by ```VBML.astrometry = true``` and read the results in ```VBML.astrox1```. This works in the same way for ```PSPLMag``` and ```ESPLMag2```.
+If you need astrometry calculations together with magnification, you have to turn astrometry on by ```VBM.astrometry = True``` and read the results in ```VBM.astrox1```. This works in the same way for ```PSPLMag``` and ```ESPLMag2```.
 
 ```
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
-VBML.LoadESPLTable("ESPL.tbl") # Load the pre-calculated table (you only have to do this once)
+VBM.LoadESPLTable("ESPL.tbl") # Load the pre-calculated table (you only have to do this once)
 
 u = 0.1 # Source-lens separation in Einstein radii
 rho = 0.01 # Source radius in units of the Einstein angle
 
-VBML.astrometry = true # We want astrometry
+VBM.astrometry = True # We want astrometry
 
-Mag = VBML.ESPLMag2(u, rho) # Call to the ESPLMag2 function with these parameters
-print(f"\nMagnification of Extended-source-point-lens = {Mag}\n")  # Output should be 10.050.....
-print(f"\nCentroid shift = {VBML.astrox1 - u}\n")  # Output should be 0.0493.....
+Mag = VBM.ESPLMag2(u, rho) # Call to the ESPLMag2 function with these parameters
+print(f"Magnification of Extended-source-point-lens = {Mag}\n")  # Output should be 10.050.....
+print(f"Centroid shift = {VBM.astrox1 - u}\n")  # Output should be 0.0493.....
 
 ```
 
-Note that ```VBML.astrox1``` reports the **centroid position with respect to the lens**. The **centroid position with respect to the source** is ```VBML.astrox1 - u```.
+Note that ```VBM.astrox1``` reports the **centroid position with respect to the lens**. The **centroid position with respect to the source** is ```VBM.astrox1 - u```.
 
 [Go to: **Binary lenses**](BinaryLenses.md)

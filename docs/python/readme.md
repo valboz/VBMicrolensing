@@ -14,7 +14,7 @@ An instance to the ```VBMicrolensing``` class should be declared in your program
 import VBMicrolensing
 
 # Initialize VBMicrolensing() class object
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 s = 0.8 #separation between the two lenses
 q = 0.1 # mass ratio: mass of the lens on the right divided by mass of the lens on the left
@@ -24,12 +24,12 @@ y1 = 0.01 # y1 is the source coordinate along the axis parallel to the line join
 y2 = 0.01 # y2 is the source coordinate orthogonal to the first one
 Rs = 0.01 # Source radius in Einstein radii of the total mass.
   
-Mag = VBML.BinaryMag2(s, q, y1, y2, Rs) # Call to the BinaryMag2 function with these parameters
+Mag = VBM.BinaryMag2(s, q, y1, y2, Rs) # Call to the BinaryMag2 function with these parameters
 print(f"Binary lens Magnification = {Mag}") # Output should be 18.28....
 
 ```
 
-In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBML.BinaryMag2``` to perform a computation of magnification by a binary lens with these parameters. 
+In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBM.BinaryMag2``` to perform a computation of magnification by a binary lens with these parameters. 
 
 ## Summary
 

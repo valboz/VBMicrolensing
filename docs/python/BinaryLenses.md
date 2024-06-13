@@ -26,14 +26,14 @@ $$ \vec{x}_B= \left( \frac{s}{1+q}, 0 \right)$$
 For point sources, we can get the magnification with the `BinaryMag0` function. This depends on the separation $s$, the mass ratio $q$ and the source position $y_1$, $y_2$. Here is an example:
 
 ```
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 s = 0.8 # separation between the two lenses
 q = 0.1 # mass ratio
 y1 = 0.01 # y1 is the source coordinate along the axis parallel to the line joining the two lenses 
 y2 = 0.01 # y2 is the source coordinate orthogonal to the first one
 
-Mag = VBML.BinaryMag0(s, q, y1, y2) # Call to the BinaryMag0 function with these parameters
+Mag = VBM.BinaryMag0(s, q, y1, y2) # Call to the BinaryMag0 function with these parameters
 print(f"Magnification of a point-source = {Mag}\n") # Output should be 18.18.....
 
 ```
@@ -45,7 +45,7 @@ The resolution of the lens equation is obtained by recasting the lens equation a
 For extended sources, our recommended general purpose function is `BinaryMag2`, as shown in the quick start section. This function also depends on $\rho$, the source radius in units of the total Einstein angle:
 
 ```
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 s = 0.8 # separation between the two lenses
 q = 0.1 # mass ratio
@@ -53,7 +53,7 @@ y1 = 0.01 # y1 is the source coordinate along the axis parallel to the line join
 y2 = 0.01 # y2 is the source coordinate orthogonal to the first one
 rho = 0.01 # Source radius in Einstein radii
 
-Mag = VBML.BinaryMag2(s, q, y1, y2,rho) # Call to the BinaryMag2 function with these parameters
+Mag = VBM.BinaryMag2(s, q, y1, y2,rho) # Call to the BinaryMag2 function with these parameters
 print(f"Binary lens Magnification = {Mag}\n")  # Output should be 18.28....
 
 ```
@@ -66,10 +66,10 @@ The `BinaryMag2` function has a quite complicated flow that optimizes the calcul
 
 Astrometry in binary lensing is obtained in the same way as for single lenses. We repeat the steps here outlining the differences.
 
-If you need astrometry calculations together with magnification, you have to turn astrometry on by ```VBML.astrometry = True``` and read the results in ```VBML.astrox1``` and ```VBML.astrox2```. This works in the same way for ```BinaryMag0``` and ```BinaryMag2```.
+If you need astrometry calculations together with magnification, you have to turn astrometry on by ```VBM.astrometry = True``` and read the results in ```VBM.astrox1``` and ```VBM.astrox2```. This works in the same way for ```BinaryMag0``` and ```BinaryMag2```.
 
 ```
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 s = 0.8 # separation between the two lenses
 q = 0.1 # mass ratio
@@ -77,14 +77,14 @@ y1 = 0.01 # y1 is the source coordinate along the axis parallel to the line join
 y2 = 0.01 # y2 is the source coordinate orthogonal to the first one
 rho = 0.01 # Source radius in Einstein radii
 
-VBML.astrometry = True # We want astrometry
+VBM.astrometry = True # We want astrometry
 
-Mag = VBML.BinaryMag2(s, q, y1, y2,rho) # Call to the BinaryMag2 function with these parameters
+Mag = VBM.BinaryMag2(s, q, y1, y2,rho) # Call to the BinaryMag2 function with these parameters
 print(f"Binary lens Magnification = {Mag}\n")  # Output should be 18.28....
-print(f"\nCentroid shift = ({VBML.astrox1 - y1},{VBML.astrox2 - y2})\n")  # Output should be (-0.164...,-0.074...)
+print(f"\nCentroid shift = ({VBM.astrox1 - y1},{VBM.astrox2 - y2})\n")  # Output should be (-0.164...,-0.074...)
 
 ```
 
-We note that ```VBML.astrox1``` and ```VBML.astrox2``` express the centroid position in the **frame centered in the barycenter of the lenses**. In order to obtain the **centroid with respect to the source position**, we just have to subtract `y1` and `y2` respectively.
+We note that ```VBM.astrox1``` and ```VBM.astrox2``` express the centroid position in the **frame centered in the barycenter of the lenses**. In order to obtain the **centroid with respect to the source position**, we just have to subtract `y1` and `y2` respectively.
 
 [Go to **Multiple lenses**](MultipleLenses.md)

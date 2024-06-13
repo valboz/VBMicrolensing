@@ -20,6 +20,9 @@ t02 = 7551.8  # Time of closest approach to source 2
 tE = 37.3  # Einstein time
 FR = 0.1  # Flux ratio of the second source to the first
 
+# Array of parameters
+pr = [0] * 6
+
 # Assign parameters to the array
 pr[0] = math.log(tE)
 pr[1] = math.log(FR)
@@ -34,7 +37,7 @@ t = [7551.6]  # Time at which we want to calculate the magnification
 Mag = VBML.BinSourceLightCurve(pr, t)
 
 # Output the result
-print("Binary Source Light Curve at time t: {}".format(Mag[0]))  # Output should be 29.97...
+print("Binary Source Light Curve at time t: {}".format(Mag[0][0]))  # Output should be 29.97...
 ```
 
 The output of BinSourceLightCurve is a magnification compared to the baseline flux. Therefore, it is the sum of two Paczynsky light curves weighted by 1/(1+FR) and FR/(1+FR) respectively.
@@ -49,7 +52,7 @@ If the finite size of the sources is relevant, one can use `BinSourceLightCurve`
 rho = 0.01 # Size of source 1
 pr[6] = math.log(rho) 
 Mag = VBML.BinSourceExtLightCurve(pr, t) # Calculates the magnification for extended binary sources
-print("Binary Source Extended Light Curve at time t: {}".format(Mag[0]))  
+print("Binary Source Extended Light Curve at time t: {}".format(Mag[0][0]))  
 ```
 
 Only one source size is specified as an independent parameter, while the source size of the second source is obtained through mass-radius-luminosity relations. This ensures that the user has full control on the physical consistency of the model.
