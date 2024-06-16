@@ -1430,7 +1430,7 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 	static _curve *scurve, *scurve2;
 
 	static _theta *theta;
-	static double th, mi, cmp, cmp2, cmp_2,er3;
+	static double th, mi, cmp, cmp2, cmp_2,er3, parab1, parab2;
 	static int nprec, npres, npres2, nfoll, issoc[2], ij;
 
 	nprec = nfoll = 0;
@@ -1544,7 +1544,10 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp *0.0416666666666667;
-		scan->parab = (scan->ds + scan2->ds)*mi; // Correzione parabolica
+		parab1 = (scan->ds + scan2->ds) * mi; // Vecchia Correzione parabolica
+		// Nuova correzione parabolica
+		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
+		scan->parab = 0.5 * (parab1 + parab2);
 
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2)*(scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds)*mi / 2, fabs(scan->parab)*(cmp2) / 10, fabs(scan->parab)*(1.5*fabs(cmp2 / (cmp*cmp) - 1)));
@@ -1645,7 +1648,9 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 		er3 = sqrt(mi*mi*mi)*samplingfactor;
 		cmp = sqrt(cmp_2);
 		mi = cmp_2 * cmp*0.04166666667;
-		scurve->parabstart = -(-scan->ds + scan2->ds)*mi;
+		parab1 = -(-scan->ds + scan2->ds) * mi;
+		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
+		scurve->parabstart = 0.5 * (parab1 + parab2);
 
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2)*(scan2->x1 - scan->x1) / 2, scurve->parabstart, (scan->ds + scan2->ds)*mi / 2, fabs(scurve->parabstart)*(cmp*cmp) / 10, 1.5*fabs(((scan->d.re - scan2->d.re)*(scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im)*(scan->x2 - scan2->x2)) - 2 * cmp*cmp2)*cmp);
@@ -1764,7 +1769,9 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 		cmp_2 = mi / cmp2;
 		cmp = sqrt(cmp_2);
 		mi = cmp_2 * cmp *0.04166666666667;
-		scan->parab = -(scan->ds - scan2->ds)*mi;
+		parab1 = -(scan->ds - scan2->ds) * mi;
+		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
+		scan->parab = 0.5 * (parab1 + parab2);
 
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2)*(scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds)*mi / 2, fabs(scan->parab)*(cmp*cmp) / 10, 1.5*fabs(((scan->d.re - scan2->d.re)*(scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im)*(scan->x2 - scan2->x2)) + 2 * cmp*cmp2)*cmp);
@@ -1873,7 +1880,10 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp *0.041666666667;
-		scan->parab = (scan->ds + scan2->ds)*mi; // Correzione parabolica
+		parab1 = (scan->ds + scan2->ds) * mi; // Vecchia Correzione parabolica
+			// Nuova correzione parabolica
+		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
+		scan->parab = 0.5 * (parab1 + parab2);
 
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2)*(scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds)*mi / 2, fabs(scan->parab)*(cmp2) / 10, fabs(scan->parab)*(1.5*fabs(cmp2 / (cmp*cmp) - 1)));
@@ -1953,7 +1963,9 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 		cmp_2 = mi / cmp2;
 		cmp = sqrt(cmp_2);
 		mi = cmp_2 * cmp *0.04166666666666667;
-		cfoll[issoc[0]]->parabstart = (scan->ds - scan2->ds)*mi;
+		parab1 = (scan->ds - scan2->ds) * mi;
+		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
+		cfoll[issoc[0]]->parabstart = 0.5 * (parab1 + parab2);
 
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2)*(scan2->x1 - scan->x1) / 2, cfoll[issoc[0]]->parabstart, (scan->ds + scan2->ds)*mi / 2, fabs(cfoll[issoc[0]]->parabstart)*(cmp*cmp) / 10, 1.5*fabs(((scan->d.re - scan2->d.re)*(scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im)*(scan->x2 - scan2->x2)) - 2 * cmp*cmp2)*cmp);
@@ -2068,7 +2080,9 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 		cmp_2 = mi / cmp2;
 		cmp = sqrt(cmp_2);
 		mi = cmp_2 * cmp *0.0416666666667;
-		scan->parab = -(scan->ds - scan2->ds)*mi;
+		parab1 = -(scan->ds - scan2->ds) * mi;
+		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
+		scan->parab = 0.5 * (parab1 + parab2);
 
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2)*(scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds)*mi / 2, fabs(scan->parab)*(cmp*cmp) / 10, 1.5*fabs(((scan->d.re - scan2->d.re)*(scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im)*(scan->x2 - scan2->x2)) + 2 * cmp*cmp2)*cmp);
