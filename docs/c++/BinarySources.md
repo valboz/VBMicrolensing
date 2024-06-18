@@ -1,13 +1,13 @@
-# <span style="color:red">VBMicroLensing</span>
+# <span style="color:red">VBMicrolensing</span>
 
 [Back to **Orbital motion**](OrbitalMotion.md)
 
 # Binary sources
 
-Binary sources just give the superposition of two single-source microlensing light curves. In VBMicroLensing we have the `BinSourceLightCurve` function, illustrated in the following example:
+Binary sources just give the superposition of two single-source microlensing light curves. In VBMicrolensing we have the `BinSourceLightCurve` function, illustrated in the following example:
 
 ```
-VBMicroLensing VBML; // Declare instance to VBMicroLensing
+VBMicrolensing VBM; // Declare instance to VBMicrolensing
 
 double pr[6]; // Array of parameters
 double tE, FR, u01, u02, t01, t02, t;
@@ -29,7 +29,7 @@ pr[5] = t02;
 
 t = 7551.6; // Time at which we want to calculate the magnification
 
-Mag = VBML.BinSourceLightCurve(pr, t); // Calculates the Binary Source magnification at time t with parameters in pr
+Mag = VBM.BinSourceLightCurve(pr, t); // Calculates the Binary Source magnification at time t with parameters in pr
 printf("Binary Source Light Curve at time t: %lf", Mag); // Output should be 29.97...
 ```
 
@@ -44,24 +44,24 @@ If the finite size of the sources is relevant, one can use `BinSourceLightCurve`
 ```
 rho = 0.01; // Size of source 1
 pr[6] = log(rho); 
-Mag = VBML.BinSourceExtLightCurve(pr, t); // Calculates the magnification for extended binary sources
+Mag = VBM.BinSourceExtLightCurve(pr, t); // Calculates the magnification for extended binary sources
 ```
 
 Only one source size is specified as an independent parameter, while the source size of the second source is obtained through mass-radius-luminosity relations. This ensures that the user has full control on the physical consistency of the model.
 
 ## Mass-radius-luminosity relations for binary sources
 
-The mass-luminosity relation in VBMicroLensing is a power law of the form $L \sim M^q$ where the exponent $q$ is given by the variable `VBML.mass_luminosity_exponent`, whose default value is $4.0$.
+The mass-luminosity relation in VBMicrolensing is a power law of the form $L \sim M^q$ where the exponent $q$ is given by the variable `VBM.mass_luminosity_exponent`, whose default value is $4.0$.
 
-The mass-radius relation is a power law of the form $\rho \sim M^p$ where the exponent $p$ is given by the variable `VBML.mass_radius_exponent`, whose default value is $0.9$.
+The mass-radius relation is a power law of the form $\rho \sim M^p$ where the exponent $p$ is given by the variable `VBM.mass_radius_exponent`, whose default value is $0.9$.
 
 Therefore, in the function `BinSourceExtLightCurve`, if the flux ratio is `FR` and the radius of the first source is `rho`, the radius of the second source is calculated as `rho * FR^{p/q}`.
 
-The user can customize the two exponents by changing `VBML.mass_luminosity_exponent` and `VBML.mass_radius_exponent` as appropriate for the sources in the specific microlensing event and for the observation band.
+The user can customize the two exponents by changing `VBM.mass_luminosity_exponent` and `VBM.mass_radius_exponent` as appropriate for the sources in the specific microlensing event and for the observation band.
 
 ## Xallarap
 
-Binary sources can also orbit around a common center of mass. VBMicroLensing offers xallarap with circular orbital motion, described by 6 parameters:
+Binary sources can also orbit around a common center of mass. VBMicrolensing offers xallarap with circular orbital motion, described by 6 parameters:
 
 $(\xi_\parallel, \xi_\perp)$, projections of the node lines parallel and perpendicular to the source velocity at time $t_0$. Note that the orbital radius in Einstein angle units is $\sqrt{\xi_\parallel^2 + \xi_\perp^2}$;
 
@@ -76,8 +76,8 @@ $q_s$, mass ratio of the two source components.
 Here is an example with the function `BinSourceSingleLensXallarap`. You may note that the parametrization of the sources is very different with respect to the previous functions.
 
 ```
-VBMicroLensing VBML; // Declare instance to VBMicroLensing
-VBML.LoadESPLTable("ESPL.tbl");
+VBMicrolensing VBM; // Declare instance to VBMicrolensing
+VBM.LoadESPLTable("ESPL.tbl");
 
 double pr[10]; // Array of parameters
 double u0, t0, tE, rho, xi1, xi2, om, inc, phi0, qs, t, Mag;
@@ -107,11 +107,11 @@ pr[9] = log(qs);
 
 t = 7551.6; // Time at which we want to calculate the magnification
 
-Mag = VBML.BinSourceSingleLensXallarap(pr, t); // Calculates the Binary Source magnification at time t with parameters in pr
-printf("Binary Source Light Curve at time t: %lf", Mag); // Output should be 2.70...
+Mag = VBM.BinSourceSingleLensXallarap(pr, t); // Calculates the Binary Source magnification at time t with parameters in pr
+printf("Binary Source Light Curve at time t: %lf", Mag); // Output should be 29.76...
 ```
 
-In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBML.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBML.mass_radius_exponent`.
+In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
 Xallarap is also available for binary lenses through the `BinSourceBinaryLensXallarap` function. In this case, the parameters are 13 with the seven parameters for the [static binary lens](BinaryLenses.md) followed by the six parameters for the xallarap.
 

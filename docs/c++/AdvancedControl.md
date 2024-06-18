@@ -1,4 +1,4 @@
-# <span style="color:red">VBMicroLensing</span>
+# <span style="color:red">VBMicrolensing</span>
 
 
 [Back to **Binary Sources**](BinarySources.md)
@@ -33,9 +33,9 @@ These functions are particularly useful for diagnostics on particular cases and 
 
 ## Advanced contol in limb darkening
 
-The number of annuli used in any magnification calculation on a limb-darkened source in VBMicroLensing is reported through the property `VBML.nannuli`. This can be a useful diagnostics to know how deep the calculation had to go in order to meet the required accuracy.
+The number of annuli used in any magnification calculation on a limb-darkened source in VBMicrolensing is reported through the property `VBML.nannuli`. This can be a useful diagnostics to know how deep the calculation had to go in order to meet the required accuracy.
 
-Furthermore, there are exceptional situations in which huge sources cover tiny caustics. If both the center and the margin of the source are far from the caustic, there is a chance that `BinaryMag2` does not judge worthwhile to insert any annuli in-between, thereby missing the subtle perturbation by the caustic. In these cases, the user may force VBMicroLensing to use a minimum number of annuli by changing  `VBML.minannuli`. 
+Furthermore, there are exceptional situations in which huge sources cover tiny caustics. If both the center and the margin of the source are far from the caustic, there is a chance that `BinaryMag2` does not judge worthwhile to insert any annuli in-between, thereby missing the subtle perturbation by the caustic. In these cases, the user may force VBMicrolensing to use a minimum number of annuli by changing  `VBML.minannuli`. 
 
 For example, by setting 
 
@@ -66,7 +66,7 @@ Another important diagnostics only available with `BinaryMag` is the error estim
 
 ## Parameters range
 
-VBMicroLensing has been widely tested with particular attention on caustic crossings and all source positions close to caustics. Here we report the recommended ranges of parameters for `BinaryMag2`.
+VBMicrolensing has been widely tested with particular attention on caustic crossings and all source positions close to caustics. Here we report the recommended ranges of parameters for `BinaryMag2`.
 
 Mass ratio: testing has been performed with $10^{-9} \leq q \leq 1$.
 

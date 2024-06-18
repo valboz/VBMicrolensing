@@ -1,4 +1,4 @@
-# <span style="color:red">VBMicroLensing</span>
+# <span style="color:red">VBMicrolensing</span>
 
 [Back to **Parallax**](Parallax.md)
 
@@ -6,7 +6,7 @@
 
 Binary lenses orbit around the common center of mass. If the microlensing event is long enough, we should take orbital motion into account. However, to first order, microlensing is only sensitive to changes in the projected separation and orientation of the binary lenses, while most orbital parameters remain unconstrained. Rather than adding too many dimensions to our parameter space, in order to describe the subtle deviations in our microlensing event, it can be sufficient to restrict to circular orbits.
 
-VBMicroLensing offers two functions:
+VBMicrolensing offers two functions:
 
 ```
 BinaryLightCurveOrbital
@@ -15,22 +15,22 @@ BinaryLightCurveKepler
 
 The first function describes circular orbital motion, while the second considers elliptic Keplerian orbital motion. Note that we deprecate the "linear approximation", which is popular in many microlensing papers, since it does not correspond to any physical trajectories and may lead to unphysical solutions.
 
-Both functions discussed here include the parallax calculation. Therefore, a preliminary call to `VBML.SetObjectCoordinates` is mandatory (see [Parallax](Parallax.md)). If you want to fit orbital motion without parallax, you may set the two components of the parallax to zero.
+Both functions discussed here include the parallax calculation. Therefore, a preliminary call to `VBM.SetObjectCoordinates` is mandatory (see [Parallax](Parallax.md)). If you want to fit orbital motion without parallax, you may set the two components of the parallax to zero.
 
-Finally, the reference time for orbital motion calculation is by default $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. If you want to specify a different time, you can do it through $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)). There is no possibility to set two different reference times. Therefore, in VBMicroLensing we always have $t_{0,orb} = t_{0,par}$.
+Finally, the reference time for orbital motion calculation is by default $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. If you want to specify a different time, you can do it through $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)). There is no possibility to set two different reference times. Therefore, in VBMicrolensing we always have $t_{0,orb} = t_{0,par}$.
 
 ## Circular orbital motion binary lenses
 
 Here is an example of use of `BinaryLightCurveOrbital`:
 
 ```
-VBMicroLensing VBML; // Declare instance to VBMicroLensing
+VBMicrolensing VBM; // Declare instance to VBMicrolensing
 
 double pr[12]; // Array of parameters
 double s, q, u0, alpha, rho, tE, t0, paiN, paiE, g1, g2, g3, t;
 
-VBML.SetObjectCoordinates("OB151212coords.txt", ".");  // Read target coordinates in file
-VBML.parallaxsystem = 1; // Here we use North-East components for parallax
+VBM.SetObjectCoordinates("OB151212coords.txt", ".");  // Read target coordinates in file
+VBM.parallaxsystem = 1; // Here we use North-East components for parallax
 
 u0 = -0.01; // Impact parameter
 t0 = 7550.4; // Time of closest approach to the center of mass
@@ -62,7 +62,7 @@ pr[11] = g3;
 
 t = 7551.6; // Time at which we want to calculate the magnification
 
-Mag = VBML.BinaryLightCurveOrbital(pr, t); // Calculates the Binary Lens magnification at time t with parameters in pr
+Mag = VBM.BinaryLightCurveOrbital(pr, t); // Calculates the Binary Lens magnification at time t with parameters in pr
 printf("Binary Light Curve with Parallax and Orbital Motion at time t: %lf", Mag); // Output should be 30.92...
 ```
 
