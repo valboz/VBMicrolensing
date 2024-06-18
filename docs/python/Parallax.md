@@ -21,20 +21,20 @@ We need to specify J2000.0 equatorial coordinates for our microlensing target. T
 Then we inform VBMicrolensing of these coordinates by the function `SetObjectCoordinates`
 
 ```
-VBMicrolensing VBML;
+VBMicrolensing VBM;
 
-VBML.SetObjectCoordinates("OB151212coords.txt",".");
+VBM.SetObjectCoordinates("OB151212coords.txt",".");
 ```
 
 The first argument is the name of the file we have just prepared (these are the coordinates of the event [OGLE-2015-BLG-1212](https://ui.adsabs.harvard.edu/abs/2016ApJ...820...79B/abstract)). The second argument will only be used in case of observations from space (see [below](Parallax.md#satellite-parallax)).
 
 ## Parallax system
 
-Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBML.parallaxsystem` to 1 or 0 respectively. The default value is 0, corresponding to the parallel/orthogonal system.
+Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 0, corresponding to the parallel/orthogonal system.
 
 ## Reference time for parallax $t_{0,par}$
 
-Finally, we have to decide the reference time for the parallax effect $t_{0,par}$. Whatever the values of the parallax components, the source position at $t=t_{0,par}$ remains fixed. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBML.t0_par_fixed = 1;` and choose your reference time via `VBML.t0_par`.
+Finally, we have to decide the reference time for the parallax effect $t_{0,par}$. Whatever the values of the parallax components, the source position at $t=t_{0,par}$ remains fixed. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBM.t0_par_fixed = 1;` and choose your reference time via `VBM.t0_par`.
 
 ## Light curve functions with parallax
 
@@ -52,7 +52,7 @@ The only difference is that the array of parameters must include two more entrie
 import VBMicrolensing
 import math
 
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 pr = [0] * 9  # Array of parameters
 
@@ -68,8 +68,10 @@ paiN = 0.3  # Parallax component in the North direction
 paiE = 0.13  # Parallax component in the East direction
 
 # Set object coordinates
-VBML.SetObjectCoordinates("OB151212coords.txt", ".")  # Read target coordinates from file
-VBML.parallaxsystem = 1  # Here we use North-East components for parallax
+VBM.SetObjectCoordinates("OB151212coords.txt", ".")  # Read target coordinates from file
+#Copy the file from the data folder to your path.
+
+VBM.parallaxsystem = 1  # Here we use North-East components for parallax
 
 # Assign parameters to the array
 pr[0] = math.log(s)
@@ -85,14 +87,14 @@ pr[8] = paiE
 t = [7551.6]  # Time at which we want to calculate the magnification
 
 # Calculate the Binary Lens magnification at time t with parameters in pr
-Mag = VBML.BinaryLightCurveParallax(pr, t)
+Mag = VBM.BinaryLightCurveParallax(pr, t)
 
 # Output the result
 print("Binary Light Curve with Parallax at time t: {}".format(Mag[0][0]))  # Output should be 31.01...
 
 ```
 
-In this example we have not set `VBML.t0_par`, which means that $t_{0,par}=t_0$ here.
+In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ here.
 
 Finally, we add that all light curve functions are available in two versions as explained in [Light Curves](LightCurves.md): the version performing a single calculation of the magnification at time t (as in the example above) and the version calculating the full light curve with one single call (see [Light Curves](LightCurves.md) for details).
 
@@ -109,16 +111,16 @@ In particular, we assume five columns:
 
 Examples of valid satellite ephemerid tables are in [https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data](https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data).
 
-The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character). The satellite table files should be in the directory specified as second argument in the `VBML.SetObjectCoordinates` function, as shown [above](Parallax.md#target-coordinates). When the `VBML.SetObjectCoordinates` is executed, the satellite tables are pre-loaded so that they are ready for use in any calculations.
+The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character). The satellite table files should be in the directory specified as second argument in the `VBM.SetObjectCoordinates` function, as shown [above](Parallax.md#target-coordinates). When the `VBM.SetObjectCoordinates` is executed, the satellite tables are pre-loaded so that they are ready for use in any calculations.
 
-If you want the magnification as seen from satellite 1, then just set VBML.satellite to 1 before the parallax calculation.
+If you want the magnification as seen from satellite 1, then just set VBM.satellite to 1 before the parallax calculation.
 
 ```
-VBML.satellite = 1 # All following calculations will be performed as seen from satellite 1 (Spitzer in this example)
-Mag = VBML.BinaryLightCurveParallax(pr, t)
-print(f"Magnification as seen from satellite 1= {Mag[0]}"); # Output should be 3.88...
+VBM.satellite = 1 # All following calculations will be performed as seen from satellite 1 (Spitzer in this example)
+Mag = VBM.BinaryLightCurveParallax(pr, t)
+print(f"Magnification as seen from satellite 1= {Mag[0][0]}"); # Output should be 3.88...
 ```
 
-If you want to return to the ground do not forget to set VBML.satellite back to 0!
+If you want to return to the ground do not forget to set VBM.satellite back to 0!
 
 [Go to **Orbital motion**](OrbitalMotion.md)

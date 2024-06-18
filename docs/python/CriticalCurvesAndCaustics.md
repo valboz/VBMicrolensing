@@ -44,7 +44,7 @@ plt.tick_params(axis='both', which='minor', width=1, length=5, direction='in', b
 <img src="Caustics_binary.png" width = 600>
 
 
-## Multi Lens
+## Multiple Lens
 
 ```
 import VBMicrolensing

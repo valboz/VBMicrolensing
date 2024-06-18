@@ -10,7 +10,7 @@ Binary sources just give the superposition of two single-source microlensing lig
 import VBMicrolensing
 import math
 
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 # Parameters
 u01 = 0.01  # Impact parameter for source 1
@@ -21,7 +21,7 @@ tE = 37.3  # Einstein time
 FR = 0.1  # Flux ratio of the second source to the first
 
 # Array of parameters
-pr = [0] * 6
+pr = [0] * 7
 
 # Assign parameters to the array
 pr[0] = math.log(tE)
@@ -34,7 +34,7 @@ pr[5] = t02
 t = [7551.6]  # Time at which we want to calculate the magnification
 
 # Calculate the Binary Source magnification at time t with parameters in pr
-Mag = VBML.BinSourceLightCurve(pr, t)
+Mag = VBM.BinSourceLightCurve(pr, t)
 
 # Output the result
 print("Binary Source Light Curve at time t: {}".format(Mag[0][0]))  # Output should be 29.97...
@@ -50,22 +50,23 @@ If the finite size of the sources is relevant, one can use `BinSourceLightCurve`
 
 ```
 rho = 0.01 # Size of source 1
-pr[6] = math.log(rho) 
-Mag = VBML.BinSourceExtLightCurve(pr, t) # Calculates the magnification for extended binary sources
-print("Binary Source Extended Light Curve at time t: {}".format(Mag[0][0]))  
+pr[6] = math.log(rho)
+VBM.LoadESPLTable("ESPL.tbl"); #Load ESPL table
+Mag = VBM.BinSourceExtLightCurve(pr, t) # Calculates the magnification for extended binary sources
+print("Binary Source Extended Light Curve at time t: {}".format(Mag[0][0])) 
 ```
 
 Only one source size is specified as an independent parameter, while the source size of the second source is obtained through mass-radius-luminosity relations. This ensures that the user has full control on the physical consistency of the model.
 
 ## Mass-radius-luminosity relations for binary sources
 
-The mass-luminosity relation in VBMicrolensing is a power law of the form $L \sim M^q$ where the exponent $q$ is given by the variable `VBML.mass_luminosity_exponent`, whose default value is $4.0$.
+The mass-luminosity relation in VBMicrolensing is a power law of the form $L \sim M^q$ where the exponent $q$ is given by the variable `VBM.mass_luminosity_exponent`, whose default value is $4.0$.
 
-The mass-radius relation is a power law of the form $\rho \sim M^p$ where the exponent $p$ is given by the variable `VBML.mass_radius_exponent`, whose default value is $0.9$.
+The mass-radius relation is a power law of the form $\rho \sim M^p$ where the exponent $p$ is given by the variable `VBM.mass_radius_exponent`, whose default value is $0.9$.
 
 Therefore, in the function `BinSourceExtLightCurve`, if the flux ratio is `FR` and the radius of the first source is `rho`, the radius of the second source is calculated as `rho * FR^{p/q}`.
 
-The user can customize the two exponents by changing `VBML.mass_luminosity_exponent` and `VBML.mass_radius_exponent` as appropriate for the sources in the specific microlensing event and for the observation band.
+The user can customize the two exponents by changing `VBM.mass_luminosity_exponent` and `VBM.mass_radius_exponent` as appropriate for the sources in the specific microlensing event and for the observation band.
 
 ## Xallarap
 
@@ -87,10 +88,10 @@ Here is an example with the function `BinSourceSingleLensXallarap`. You may note
 import VBMicrolensing
 import math
 
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 # Load the ESPL table
-VBML.LoadESPLTable("ESPL.tbl")
+VBM.LoadESPLTable("ESPL.tbl")
 
 # Parameters
 u0 = 0.01  # Impact parameter for the first source
@@ -103,6 +104,9 @@ om = 0.04  # Orbital velocity
 inc = 0.8  # Inclination
 phi0 = 1.4  # Phase from the line of nodes
 qs = 0.1  # Mass ratio of the two stars
+
+# Array of parameters
+pr = [0] * 10
 
 # Assign parameters to the array
 pr[0] = u0
@@ -119,13 +123,13 @@ pr[9] = math.log(qs)
 t = [7551.6]  # Time at which we want to calculate the magnification
 
 # Calculate the Binary Source magnification at time t with parameters in pr
-Mag = VBML.BinSourceSingleLensXallarap(pr, t)
+Mag = VBM.BinSourceSingleLensXallarap(pr, t)
 
 # Output the result
-print("Binary Source Light Curve at time t: {}".format(Mag[0]))  # Output should be 2.70...
+print("Binary Source Light Curve at time t: {}".format(Mag[0][0]))  # Output should be 29.76...
 ```
 
-In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBML.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBML.mass_radius_exponent`.
+In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
 Xallarap is also available for binary lenses through the `BinSourceBinaryLensXallarap` function. In this case, the parameters are 13 with the seven parameters for the [static binary lens](BinaryLenses.md) followed by the six parameters for the xallarap.
 

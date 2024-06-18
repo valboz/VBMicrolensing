@@ -31,9 +31,9 @@ pr[2] = t0
 
 t = [7551.6]  # Time at which we want to calculate the magnification
 
-Mag = VBM.PSPLLightCurve(pr, times)  # Calculates the PSPL magnification at different times with parameters in pr
+Mag = VBM.PSPLLightCurve(pr, t)  # Calculates the PSPL magnification at different times with parameters in pr
 
-print(f"PSPL Light Curve at time {times[i]:.6f}: {Mag[0][i]:.6f}")  # Output should be 64.13...
+print(f"PSPL Light Curve at time t: {Mag[0][0]}")  # Output should be 64.13...
 ```
 The array `Mag` contains the magnification for the time specified in the array `t`.
 
@@ -69,10 +69,12 @@ u0, t0, tE, rho = 0.01, 7550.4, 100.3, 0.01  # Impact parameter, Time of closest
 pr[0] = math.log(u0)  # Note that we give some parameters in log scale
 pr[1] = math.log(tE)
 pr[2] = t0
+pr[3] = math.log(rho)
 
 t = [7551.6]  # Time at which we want to calculate the magnification
 
 VBM.LoadESPLTable("ESPL.tbl")  # Do not forget to load the pre-calculated tables before the first ESPL calculation!
+#Copy the file from the data folder to your path.
 
 Mag = VBM.ESPLLightCurve(pr, t)  # Calculates the ESPL magnification at time t with parameters in pr
 print("ESPL Light Curve at time t:", Mag[0][0])  # Output should be 68.09...

@@ -15,7 +15,7 @@ BinaryLightCurveKepler
 
 The first function describes circular orbital motion, while the second considers elliptic Keplerian orbital motion. Note that we deprecate the "linear approximation", which is popular in many microlensing papers, since it does not correspond to any physical trajectories and may lead to unphysical solutions.
 
-Both functions discussed here include the parallax calculation. Therefore, a preliminary call to `VBML.SetObjectCoordinates` is mandatory (see [Parallax](Parallax.md)). If you want to fit orbital motion without parallax, you may set the two components of the parallax to zero.
+Both functions discussed here include the parallax calculation. Therefore, a preliminary call to `VBM.SetObjectCoordinates` is mandatory (see [Parallax](Parallax.md)). If you want to fit orbital motion without parallax, you may set the two components of the parallax to zero.
 
 Finally, the reference time for orbital motion calculation is by default $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. If you want to specify a different time, you can do it through $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)). There is no possibility to set two different reference times. Therefore, in VBMicrolensing we always have $t_{0,orb} = t_{0,par}$.
 
@@ -27,7 +27,7 @@ Here is an example of use of `BinaryLightCurveOrbital`:
 import VBMicrolensing
 import math
 
-VBML = VBMicrolensing.VBMicrolensing()
+VBM = VBMicrolensing.VBMicrolensing()
 
 # Array of parameters
 pr = [0] * 12
@@ -49,8 +49,8 @@ g2 = -0.002  # Orbital component gamma2
 g3 = 0.0011  # Orbital component gamma3
 
 # Set object coordinates
-VBML.SetObjectCoordinates("OB151212coords.txt", ".")  # Read target coordinates from file
-VBML.parallaxsystem = 1  # Use North-East components for parallax
+VBM.SetObjectCoordinates("OB151212coords.txt", ".")  # Read target coordinates from file
+VBM.parallaxsystem = 1  # Use North-East components for parallax
 
 # Assign parameters to the array
 pr[0] = math.log(s)
@@ -69,10 +69,10 @@ pr[11] = g3
 t = [7551.6]  # Time at which we want to calculate the magnification
 
 # Calculate the Binary Lens magnification at time t with parameters in pr
-Mag = VBML.BinaryLightCurveOrbital(pr, t)
+Mag = VBM.BinaryLightCurveOrbital(pr, t)
 
 # Output the result
-print("Binary Light Curve with Parallax and Orbital Motion at time t: {}".format(Mag[0]))  # Output should be 30.92...
+print("Binary Light Curve with Parallax and Orbital Motion at time t: {}".format(Mag[0][0]))  # Output should be 30.92...
 ```
 
 A circular orbital motion is completely specified by the three components of the angular velocity $\vec \gamma$ of the secondary mass with respect to the first mass. We have
