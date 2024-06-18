@@ -14,7 +14,7 @@ It is written as a C++ library and wrapped as a Python package, the user can cal
 
 
 ## Documentation
-Full [documentation for the use of VBmicrolensing in C++](/docs/C++/readme.md) ond p is available. This can be a good reference also for Python users. 
+Full [documentation for the use of VBmicrolensing in python](/docs/python/readme.md) and [documentation for the use of VBmicrolensing in C++](/docs/C++/readme.md) is available.
 
 Furthermore, the vast majority of functions are documented with Python docstrings which can be accessed as, for example, `?VBBL.BinaryMag2()` in
 a Jupyter notebook.
