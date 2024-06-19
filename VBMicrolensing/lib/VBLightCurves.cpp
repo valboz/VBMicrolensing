@@ -190,14 +190,18 @@ void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1
 
 	SetLensGeometry(nl, q, s);
 
+
+	free(q);
+	free(s);
+
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - pr[0]) * tE_inv;
 		y1s[i] = -tn;
 		y2s[i] = 0.;
 		mindi = 1.e100;
 		for (int i = 0; i < n; i++) {
-			di = fabs(y1s[i] - s[i].re) + fabs(y2s[i] - s[i].im);
-			di /= sqrt(q[i]);
+			di = fabs(y1s[i] - a[i].re) + fabs(y2s[i] - a[i].im);
+			di /= sqrt(m[i]);
 			if (di < mindi) mindi = di;
 		}
 		if (mindi >= 10.) {
@@ -207,10 +211,8 @@ void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1
 		else {
 			mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
 		}
-		mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
 	}
-	free(q);
-	free(s);
+
 }
 
 
