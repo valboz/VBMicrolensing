@@ -1021,7 +1021,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     
         vbm.def("SetLensGeometry",
             [](VBMicrolensing& self, std::vector<double> pr) {
-                    self.SetLensGeometry_py(pr.size()/3, pr.data());
+                    self.SetLensGeometry(pr.size()/3, pr.data());
             },
             py::return_value_policy::reference,
             R"mydelimiter(

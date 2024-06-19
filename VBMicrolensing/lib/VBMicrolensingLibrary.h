@@ -113,11 +113,13 @@ namespace VBMicrolensingLibrary {
 
 
 		void SetLensGeometry(int n, double* q, complex* s);
-		void SetLensGeometry_py(int nn, double* pr);
-		double MultiMag0(double y1,double y2, _sols **Images);
+		void SetLensGeometry(int nn, double* pr);
+		double MultiMag0(complex y, _sols** Images);
+		double MultiMag0(complex y);
 		double MultiMag0(double y1, double y2);
-		double MultiMag(complex y, double rho, double accuracy, _sols **Images);
+		double MultiMag(complex y, double rho, double accuracy, _sols** Images);
 		double MultiMag(complex y, double rho, double accuracy);
+		double MultiMag(complex y, double rho);
 		double MultiMag(double y1, double y2, double rho);
 		double rootaccuracy;
 		double samplingfactor;
