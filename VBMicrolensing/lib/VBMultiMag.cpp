@@ -58,7 +58,7 @@
 // VBML::pmza is an array of n polynomials m[i] * Product(z-a[j]) (polynomials of degree n-1)
 
 
-void VBMicrolensing::SetLensGeometry_py(int nn, double* pr) {
+void VBMicrolensing::SetLensGeometry(int nn, double* pr) {
 	double* q = (double*)malloc(sizeof(double) * (nn));
 	complex* s = (complex*)malloc(sizeof(complex) * (nn));
 
@@ -69,22 +69,10 @@ void VBMicrolensing::SetLensGeometry_py(int nn, double* pr) {
 		s[i] = complex(pr[j], pr[j + 1]);
 	}
 
-	switch (SelectedMethod)
-	{
-	case Method::Singlepoly:
-		SetLensGeometry_spnp(nn, q, s);
-		break;
-	case Method::Multipoly:
-		SetLensGeometry_spnp(nn, q, s);
-		SetLensGeometry_multipoly(nn, q, s);
-		break;
-	case Method::Nopoly:
-		SetLensGeometry_spnp(nn, q, s);
-		break;
-	}
+	SetLensGeometry(nn, q, s);
 }
 
-void VBMicrolensing::SetLensGeometry(int nn, double* q, complex * s) {
+void VBMicrolensing::SetLensGeometry(int nn, double* q, complex *s) {
 	switch (SelectedMethod)
 	{
 	case Method::Singlepoly:
@@ -262,12 +250,11 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 //////////////////////////////
 //////////////////////////////
 
-double VBMicrolensing::MultiMag0(double y1,double y2, _sols **Images) {
+double VBMicrolensing::MultiMag0(complex yi, _sols **Images) {
 	static double Mag = -1.0;
 	_theta *stheta;
 	_curve *Prov, *Prov2;
 	_point *scan1, *scan2;
-	complex yi = complex(y1, y2);
 
 	stheta = new _theta(-1.);
 	
@@ -313,10 +300,19 @@ double VBMicrolensing::MultiMag0(double y1,double y2, _sols **Images) {
 
 }
 
+double VBMicrolensing::MultiMag0(complex y) {
+	static _sols* images;
+	static double mag;
+	mag = MultiMag0(y, &images);
+	delete images;
+	return mag;
+}
+
 double VBMicrolensing::MultiMag0(double y1, double y2) {
 	static _sols* images;
 	static double mag;
-	mag = MultiMag0(y1,y2,&images);
+	complex y = complex(y1, y2);
+	mag = MultiMag0(y,&images);
 	delete images;
 	return mag;
 }
@@ -624,6 +620,14 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols **Imag
 
 double VBMicrolensing::MultiMag(complex y, double RSv, double Tol) {
 	static _sols *images;
+	static double mag;
+	mag = MultiMag(y, RSv, Tol, &images);
+	delete images;
+	return mag;
+}
+
+double VBMicrolensing::MultiMag(complex y, double RSv) {
+	static _sols* images;
 	static double mag;
 	mag = MultiMag(y, RSv, Tol, &images);
 	delete images;

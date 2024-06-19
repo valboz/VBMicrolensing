@@ -145,6 +145,12 @@ VBMicrolensing::~VBMicrolensing() {
 		free(rCLDtab);
 	}
 	//multipoly
+	if (coefs_mp) {
+		for (int i = 0; i < n; i++) {
+			free(coefs_mp[i]);
+		}
+		free(coefs_mp);
+	}
 	if (m_mp) {
 		for (int i = 0; i < n; i++) {
 			free(m_mp[i]);
@@ -172,17 +178,17 @@ VBMicrolensing::~VBMicrolensing() {
 			free(ppy_mp[i]);
 			free(pza_mp[i]);
 
-			free(za[i]);
-			free(za2[i]);
+			//free(za[i]);
+			//free(za2[i]);
 		}
 		free(pmza_mp);
 		free(pyaza_mp);
 		free(ppmy_mp);
 		free(pza_mp);
 		free(ppy_mp);
-		free(pdum);
-		free(za);
-		free(za2);
+		//free(pdum);
+		//free(za);
+		//free(za2);
 	}
 	if (zr_mp) {
 		for (int j = 0; j < n; j++) {
@@ -191,13 +197,13 @@ VBMicrolensing::~VBMicrolensing() {
 		free(zrm);
 		free(zr_mp);
 		free(nrootsmp_mp);
-		free(zaltc);
-		free(J1);
-		free(J1c);
-		free(Jacs);
+		//free(zaltc);
+		//free(J1);
+		//free(J1c);
+		//free(Jacs);
 	}
 
-	delete s_offset;
+	//delete s_offset;
 
 }
 
