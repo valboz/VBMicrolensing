@@ -91,30 +91,30 @@ void VBMicrolensing::change_n(int nn) {
 	n2 = n * n;
 	nnm1 = n2 - n;
 	nroots = 2 * n2 + 1;
-	coefs = (complex *)malloc(sizeof(complex)*(nroots + 1));
-	pmza = (complex **)malloc(sizeof(complex *)*n);
-	pmza2 = (complex **)malloc(sizeof(complex *)*n);
-	pyaza = (complex **)malloc(sizeof(complex *)*n);
-	ppmy = (complex **)malloc(sizeof(complex *)*n);
-	za = (complex **)malloc(sizeof(complex *)*n);
-	za2 = (complex **)malloc(sizeof(complex *)*n);
+	coefs = (complex*)malloc(sizeof(complex) * (nroots + 1));
+	pmza = (complex**)malloc(sizeof(complex*) * n);
+	pmza2 = (complex**)malloc(sizeof(complex*) * n);
+	pyaza = (complex**)malloc(sizeof(complex*) * n);
+	ppmy = (complex**)malloc(sizeof(complex*) * n);
+	za = (complex**)malloc(sizeof(complex*) * n);
+	za2 = (complex**)malloc(sizeof(complex*) * n);
 	for (int i = 0; i < n; i++) {
-		pmza[i] = (complex *)malloc(sizeof(complex)*n);
-		pmza2[i] = (complex *)malloc(sizeof(complex)*(2 * n - 1));
-		pyaza[i] = (complex *)malloc(sizeof(complex)*(n + 1));
-		ppmy[i] = (complex *)malloc(sizeof(complex)*(nnm1 + 1));
-		za[i] = (complex *)malloc(sizeof(complex)*(nroots));
-		za2[i] = (complex *)malloc(sizeof(complex)*(nroots));
+		pmza[i] = (complex*)malloc(sizeof(complex) * n);
+		pmza2[i] = (complex*)malloc(sizeof(complex) * (2 * n - 1));
+		pyaza[i] = (complex*)malloc(sizeof(complex) * (n + 1));
+		ppmy[i] = (complex*)malloc(sizeof(complex) * (nnm1 + 1));
+		za[i] = (complex*)malloc(sizeof(complex) * (nroots));
+		za2[i] = (complex*)malloc(sizeof(complex) * (nroots));
 	}
 
-	pza = (complex *)malloc(sizeof(complex)*(n + 1));
-	pza2 = (complex *)malloc(sizeof(complex)*(2 * n + 1));
-	pdum = (complex *)malloc(sizeof(complex)*(nroots + 1));
-	ppy = (complex *)malloc(sizeof(complex)*(nroots + 1));
+	pza = (complex*)malloc(sizeof(complex) * (n + 1));
+	pza2 = (complex*)malloc(sizeof(complex) * (2 * n + 1));
+	pdum = (complex*)malloc(sizeof(complex) * (nroots + 1));
+	ppy = (complex*)malloc(sizeof(complex) * (nroots + 1));
 
-	zr = (complex *)malloc(sizeof(complex)*(nroots));
-	zcr = (complex *)malloc(sizeof(complex)*(2 * n));
-	for (int i = 0; i <nroots; i++) {
+	zr = (complex*)malloc(sizeof(complex) * (nroots));
+	zcr = (complex*)malloc(sizeof(complex) * (2 * n));
+	for (int i = 0; i < nroots; i++) {
 		zr[i] = 0;
 	}
 	for (int i = 0; i < 2 * n; i++) {
@@ -122,44 +122,97 @@ void VBMicrolensing::change_n(int nn) {
 	}
 
 
-	good = (double *)malloc(sizeof(double)*(nroots));
-	Jacs = (double *)malloc(sizeof(double)*(nroots));
-	J1 = (complex *)malloc(sizeof(complex)*(nroots));
-	J1c = (complex *)malloc(sizeof(complex)*(nroots));
-	zaltc = (complex *)malloc(sizeof(complex)*(nroots));
-	worst = (int *)malloc(sizeof(int)*(nroots));
-	pert = (complex *)malloc(sizeof(complex)*n);
+	good = (double*)malloc(sizeof(double) * (nroots));
+	Jacs = (double*)malloc(sizeof(double) * (nroots));
+	J1 = (complex*)malloc(sizeof(complex) * (nroots));
+	J1c = (complex*)malloc(sizeof(complex) * (nroots));
+	zaltc = (complex*)malloc(sizeof(complex) * (nroots));
+	worst = (int*)malloc(sizeof(int) * (nroots));
+	pert = (complex*)malloc(sizeof(complex) * n);
 
-	m = (double *)malloc(sizeof(double)*n);
-	a = (complex *)malloc(sizeof(complex)*n);
-	prodevs= (double *)malloc(sizeof(double)*n);
-	devs = (complex *)malloc(sizeof(complex)*n);
-	init = (complex *)malloc(sizeof(complex)*(n+1));
-	centralimages = (complex *)malloc(sizeof(complex)*(nnm1)/2);
-	errs = (double *)malloc(sizeof(double)*nroots);
-	newseeds = (complex *)malloc(sizeof(complex)*(2*nroots));
-	grads = (complex *)malloc(sizeof(complex)*(nroots));
-	S2s = (complex *)malloc(sizeof(complex)*(nroots));
-	S3s = (complex *)malloc(sizeof(complex)*(nroots));
-	S4s = (complex *)malloc(sizeof(complex)*(nroots));
+	m = (double*)malloc(sizeof(double) * n);
+	a = (complex*)malloc(sizeof(complex) * n);
+	prodevs = (double*)malloc(sizeof(double) * n);
+	devs = (complex*)malloc(sizeof(complex) * n);
+	init = (complex*)malloc(sizeof(complex) * (n + 1));
+	centralimages = (complex*)malloc(sizeof(complex) * (nnm1) / 2);
+	errs = (double*)malloc(sizeof(double) * nroots);
+	newseeds = (complex*)malloc(sizeof(complex) * (2 * nroots));
+	grads = (complex*)malloc(sizeof(complex) * (nroots));
+	S2s = (complex*)malloc(sizeof(complex) * (nroots));
+	S3s = (complex*)malloc(sizeof(complex) * (nroots));
+	S4s = (complex*)malloc(sizeof(complex) * (nroots));
 
-	cprec = (_curve **)malloc(sizeof(_curve *)*nroots);
-	cpres = (_curve **)malloc(sizeof(_curve *)*(nroots));
-	cfoll = (_curve **)malloc(sizeof(_curve *)*(nroots));
-	A = (double **)malloc(sizeof(double *)*(nroots));
+	cprec = (_curve**)malloc(sizeof(_curve*) * nroots);
+	cpres = (_curve**)malloc(sizeof(_curve*) * (nroots));
+	cfoll = (_curve**)malloc(sizeof(_curve*) * (nroots));
+	A = (double**)malloc(sizeof(double*) * (nroots));
 	for (int i = 0; i < nroots; i++) {
-		A[i] = (double *)malloc(sizeof(double)*(nroots));
+		A[i] = (double*)malloc(sizeof(double) * (nroots));
 	}
 
 }
 
 void VBMicrolensing::change_n_mp(int nn) {
+	if (coefs) free(coefs);
+	if (m) {
+		free(m);
+		free(a);
+	}
+	if (zr) {
+		free(zr);
+		free(zcr);
+		free(good);
+		free(Jacs);
+		free(worst);
+		free(pert);
+		free(zaltc);
+		free(J1);
+		free(J1c);
+		free(prodevs);
+		free(devs);
+		free(init);
+		free(centralimages);
+		free(errs);
+		free(newseeds);
+		free(grads);
+	}
+	if (pmza) {
+		for (int i = 0; i < n; i++) {
+			free(pmza[i]);
+			free(pmza2[i]);
+			free(pyaza[i]);
+			free(ppmy[i]);
+			free(za[i]);
+			free(za2[i]);
+		}
+		free(pmza);
+		free(pmza2);
+		free(pyaza);
+		free(ppmy);
+		free(pza);
+		free(pza2);
+		free(pdum);
+		free(ppy);
+		free(za);
+		free(za2);
+	}
+	if (A) {
+		for (int i = 0; i < nroots; i++) {
+			free(A[i]);
+		}
+		free(A);
+		free(cprec);
+		free(cpres);
+		free(cfoll);
+	}
 	if (coefs_mp) {
 		for (int i = 0; i < n; i++) {
 			free(coefs_mp[i]);
 		}
 		free(coefs_mp);
 	}
+
 	if (m_mp) {
 		for (int i = 0; i < n; i++) {
 			free(m_mp[i]);
@@ -183,33 +236,21 @@ void VBMicrolensing::change_n_mp(int nn) {
 			free(pmza_mp[i]);
 			free(pyaza_mp[i]);
 			free(ppmy_mp[i]);
-
 			free(ppy_mp[i]);
 			free(pza_mp[i]);
-
-			free(za[i]);
-			free(za2[i]);
 		}
 		free(pmza_mp);
 		free(pyaza_mp);
 		free(ppmy_mp);
 		free(pza_mp);
 		free(ppy_mp);
-		free(pdum);
-		free(za);
-		free(za2);
 	}
 	if (zr_mp) {
 		for (int j = 0; j < n; j++) {
 			free(zr_mp[j]);
 		}
-		free(zrm);
 		free(zr_mp);
 		free(nrootsmp_mp);
-		free(zaltc);
-		free(J1);
-		free(J1c);
-		free(Jacs);
 	}
 
 	n = nn;
@@ -222,7 +263,7 @@ void VBMicrolensing::change_n_mp(int nn) {
 	q_sort = (double*)malloc(sizeof(double) * n);
 	s_sort = (complex*)malloc(sizeof(complex) * n);
 	y_mp = (complex*)malloc(sizeof(complex) * n);
-	
+
 	m_mp = (double**)malloc(sizeof(double*) * n);
 	a_mp = (complex**)malloc(sizeof(complex*) * n);
 	for (int i = 0; i < n; i++) {
@@ -230,51 +271,97 @@ void VBMicrolensing::change_n_mp(int nn) {
 		a_mp[i] = (complex*)malloc(sizeof(complex) * n);
 	}
 
-	pdum = (complex*)malloc(sizeof(complex) * (nroots + 1));
-
 	coefs_mp = (complex**)malloc(sizeof(complex*) * n);
 	pza_mp = (complex**)malloc(sizeof(complex*) * n);
 	ppy_mp = (complex**)malloc(sizeof(complex*) * n);
 	for (int j = 0; j < n; j++) {
-		coefs_mp[j]= (complex*)malloc(sizeof(complex) * (nroots + 1));
+		coefs_mp[j] = (complex*)malloc(sizeof(complex) * (nroots + 1));
 		pza_mp[j] = (complex*)malloc(sizeof(complex) * (n + 1));
 		ppy_mp[j] = (complex*)malloc(sizeof(complex) * (nroots + 1));
 	}
 
 	pmza_mp = (complex***)malloc(sizeof(complex**) * n);
-	pyaza_mp= (complex***)malloc(sizeof(complex**) * n);
-	ppmy_mp=(complex***)malloc(sizeof(complex**) * n);
+	pyaza_mp = (complex***)malloc(sizeof(complex**) * n);
+	ppmy_mp = (complex***)malloc(sizeof(complex**) * n);
 	for (int j = 0; j < n; j++) {
 		pmza_mp[j] = (complex**)malloc(sizeof(complex*) * n);
 		pyaza_mp[j] = (complex**)malloc(sizeof(complex*) * n);
 		ppmy_mp[j] = (complex**)malloc(sizeof(complex*) * n);
 		for (int i = 0; i < n; i++) {
 			pmza_mp[j][i] = (complex*)malloc(sizeof(complex) * n);
-			pyaza_mp[j][i] = (complex*)malloc(sizeof(complex)*(n+1));
-			ppmy_mp[j][i]= (complex*)malloc(sizeof(complex) * (nnm1 + 1));
+			pyaza_mp[j][i] = (complex*)malloc(sizeof(complex) * (n + 1));
+			ppmy_mp[j][i] = (complex*)malloc(sizeof(complex) * (nnm1 + 1));
 		}
 	}
-	dist_mp= (double*)malloc(sizeof(double) * n);
+	dist_mp = (double*)malloc(sizeof(double) * n);
 
-	zaltc = (complex*)malloc(sizeof(complex) * (nroots));
-
-	zrm = (complex*)malloc(sizeof(complex) * (nroots));
 	zr_mp = (complex**)malloc(sizeof(complex*) * n);
-	za = (complex**)malloc(sizeof(complex*) * n);
-	za2 = (complex**)malloc(sizeof(complex*) * n);
 	for (int j = 0; j < n; j++) {
 		zr_mp[j] = (complex*)malloc(sizeof(complex) * nroots);
-		za[j] = (complex*)malloc(sizeof(complex) * (nroots));
-		za2[j] = (complex*)malloc(sizeof(complex) * (nroots));
 		for (int i = 0; i < n; i++) {
 			zr_mp[j][i] = 0;
 		}
 	}
 
+	coefs = (complex*)malloc(sizeof(complex) * (nroots + 1));
+	pmza = (complex**)malloc(sizeof(complex*) * n);
+	pmza2 = (complex**)malloc(sizeof(complex*) * n);
+	pyaza = (complex**)malloc(sizeof(complex*) * n);
+	ppmy = (complex**)malloc(sizeof(complex*) * n);
+	za = (complex**)malloc(sizeof(complex*) * n);
+	za2 = (complex**)malloc(sizeof(complex*) * n);
+	for (int i = 0; i < n; i++) {
+		pmza[i] = (complex*)malloc(sizeof(complex) * n);
+		pmza2[i] = (complex*)malloc(sizeof(complex) * (2 * n - 1));
+		pyaza[i] = (complex*)malloc(sizeof(complex) * (n + 1));
+		ppmy[i] = (complex*)malloc(sizeof(complex) * (nnm1 + 1));
+		za[i] = (complex*)malloc(sizeof(complex) * (nroots));
+		za2[i] = (complex*)malloc(sizeof(complex) * (nroots));
+	}
+
+	pza = (complex*)malloc(sizeof(complex) * (n + 1));
+	pza2 = (complex*)malloc(sizeof(complex) * (2 * n + 1));
+	pdum = (complex*)malloc(sizeof(complex) * (nroots + 1));
+	ppy = (complex*)malloc(sizeof(complex) * (nroots + 1));
+
+	zr = (complex*)malloc(sizeof(complex) * (nroots));
+	zcr = (complex*)malloc(sizeof(complex) * (2 * n));
+	for (int i = 0; i < nroots; i++) {
+		zr[i] = 0;
+	}
+	for (int i = 0; i < 2 * n; i++) {
+		zcr[i] = 0;
+	}
+
+
+	good = (double*)malloc(sizeof(double) * (nroots));
 	Jacs = (double*)malloc(sizeof(double) * (nroots));
 	J1 = (complex*)malloc(sizeof(complex) * (nroots));
 	J1c = (complex*)malloc(sizeof(complex) * (nroots));
 	zaltc = (complex*)malloc(sizeof(complex) * (nroots));
+	worst = (int*)malloc(sizeof(int) * (nroots));
+	pert = (complex*)malloc(sizeof(complex) * n);
+
+	m = (double*)malloc(sizeof(double) * n);
+	a = (complex*)malloc(sizeof(complex) * n);
+	prodevs = (double*)malloc(sizeof(double) * n);
+	devs = (complex*)malloc(sizeof(complex) * n);
+	init = (complex*)malloc(sizeof(complex) * (n + 1));
+	centralimages = (complex*)malloc(sizeof(complex) * (nnm1) / 2);
+	errs = (double*)malloc(sizeof(double) * nroots);
+	newseeds = (complex*)malloc(sizeof(complex) * (2 * nroots));
+	grads = (complex*)malloc(sizeof(complex) * (nroots));
+	S2s = (complex*)malloc(sizeof(complex) * (nroots));
+	S3s = (complex*)malloc(sizeof(complex) * (nroots));
+	S4s = (complex*)malloc(sizeof(complex) * (nroots));
+
+	cprec = (_curve**)malloc(sizeof(_curve*) * nroots);
+	cpres = (_curve**)malloc(sizeof(_curve*) * (nroots));
+	cfoll = (_curve**)malloc(sizeof(_curve*) * (nroots));
+	A = (double**)malloc(sizeof(double*) * (nroots));
+	for (int i = 0; i < nroots; i++) {
+		A[i] = (double*)malloc(sizeof(double) * (nroots));
+	}
 }
 
 void VBMicrolensing::polycritcoefficients(complex eiphi) {

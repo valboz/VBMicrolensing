@@ -53,7 +53,7 @@ namespace VBMicrolensingLibrary {
 		double Mag0, corrquad, corrquad2, safedist;
 		double *dist_mp;
 		int nim0,n,n2,nnm1,nroots, nrootsmp, *nrootsmp_mp;
-		complex *zr,*zrm, *zcr,**pmza, **pyaza , **ppmy , *pza , *pza2, **pmza2, *pdum , *ppy, *a, *s_offset, *pert,y,yc;
+		complex *zr,*zrm, *zcr,**pmza, **pyaza , **ppmy , *pza , *pza2, **pmza2, *pdum , *ppy, *a, *s_offset, *pert,y,yc, *q,*s;
 		complex *y_mp, *** pmza_mp, ** pza_mp, ***pyaza_mp, ***ppmy_mp, **ppy_mp, **zr_mp;
 		complex *zaltc, *J1, *J1c,**za,**za2; 
 		complex *coefs, **coefs_mp;
@@ -95,7 +95,6 @@ namespace VBMicrolensingLibrary {
 		double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols** images);
 		void OrderImages(_sols *,_curve *);
 		void OrderMultipleImages(_sols *, _curve *);
-		void OrderMultipleImages_multi(_sols*, _curve*);
 		void cmplx_laguerre(complex *, int, complex *, int &, bool &);
 		void cmplx_newton_spec(complex *, int, complex *, int &, bool &);
 		void cmplx_laguerre2newton(complex *, int, complex *, int &, bool &, int);
@@ -112,12 +111,12 @@ namespace VBMicrolensingLibrary {
 	public: 
 
 
-		void SetLensGeometry(int n, double* q, complex* s);
-		void SetLensGeometry(int nn, double* pr);
+		void SetLensGeometry(int n, double* q, complex *s);
+		void SetLensGeometry(int n, double* pr);
 		double MultiMag0(complex y, _sols** Images);
 		double MultiMag0(complex y);
 		double MultiMag0(double y1, double y2);
-		double MultiMag(complex y, double rho, double accuracy, _sols** Images);
+		double MultiMag(complex y, double rho, double accuracy, _sols **Images);
 		double MultiMag(complex y, double rho, double accuracy);
 		double MultiMag(complex y, double rho);
 		double MultiMag(double y1, double y2, double rho);

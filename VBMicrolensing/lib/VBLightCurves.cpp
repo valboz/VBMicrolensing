@@ -721,10 +721,10 @@ double VBMicrolensing::TripleLightCurve(double *pr, double t) {
 		s[1] = s[0] * q[0];
 		s[0] = -q[1] * s[0];
 		s[2] = exp(pr[7])*complex(cbeta, sbeta);
-		//	_sols *Images; double Mag; // For debugging
-
-		SetLensGeometry(3, q, s);
+		//	_sols *Images; double Mag; // For debugging		
 	}
+	SetLensGeometry(3, q, s);
+
 	tn = (t - pr[6]) * tE_inv;
 	y_1 = pr[2] * salpha - tn * calpha;
 	y_2 = -pr[2] * calpha - tn * salpha;

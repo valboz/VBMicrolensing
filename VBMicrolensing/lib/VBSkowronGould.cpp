@@ -174,7 +174,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 			zr_mp[l][i] = complex(0., 0.);
 		}
 	}
-	//ciclo sui sistemi di riferimento
+	//Cycle reference systems
 	for (l = 0; l < nl; l++) {
 
 		br = false;
@@ -249,9 +249,6 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				ind += nrootsmp_mp[ll];
 			}
 			
-			/*for (int i = 0; i < degree; i++) {
-				printf("%lf + %lf I\n", zr_mp[l][i].re, zr_mp[l][i].im, j);
-			}*/
 			
 			//divide by previous roots
 
@@ -267,17 +264,11 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 					poly2[i] = coef;
 					coef = prev + zr_mp[l][n - 1] * coef;
 				}
-				/*printf("divide for: (%lf, %lf)\n", zr_mp[l][n - 1].re, zr_mp[l][n - 1].im);*/
 			}
 			
 			if (degreenew <= 1) {
 				if (degreenew == 1) zr_mp[l][0] = -poly2[0] / poly2[1];
 				nrootsmp_mp[l] = 1;
-				
-				/*printf("\nTEST z0 %lf + %lf I\n", zr_mp[l][0].re, zr_mp[l][0].im);
-				printf("\nTEST p0 %lf + %lf I\n", poly[l][0].re, poly[l][0].im);
-				printf("\nTEST p1 %lf + %lf I\n", poly[l][1].re, poly[l][1].im);
-				printf("\nTEST div %lf + %lf I\n", ( - poly[l][0] / poly[l][1]).re, (-poly[l][0] / poly[l][1]).im);*/
 
 				break;
 			}
@@ -308,19 +299,12 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	for (l = 0; l < nl - 1; l++) {
 		for (i = 0; i < nrootsmp_mp[l]; i++) {
 			roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
-			/*printf("%d:  (%lf,%lf)\n", ind, roots[ind].re, roots[ind].im);*/
 			ind--;
 		}
 	}
 	for (i = 0; i < nrootsmp_mp[nl-1]; i++) {
 		roots[ind] = zr_mp[nl-1][i] + s_sort[nl-1] - s_sort[0];
 		ind--;
-	}
-
-	for (l = 0; l < nl; l++) {
-		for (i = 0; i < degree; i++) {
-			zr_mp[l][i] = zr_mp[l][i] + s_sort[l] - s_sort[0];
-		}
 	}
 	
 	return;

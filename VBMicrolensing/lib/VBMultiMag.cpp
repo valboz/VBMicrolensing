@@ -70,6 +70,9 @@ void VBMicrolensing::SetLensGeometry(int nn, double* pr) {
 	}
 
 	SetLensGeometry(nn, q, s);
+
+	free(q);
+	free(s);
 }
 
 void VBMicrolensing::SetLensGeometry(int nn, double* q, complex *s) {
@@ -79,7 +82,6 @@ void VBMicrolensing::SetLensGeometry(int nn, double* q, complex *s) {
 		SetLensGeometry_spnp(nn,q,s);
 		break;
 	case Method::Multipoly:
-		SetLensGeometry_spnp(nn, q, s);
 		SetLensGeometry_multipoly(nn, q, s);
 		break;
 	case Method::Nopoly:
@@ -98,7 +100,7 @@ void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex* s) {
 	static complex pbin[2], z, S2, fac;
 	static int i, j;
 
-	if (nn != n) change_n(nn);
+	change_n(nn);
 
 	qmin = sumq = q[0];
 	iqmin = 0;
@@ -161,7 +163,6 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 	static double tempq, sumq;
 	static complex temps, pbin[2];
 
-
 	change_n_mp(nn);
 
 	sumq = 0;
@@ -220,6 +221,12 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 		}
 	}
 
+	*s_offset = s_sort[0];
+	for (int i = 0; i < n; i++) {
+		m[i] = m_mp[0][i];
+		a[i] = a_mp[0][i];
+	}
+
 	// first steps for the creation of the polynomials
 
 	for (int k = 0; k < n; k++) {
@@ -250,6 +257,24 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 //////////////////////////////
 //////////////////////////////
 
+#define EXECUTE_METHOD(METHOD, THETA)                     \
+    switch (METHOD) {                                      \
+        case Method::Singlepoly:                           \
+            polycoefficients();                            \
+            Prov = NewImagespoly(THETA);                   \
+            break;                                         \
+        case Method::Multipoly:                            \
+            for (int i = 0; i < n; i++) {                  \
+                y_mp[i] = y + s_sort[0] - s_sort[i];       \
+            }                                              \
+            polycoefficients_multipoly();                  \
+            Prov = NewImagesmultipoly(THETA);              \
+            break;                                         \
+        case Method::Nopoly:                               \
+            Prov = NewImages(THETA);                       \
+            break;                                         \
+    }
+
 double VBMicrolensing::MultiMag0(complex yi, _sols **Images) {
 	static double Mag = -1.0;
 	_theta *stheta;
@@ -265,24 +290,7 @@ double VBMicrolensing::MultiMag0(complex yi, _sols **Images) {
 	corrquad = corrquad2 = 0; // to be implemented for v2.0
 	safedist = 10;
 
-	switch (SelectedMethod){
-		case Method::Singlepoly:
-			polycoefficients(); // Calculation of coefficients of the lens equation of order n^2+1
-			Prov = NewImagespoly(stheta);
-			break;
-		case Method::Multipoly:
-			for (int i = 0; i < n; i++) {
-				y_mp[i] = yi - s_sort[i];
-			}
-			y = yi - s_sort[0];
-
-			polycoefficients_multipoly();
-			Prov = NewImagesmultipoly(stheta);
-			break;
-		case Method::Nopoly:
-			Prov = NewImages(stheta); // Calculates images
-			break;
-	}
+	EXECUTE_METHOD(SelectedMethod, stheta)
 	
 	Mag = 0.;
 	nim0 = 0;
@@ -334,8 +342,7 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols **Imag
 		y0 = yi - *s_offset; // Source position relative to first (lowest) mass
 		rho = RSv;
 		rho2 = RSv * RSv;
-
-	
+			
 
 		NPS = 1;
 		// Two channels: Tol>1 uses Tol points in the contour; Tol<1 uses Tol as accuracy goal and RelTol as precision goal
@@ -362,22 +369,8 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols **Imag
 		tim0 = Environment::TickCount;
 #endif
 		
-		switch(SelectedMethod){
-			case Method::Singlepoly:
-				polycoefficients(); // Calculation of coefficients of the lens equation of order n^2+1
-				Prov = NewImagespoly(stheta);
-				break;
-			case Method::Multipoly:
-				for (int i = 0; i < n; i++) {
-					y_mp[i] = y + s_sort[0] - s_sort[i];
-				}
-				polycoefficients_multipoly();
-				Prov = NewImagesmultipoly(stheta);
-				break;
-			case Method::Nopoly:
-				Prov = NewImages(stheta); // Calculates images
-				break;
-		}
+		EXECUTE_METHOD(SelectedMethod, stheta)
+
 #ifdef _PRINT_TIMES
 		tim1 = Environment::TickCount;
 		GM += tim1 - tim0;
@@ -405,22 +398,8 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols **Imag
 			stheta = Thetas->insert(th);
 			y = y0 + complex(RSv*cos(th), RSv*sin(th));
 
-			switch (SelectedMethod) {
-			case Method::Singlepoly:
-				polycoefficients(); // Calculation of coefficients of the lens equation of order n^2+1
-				Prov = NewImagespoly(stheta);
-				break;
-			case Method::Multipoly:
-				for (int i = 0; i < n; i++) {
-					y_mp[i] = y + s_sort[0] - s_sort[i];
-				}
-				polycoefficients_multipoly();
-				Prov = NewImagesmultipoly(stheta);
-				break;
-			case Method::Nopoly:
-				Prov = NewImages(stheta); // Calculates images
-				break;
-			}
+			EXECUTE_METHOD(SelectedMethod, stheta)
+
 			OrderMultipleImages((*Images), Prov);
 		}
 		NPS = 4;
@@ -433,45 +412,16 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols **Imag
 				th = (itheta->th + itheta->next->th)*0.5;
 				rhorad2 = RSv / cos((itheta->next->th - itheta->th)*0.5);
 				y = y0 + complex(rhorad2*cos(th), rhorad2*sin(th));
-				switch (SelectedMethod)
-				{
-				case Method::Singlepoly:
-					polycoefficients(); // Calculation of coefficients of the lens equation of order n^2+1
-					Prov = NewImagespoly(stheta);
-					break;
-				case Method::Multipoly:
-					for (int i = 0; i < n; i++) {
-						y_mp[i] = y + s_sort[0] - s_sort[i];
-					}
-					polycoefficients_multipoly();
-					Prov = NewImagesmultipoly(stheta);
-					break;
-				case Method::Nopoly:
-					Prov = NewImages(stheta); // Calculates images
-					break;
-				}
+
+				EXECUTE_METHOD(SelectedMethod, stheta)
 				
 				delete Prov;
 				if (itheta->imlength != stheta->imlength && itheta->next->imlength != stheta->imlength) {
 					jtheta = Thetas->insert(th);
 					y = y0 + complex(RSv*cos(th), RSv*sin(th));
-					switch (SelectedMethod)
-					{
-					case Method::Singlepoly:
-						polycoefficients(); // Calculation of coefficients of the lens equation of order n^2+1
-						Prov = NewImagespoly(jtheta);
-						break;
-					case Method::Multipoly:
-						for (int i = 0; i < n; i++) {
-							y_mp[i] = y + s_sort[0] - s_sort[i];
-						}
-						polycoefficients_multipoly();
-						Prov = NewImagesmultipoly(stheta);
-						break;
-					case Method::Nopoly:
-						Prov = NewImages(jtheta); // Calculates images
-						break;
-					}
+
+					EXECUTE_METHOD(SelectedMethod, stheta)
+
 					OrderMultipleImages((*Images), Prov);
 					NPS++;
 				}
@@ -515,23 +465,8 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols **Imag
 #ifdef _PRINT_TIMES
 			tim0 = Environment::TickCount;
 #endif
-			switch (SelectedMethod)
-			{
-			case Method::Singlepoly:
-				polycoefficients(); // Calculation of coefficients of the lens equation of order n^2+1
-				Prov = NewImagespoly(stheta);
-				break;
-			case Method::Multipoly:
-				for (int i = 0; i < n; i++) {
-					y_mp[i] = y + s_sort[0] - s_sort[i];
-				}
-				polycoefficients_multipoly();
-				Prov = NewImagesmultipoly(stheta);
-				break;
-			case Method::Nopoly:
-				Prov = NewImages(stheta); // Calculates images
-				break;
-			}
+			EXECUTE_METHOD(SelectedMethod, stheta)
+
 #ifdef _PRINT_TIMES
 			tim1 = Environment::TickCount;
 			GM += tim1 - tim0;
@@ -1189,55 +1124,6 @@ int VBMicrolensing::findimagepoly(int i) {
 	zr[i] = z;
 	return success;
 }
-
-int VBMicrolensing::findimagemultipoly(int i) {
-	static complex z, zc, yc, LL, zo, delta, lambda;
-	static double dlmax = 1.0e-12, LLold, Jold, deltafac;
-	static int iter, iter2, success;
-	yc = conj(y);
-	z = zrm[i];
-	zc = conj(z);
-
-	for (int i = 0; i < n; i++) {
-		m[i] = m_mp[0][i];
-		a[i] = a_mp[0][i];
-	}
-	_MJacobians1
-
-	LLold = 1.e100;
-	good[i] = abs2(LL);
-	Jold = Jacs[i];
-	iter = iter2 = 0;
-	deltafac = 1.;
-
-	while (good[i] > dlmax /*&& good[i]<LLold && signbit(Jold) == signbit(Jac[i])*/ && iter < 0 && iter2 < 4) {
-		LLold = good[i];
-		Jold = Jacs[i];
-		zo = z;
-		lambda = 1.0;
-		//for (int j = nroots-1; j > i; j--) {
-		//	if(good[j]<dlmax)
-		//		lambda = lambda + conj(LL) /(z - zr[j]);
-		//}
-		delta = (conj(LL * lambda) - LL * J1c[i]) / (Jacs[i] - 1 + abs2(lambda));
-		iter2 = 0;
-		deltafac = 1.;
-		while (iter2 < 4 && (good[i] + dlmax > LLold /*|| signbit(Jold) != signbit(Jac[i])*/)) {
-			z = zo + delta * deltafac;
-			zc = conj(z);
-			_MJacobians1
-				good[i] = abs2(LL);
-			deltafac *= 0.1;
-			iter2++;
-		}
-		//		deltafac *= 4.;
-
-		iter++;
-	}
-	success = (good[i] > dlmax) ? 0 : 1;
-	zrm[i] = z;
-	return success;
-}
 _curve *VBMicrolensing::NewImagespoly(_theta *theta) {
 	static complex  yc, z, zc, zo, delta, dy, dz, J2, J3, Jalt, Jaltc, JJalt2, LL, J1c2, dzita;
 	static double dlmax = 1.0e-12, dzmax = 1.e-10, dJ2, ob2, cq, Jold, LLold;
@@ -1353,15 +1239,13 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 #ifdef _PRINT_TIMES
 	tim0 = Environment::TickCount;
 #endif
-	//	if (theta->th < 0) {
-//	initrootpoly();
-	//	}
-	cmplx_roots_multigen(zrm, coefs_mp, n2 + 1, false, false);
+
+	cmplx_roots_multigen(zr, coefs_mp, n2 + 1, false, false);
 
 	for (int i = n2; i >= 0; i--) {
-		findimagemultipoly(i);
+		findimagepoly(i);
 		for (int j = n2; j > i; j--) {
-			if (good[j] < 1.e9 && abs2(zrm[j] - zrm[i]) < dzmax && signbit(Jacs[j]) == signbit(Jacs[i])) {
+			if (good[j] < 1.e9 && abs2(zr[j] - zr[i]) < dzmax && signbit(Jacs[j]) == signbit(Jacs[i])) {
 				if (good[i] > good[j]) {
 					good[i] = 1.e100;
 					break;
@@ -1392,7 +1276,7 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	}	
 	Prov = new _curve;
 	for (int i = 0; i < ngood; i++) {
-		z = zrm[worst[i]];
+		z = zr[worst[i]];
 		zc = conj(z);
 		Prov->append(z.re + s_offset ->re, z.im + s_offset->im);
 		Prov->last->dJ = Jacs[worst[i]];
@@ -1418,7 +1302,7 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 		}
 		else {
 			for (int j = ngood; j < i; j++) { // Find the two ghost roots with minimum distance.
-				ob2 = abs2(zrm[worst[j]] - z);
+				ob2 = abs2(zr[worst[j]] - z);
 				if (ob2 < theta->errworst) theta->errworst = ob2;
 			}
 		}
