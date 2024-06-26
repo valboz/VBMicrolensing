@@ -1,5 +1,3 @@
-# <span style="color:red">VBMicrolensing</span>
-
 # Documentation
 
 In this document we will describe all use cases of the VBMicrolensing library and provide ready-to-use examples that you can copy/paste to your code. 
