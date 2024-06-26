@@ -25,7 +25,7 @@ y1 = 0.01 # y1 is the source coordinate along the axis parallel to the line join
 y2 = 0.01 # y2 is the source coordinate orthogonal to the first one
 rho = 0.01 # Source radius in Einstein radii
 
-Mag = VBM.BinaryMag2(s, q, y1, y2, rho)  # Call to the BinaryMag2 with the same parameters as in the previous section
+Mag = VBM.BinaryMag2(s, q, y1, y2, rho)  # Call to the BinaryMag2 
 print(f"Magnification with limb darkened source = {Mag}")  # Output should be 18.27.....
 
 ```
