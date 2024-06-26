@@ -1,5 +1,3 @@
-# <span style="color:red">VBMicrolensing</span>
-
 [Back to **Light Curve Functions**](LightCurves.md)
 
 # Parallax
