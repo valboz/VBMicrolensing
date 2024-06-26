@@ -27,7 +27,7 @@ fig = plt.figure(figsize=(5, 5))
 for cau in caustics:
         plt.plot(cau[0], cau[1], 'k')
 ```
-<img src="Caustics_binary.png" width = 600>
+<img src="Caustics_binary.png" width = 400>
 
 
 ## Multiple Lens
