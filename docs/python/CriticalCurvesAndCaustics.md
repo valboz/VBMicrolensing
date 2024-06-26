@@ -6,9 +6,7 @@ The gravitational lensing phenomenology is strictly related to the existence of 
 
 VBMicroLensing offers the calculation of critical curves and caustics with an arbitrary number of points through the functions ```Caustics``` and ```CriticalCurves```.
 
-The result is a list object, which is a collection of pairs of lists for each curve. Each pair of lists represents the x-coordinate and the y-coordinate of the point.
-
-The use of these objects is very intuitive, as illustrated by this examples:
+The result is a list of curves, where each curve is a pair of lists containing the x and y coordinates of the points along the curve. The use of these objects is very intuitive, as illustrated by this examples:
 
 ## Binary Lens
 
@@ -19,25 +17,15 @@ from matplotlib import pyplot as plt
 VBM = VBMicrolensing.VBMicrolensing() # Instance to VBMicroLensing
 
 # Parameters of our binary lens
-s=2.5;  # separation between the two lenses
+s=0.6;  # separation between the two lenses
 q=0.1;  # mass ratio
 
 caustics = VBM.Caustics(s,q)
-criticalcurves=VBM.Criticalcurves(s,q)
 
 #plot
 fig = plt.figure(figsize=(5, 5))
 for cau in caustics:
-        plt.plot(cau[0], cau[1], 'k-', markersize=0.1)
-plt.xlim(-0.4, 0.1)
-plt.ylim(-0.2, 0.2)
-plt.title('Caustics')
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.minorticks_on()
-plt.tick_params(axis='both', which='major', width=2, length=10, direction='in', bottom=True, top=True, left=True, right=True)
-plt.tick_params(axis='both', which='minor', width=1, length=5, direction='in', bottom=True, top=True, left=True, right=True)
-
+        plt.plot(cau[0], cau[1], 'k')
 ```
 <img src="Caustics_binary.png" width = 600>
 
@@ -58,20 +46,11 @@ parameters = [0,0,1,-1.2,0.5,
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
 caustics = VBM.Multicaustics()
-criticalcurves=VBM.Multicriticalcurves()
 
 #plot
 fig = plt.figure(figsize=(5, 5))
 for cau in caustics:
-        plt.plot(cau[0], cau[1], 'k-', markersize=0.1)
-plt.xlim(-1.5, 1)
-plt.ylim(-1, 1.5)
-plt.title('Caustics')
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.minorticks_on()
-plt.tick_params(axis='both', which='major', width=2, length=10, direction='in', bottom=True, top=True, left=True, right=True)
-plt.tick_params(axis='both', which='minor', width=1, length=5, direction='in', bottom=True, top=True, left=True, right=True)
+        plt.plot(cau[0], cau[1], 'k')
 ```
 <img src="Caustics_multi.png" width = 600>
 
