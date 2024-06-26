@@ -1,6 +1,3 @@
-# <span style="color:red">VBMicrolensing</span>
-
-
 [Back to **Binary Sources**](BinarySources.md)
 
 # Advanced control
