@@ -1,5 +1,3 @@
-# <span style="color:red">VBMicrolensing</span>
-
 [Back to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
 
 # Limb darkening
