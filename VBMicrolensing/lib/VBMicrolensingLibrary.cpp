@@ -75,6 +75,7 @@ VBMicrolensing::VBMicrolensing() {
 	worst=0;
 	pert = 0;
 	Mag0 = 0;
+	NPcrit = 200;
 	ESPLoff = true;
 	multidark = false;
 	astrometry = false;
