@@ -5,6 +5,8 @@
 
 The multiple lens equation reads
 
+$$ \vec{y} = \vec{x} - \sum_{k=1}^N m_k \frac{\vec{x}- \vec{x}_k}{|\vec{x}- \vec{x}_k|^2}
+
 $$z_s=z-\sum_{k=1}^{N} \frac{m_k}{\overline{z} - \overline{z_k}}$$
 
 Here $N$ is the number of lenses, $z_k$ is the position of the k-th lens in the complex plane, $z_s$ is the source position and $m_k$ is the mass fracrion of the k-th lens. All angular coordinates are in units of the total Einstein radius, defined in terms of the total mass of the system.
