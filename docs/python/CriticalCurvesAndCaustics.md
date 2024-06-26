@@ -29,6 +29,16 @@ for cau in caustics:
 ```
 <img src="Caustics_binary.png" width = 400>
 
+Similarly for critical curves:
+
+```
+criticalcurves = VBM.Criticalcurves(s,q)
+
+#plot
+fig = plt.figure(figsize=(5, 5))
+for crit in criticalcurves:
+        plt.plot(crit[0], crit[1], 'k')
+```
 
 ## Multiple Lens
 
@@ -53,6 +63,17 @@ for cau in caustics:
         plt.plot(cau[0], cau[1], 'k')
 ```
 <img src="Caustics_multi.png" width = 400>
+
+Similarly for critical curves:
+
+```
+criticalcurves = VBM.Multicriticalcurves()
+
+#plot
+fig = plt.figure(figsize=(5, 5))
+for crit in criticalcurves:
+        plt.plot(crit[0], crit[1], 'k')
+```
 
 
 Critical curves and caustics are calculated through the resolution of a fourth order complex polynomial (see [reviews](reviews.md)) by the [Skowron & Gould algorithm](http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/). 
