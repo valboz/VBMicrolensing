@@ -114,7 +114,7 @@ fclose(f);
 delete Mycurves; // Do not forget to free your memory!
 ```
 
-Critical curves and caustics are calculated through the resolution of a fourth order complex polynomial (see [reviews](reviews.md)) by the [Skowron & Gould algorithm](http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/). 
+Critical curves and caustics are calculated through the resolution of a complex polynomial of degree $2N$ (see [reviews](reviews.md)) by the [Skowron & Gould algorithm](http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/). 
 
 The **number of points** calculated for the critical curves is controlled by ```VBM.NPcrit```, which can be changed by the user according to the desired sampling. The default value is 200.
 
