@@ -72,7 +72,7 @@ Similarly for critical curves:
 criticalcurves = VBM.Multicriticalcurves()
 
 #plot
-fig = plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(5, 3))
 for crit in criticalcurves:
         plt.plot(crit[0], crit[1], 'k')
 ```
