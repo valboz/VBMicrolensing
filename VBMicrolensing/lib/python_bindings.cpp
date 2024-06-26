@@ -30,6 +30,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 "Secontd limb darkening coefficient.");
         vbm.def_readwrite("minannuli", &VBMicrolensing::minannuli,
                 "Minimum number of annuli to calculate for limb darkening.");
+        vbm.def_readwrite("NPcrit", &VBMicrolensing::NPcrit,
+                "Number of points in critical curves.");
         vbm.def_readwrite("parallaxsystem", &VBMicrolensing::parallaxsystem,
                 "0 for parallel-perpendicular, 1 for North-Eeast.");
         vbm.def_readwrite("t0_par_fixed", &VBMicrolensing::t0_par_fixed,
