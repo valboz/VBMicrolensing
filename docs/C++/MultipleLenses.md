@@ -21,8 +21,8 @@ int nn=4; // Number of lenses
 double pr[] = {     //parameters
     0.0, 0.0, 1.0,    // First lens: x1_1, x1_2, m1
     1.0, -0.7, 1e-4,  // Second lens: x2_2, x2_2, m2
-    2.0, 0.7, 1e-4,   // Third lens: x3_re, x3_im, m3
-    0.6, -0.6, 1e-6   // Fourth lens: x4_re, x4_im, m4
+    2.0, 0.7, 1e-4,   // Third lens: x3_1, x3_2, m3
+    0.6, -0.6, 1e-6   // Fourth lens: x4_1, x4_2, m4
 };
 
 VBM.SetLensGeometry(nn,pr); //Initialize the lens configuration
