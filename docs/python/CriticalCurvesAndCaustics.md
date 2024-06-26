@@ -1,6 +1,4 @@
-# <span style="color:red">VBMicrolensing</span>
-
-[Back to **Binary lenses**](BinaryLenses.md)
+[Back to **Multiple lenses**](MultipleLenses.md)
 
 # Critical curves and caustics
 
