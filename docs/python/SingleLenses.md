@@ -1,6 +1,4 @@
-# <span style="color:red">VBMicrolensing</span>
-
-[Back to **Documentation**](readme.md)
+[Back to **Summary**](readme.md)
 
 # Single lenses
 
