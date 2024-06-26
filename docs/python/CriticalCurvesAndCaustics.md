@@ -4,7 +4,7 @@
 
 The gravitational lensing phenomenology is strictly related to the existence of critical curves and caustics (see the recommended [reviews](reviews.md) for a full treatment).
 
-VBMicroLensing offers the calculation of critical curves and caustics with an arbitrary number of points through the functions ```Caustics``` and ```CriticalCurves```.
+VBMicroLensing offers the calculation of critical curves and caustics with an arbitrary number of points through the functions ```Caustics``` and ```CriticalCurves``` for binary lenses, and `Multicaustics` and `Multicriticalcurves` for multiple lenses.
 
 The result is a list of curves, where each curve is a pair of lists containing the x and y coordinates of the points along the curve. The use of these objects is very intuitive, as illustrated by this examples:
 
