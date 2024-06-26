@@ -27,6 +27,8 @@ VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
 Once the configuration is specified, we can make all calculations we want with the same configuration. If we want to change the lenses configuration, we need to call `SetLensGeometry` again.
 
+Note that we do not impose that the total mass be 1. We remind that the coordinates are in units of the Einstein radius for a unitary mass.
+
 ## Multiple lensing with point sources
 
 For point sources, we can calculate the magnification with the `MultiMag0` function. This depends on the source position $y_1$, $y_2$. Here is an example:
