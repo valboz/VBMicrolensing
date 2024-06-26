@@ -1,5 +1,3 @@
-# <span style="color:red">VBMicrolensing</span>
-
 [Back to **Orbital motion**](OrbitalMotion.md)
 
 # Binary sources
