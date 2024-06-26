@@ -78,11 +78,11 @@ VBM.SetMethod(VBM.Method.Nopoly)
 
 The three different alternative methods are available as `Method.Singlepoly`, `Method.Multipoly` and `Method.Nopoly`.
 
-Singlepoly solves the lens equation with the classical associated complex polynomial. It suffers from numerical errors, making it inaccurate even with configurations involving three lenses when two lenses are small. It is offered here just as a reference, but it is not intended to be used in any scientific calculations.
+`Method.Singlepoly` solves the lens equation with the classical associated complex polynomial. It suffers from numerical errors, making it inaccurate even with configurations involving three lenses when two lenses are small. It is offered here just as a reference, but it is not intended to be used in any scientific calculations.
 
-Multipoly still uses associated complex polynomials but, in order to avoid numerical problems, the reference frame is re-centered on each of the lenses for the calculation of the corresponding images. The computational time is longer, but this is the most robust algorithm.
+`Method.Multipoly` still uses associated complex polynomials but, in order to avoid numerical problems, the reference frame is re-centered on each of the lenses for the calculation of the corresponding images. The computational time is longer, but this is the most robust algorithm.
 
-Nopoly uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is much faster than Multipoly, but there is a (very remote) risk of missing some images. This is the default method if the user makes no choice.
+`Method.Nopoly` uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is much faster than Multipoly, but there is a (very remote) risk of missing some images. This is the default method if the user makes no choice.
 
 We recommend using Nopoly and, in case of doubtful results, switching to Multipoly. The full details of all algorithms will bedescribed in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
 
