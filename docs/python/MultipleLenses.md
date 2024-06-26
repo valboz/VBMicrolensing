@@ -5,7 +5,7 @@
 
 The multiple lens equation reads
 
-$$ \vec{y} = \vec{x} - \sum_{k=1}^N m_k \frac{\vec{x}- \vec{x}_k}{|\vec{x}- \vec{x}_k|^2}
+$$ \vec{y} = \vec{x} - \sum_{k=1}^N m_k \frac{\vec{x}- \vec{x}_k}{|\vec{x}- \vec{x}_k|^2} $$
 
 $$z_s=z-\sum_{k=1}^{N} \frac{m_k}{\overline{z} - \overline{z_k}}$$
 
