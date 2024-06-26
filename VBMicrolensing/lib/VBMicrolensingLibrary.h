@@ -128,7 +128,7 @@ namespace VBMicrolensingLibrary {
 		double Tol,RelTol,a1,a2,t0_par;
 		double mass_radius_exponent, mass_luminosity_exponent;
 		int satellite,parallaxsystem,t0_par_fixed,nsat;
-		int minannuli,nannuli,NPS;
+		int minannuli,nannuli,NPS,NPcrit;
 		int newtonstep;
 		double y_1,y_2,av, therr, astrox1,astrox2;
 		double (*CumulativeFunction)(double r,double *LDpars);
