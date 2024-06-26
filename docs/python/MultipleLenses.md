@@ -16,10 +16,10 @@ In VBMicrolensing, before using any functions for multiple lenses, the first ste
 ```
 VBM = VBMicrolensing.VBMicrolensing()
 
-parameters = [0,0,1,            # First mass: x_1, x_2, m
-              1,-0.7,1.e-4,     # Second mass: x_1, x_2, m
-              2,0.7,1.e-4,      # Third mass: x_1, x_2, m
-              0.6,-.6,1.e-6]    # Fourth mass: x_1, x_2, m
+parameters = [0,0,1,            # First lens: x1_1, x1_2, m1
+              1,-0.7,1.e-4,     # Second lens: x2_1, x2_2, m2
+              2,0.7,1.e-4,      # Third lens: x3_1, x3_2, m3
+              0.6,-.6,1.e-6]    # Fourth lens: x4_1, x4_2, m4
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
@@ -35,10 +35,11 @@ For point sources, we can calculate the magnification with the `MultiMag0` funct
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
-parameters = [0,0,1,            # First mass: x_1, x_2, m
-              1,-0.7,1.e-4,     # Second mass: x_1, x_2, m
-              2,0.7,1.e-4,      # Third mass: x_1, x_2, m
-              0.6,-.6,1.e-6]    # Fourth mass: x_1, x_2, m
+
+parameters = [0,0,1,            # First lens: x1_1, x1_2, m1
+              1,-0.7,1.e-4,     # Second lens: x2_1, x2_2, m2
+              2,0.7,1.e-4,      # Third lens: x3_1, x3_2, m3
+              0.6,-.6,1.e-6]    # Fourth lens: x4_1, x4_2, m4
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
@@ -54,10 +55,11 @@ For extended sources, the function is `MultiMag`. This function also takes $\rho
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
-parameters = [0,0,1,            # First mass: x_1, x_2, m
-              1,-0.7,1.e-4,     # Second mass: x_1, x_2, m
-              2,0.7,1.e-4,      # Third mass: x_1, x_2, m
-              0.6,-.6,1.e-6]    # Fourth mass: x_1, x_2, m
+
+parameters = [0,0,1,            # First lens: x1_1, x1_2, m1
+              1,-0.7,1.e-4,     # Second lens: x2_1, x2_2, m2
+              2,0.7,1.e-4,      # Third lens: x3_1, x3_2, m3
+              0.6,-.6,1.e-6]    # Fourth lens: x4_1, x4_2, m4
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
