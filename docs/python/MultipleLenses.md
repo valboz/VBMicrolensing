@@ -1,6 +1,4 @@
-# <span style="color:red">VBMicrolensing</span>
-
-[Back to **Binary lenses**](SingleLenses.md)
+[Back to **Binary lenses**](BinaryLenses.md)
 
 
 # Multiple Lenses
