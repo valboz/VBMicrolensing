@@ -84,6 +84,7 @@ VBMicrolensing::VBMicrolensing() {
 	samplingfactor = 0.125;
 	squarecheck = false;
 	CumulativeFunction = &VBDefaultCumulativeFunction;
+	SelectedMethod = Method.Nopoly;
 }
 
 VBMicrolensing::~VBMicrolensing() {
