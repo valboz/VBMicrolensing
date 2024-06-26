@@ -84,6 +84,6 @@ The three different alternative methods are available as `Method.Singlepoly`, `M
 
 `Method.Nopoly` uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is much faster than Multipoly, but there is a (very remote) risk of missing some images. This is the default method if the user makes no choice.
 
-We recommend using Nopoly and, in case of doubtful results, switching to Multipoly. The full details of all algorithms will bedescribed in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
+We recommend using Nopoly and, in case of doubtful results, switching to Multipoly. The full details of all algorithms will be described in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
 
 [Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
