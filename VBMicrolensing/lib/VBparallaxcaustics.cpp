@@ -37,8 +37,8 @@ _sols *VBMicrolensing::PlotCrit() {
 		CriticalCurves->append(Prov);
 	}
 
-	for (int j = 0; j<NPS; j++) {
-		ej = complex(cos(2 * j*M_PI / NPS), -sin(2 * j*M_PI / NPS));
+	for (int j = 0; j<NPcrit; j++) {
+		ej = complex(cos(2 * j*M_PI / NPcrit), -sin(2 * j*M_PI / NPcrit));
 		polycritcoefficients(ej);
 		cmplx_roots_gen(zcr, coefs, 2 * n, true, true);
 		if (j > 0) {
@@ -115,8 +115,8 @@ _sols *VBMicrolensing::PlotCrit(double a1, double q1) {
 		CriticalCurves->append(Prov);
 	}
 
-	for (int j = 0; j<NPS; j++) {
-		ej = complex(cos(2 * j*M_PI / NPS), -sin(2 * j*M_PI / NPS));
+	for (int j = 0; j<NPcrit; j++) {
+		ej = complex(cos(2 * j*M_PI / NPcrit), -sin(2 * j*M_PI / NPcrit));
 		complex  coefs[5] = { a*a / 16.0*(4.0 - a * a*ej)*(1.0 + q),a*(q - 1.0),(q + 1.0)*(1.0 + a * a*ej / 2.0),0.0,-(1.0 + q)*ej };
 		cmplx_roots_gen(zr, coefs, 4, true, true);
 		if (j > 0) {
