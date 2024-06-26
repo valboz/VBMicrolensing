@@ -9,42 +9,34 @@ $$ \vec{y} = \vec{x} - \sum_{k=1}^N m_k \frac{\vec{x}- \vec{x}_k}{|\vec{x}- \vec
 
 Here $N$ is the number of lenses, $\vec{x}_k$ is the position of the k-th lens in the lens plane, $\vec{y}$ is the source position and $m_k$ is the mass of the k-th lens. All angular coordinates are in units of the Einstein radius for a unitary mass. 
 
-In VBMicrolensing, whenevever we want to use functions with multiple lenses, the first step is to initialize the lens configuration using the `SetLensGeometry` function and chose the method via the `SetMethod` function.
+## Setting the configuration of the lenses
 
-The `SetLensGeometry` function takes three different arguments: the masses of the lenses, the real positions of the lenses, and the imaginary positions of the lenses. 
-
-In VBMicrolensign when selecting the method with`SetMethod`, we have three different alternatives: `Singlepoly`, `SetLensGeometry` and `SetLensGeometry`.
-Singlepoly solve the lens equation with the classical associate polynomia, it suffers from numerical errors, making it inaccurate even with configurations involving three lenses.
-Multipoly use classical associate polynomia, to overcome the problem of the singlepoly, re-center the polynomial on each lens to find nearby roots.
-Nopoly method uses an expansion of the lens equation, a Newton-Raphson method. The advantage of Nopoly is its speed compared to Multipoly. However, there is a risk that it may fail to find some of the images.
-We recommend using Nopoly and, in case of doubtful results, switching to Multipoly.
-For full details, refer to the paper (V.Bozza, V.Saggese et al. ,currently in preparation).
-
-Here is an example of how to initialize the lens configuration:
+In VBMicrolensing, before using any functions for multiple lenses, the first step is to initialize the lens configuration using the `SetLensGeometry` function. The `SetLensGeometry` function takes just a list of $3N$ values. For each of the $N$ lenses, we need to specify its position in the lens plane and its mass.
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
 
-parameters = [0,0,1,1,-0.7,1.e-4,2,0.7,1.e-4,0.6,-.6,1.e-6] 
-#Within the parameter list are the lens details, as follows: [z1_re, z1_im, q1, z2_re, z2_im, q2,....,zn_re,zn_im,qn]
-
-VBM.SetMethod(VBM.Method.Multipoly) #Singlepoly, Multipoly, Nopoly
+parameters = [0,0,1,            # First mass: x_1, x_2, m
+              1,-0.7,1.e-4,     # Second mass: x_1, x_2, m
+              2,0.7,1.e-4,      # Third mass: x_1, x_2, m
+              0.6,-.6,1.e-6]    # Fourth mass: x_1, x_2, m
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
 ```
 
+Once the configuration is specified, we can make all calculations we want with the same configuration. If we want to change the lenses configuration, we need to call `SetLensGeometry` again.
+
 ## Multiple lensing with point sources
 
-For point sources, we can get the magnification with the `MultiMag0` function. This depends on  the source position $y_1$, $y_2$. Here is an example:
+For point sources, we can calculate the magnification with the `MultiMag0` function. This depends on the source position $y_1$, $y_2$. Here is an example:
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
-
-parameters = [0,0,1,1,-0.7,1.e-4,2,0.7,1.e-4,0.6,-.6,1.e-6] 
-#Within the parameter list are the lens details, as follows: [z1_re, z1_im, q1, z2_re, z2_im, q2,....,zn_re,zn_im,qn]
-
-VBM.SetMethod(VBM.Method.Nopoly) #Singlepoly, Multipoly, Nopoly
+parameters = [0,0,1,            # First mass: x_1, x_2, m
+              1,-0.7,1.e-4,     # Second mass: x_1, x_2, m
+              2,0.7,1.e-4,      # Third mass: x_1, x_2, m
+              0.6,-.6,1.e-6]    # Fourth mass: x_1, x_2, m
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
@@ -60,13 +52,10 @@ For extended sources, the function is `MultiMag`. This function also takes $\rho
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
-
-s = [(0,0,1),(1,-0.7,1.e-4),(2,0.7,1.e-4),(0.6,-.6,1.e-6)] 
-
-parameters = [0,0,1,1,-0.7,1.e-4,2,0.7,1.e-4,0.6,-.6,1.e-6] 
-#Within the parameter list are the lens details, as follows: [z1_re, z1_im, q1, z2_re, z2_im, q2,....,zn_re,zn_im,qn]
-
-VBM.SetMethod(VBM.Method.Nopoly) #Singlepoly, Multipoly, Nopoly
+parameters = [0,0,1,            # First mass: x_1, x_2, m
+              1,-0.7,1.e-4,     # Second mass: x_1, x_2, m
+              2,0.7,1.e-4,      # Third mass: x_1, x_2, m
+              0.6,-.6,1.e-6]    # Fourth mass: x_1, x_2, m
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
@@ -77,5 +66,19 @@ Mag=VBM.MultiMag(y,rho)
 print(f"Multiple Lens Magnification = {Mag}\n") #Output should be 5.07...
 
 ```
+
+## Three different algorithms
+
+VBMicrolensing offers three different algorithms for multiple lenses calculations. The preferred algorithm can be selected with the `SetMethod` function:
+```
+VBM.SetMethod(VBM.Method.Nopoly)
+```
+
+The three different alternative methods are available as `Method.Singlepoly`, `Method.Multipoly` and `Method.Nopoly`.
+Singlepoly solves the lens equation with the classical associated complex polynomial. It suffers from numerical errors, making it inaccurate even with configurations involving three lenses when two lenses are small. It is offered here just as a reference, but it is not intended to be used in any scientific calculations.
+Multipoly still uses associated complex polynomials but, in order to avoid numerical problems, the reference frame is re-centered on each of the lenses for the calculation of the corresponding images. The computational time is longer, but this is the most robust algorithm.
+Nopoly uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is much faster than Multipoly, but there is a (very remote) risk of missing some images. This is the default method if the user makes no choice.
+We recommend using Nopoly and, in case of doubtful results, switching to Multipoly.
+The full details of all algorithms will bedescribed in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
 
 [Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
