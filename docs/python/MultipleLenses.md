@@ -7,11 +7,9 @@ The multiple lens equation reads
 
 $$ \vec{y} = \vec{x} - \sum_{k=1}^N m_k \frac{\vec{x}- \vec{x}_k}{|\vec{x}- \vec{x}_k|^2} $$
 
-$$z_s=z-\sum_{k=1}^{N} \frac{m_k}{\overline{z} - \overline{z_k}}$$
+Here $N$ is the number of lenses, $\vec{x}_k$ is the position of the k-th lens in the lens plane, $\vec{y}$ is the source position and $m_k$ is the mass of the k-th lens. All angular coordinates are in units of the Einstein radius for a unitary mass. 
 
-Here $N$ is the number of lenses, $z_k$ is the position of the k-th lens in the complex plane, $z_s$ is the source position and $m_k$ is the mass fracrion of the k-th lens. All angular coordinates are in units of the total Einstein radius, defined in terms of the total mass of the system.
-
-In VBMicrolensing, when we want to use functions that model multiple lenses, the first step is to initialize the lens configuration using the `SetLensGeometry` function and chose the method with `SetMethod`.
+In VBMicrolensing, whenevever we want to use functions with multiple lenses, the first step is to initialize the lens configuration using the `SetLensGeometry` function and chose the method via the `SetMethod` function.
 
 The `SetLensGeometry` function takes three different arguments: the masses of the lenses, the real positions of the lenses, and the imaginary positions of the lenses. 
 
