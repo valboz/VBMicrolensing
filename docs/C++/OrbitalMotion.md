@@ -1,5 +1,3 @@
-# <span style="color:red">VBMicrolensing</span>
-
 [Back to **Parallax**](Parallax.md)
 
 # Orbital motion binary lenses
