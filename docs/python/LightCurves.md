@@ -198,44 +198,13 @@ plt.plot(t,magnifications)
 <img src="TripleLens_lightcurve.png" width = 400>
 
 and then the corresponding source trajectory on the caustics
+```
+caustics = VBM.Multicaustics()
+for cau in caustics:
+    plt.plot(cau[0],cau[1],"r")
+plt.plot(y1,y2)
+```
 
 <img src="TripleLens_lightcurve_caustics.png" width = 400>
-
-## Full light curve with one call
-
-We may want to calculate the full light curve on an array of times. For example if we have a set of observations taken by a given telescope or if we want to simulate a light curve with a given time sampling. All light curve functions in VBMicrolensing have an overload in which the time `t` is replaced by an array of times as additional argument. Furthermore, we also need to give the locations where the outputs must be stored. This means that the function expects an array for the magnification, an array for the source coordinate y1 and one more for the coordinate y2, as shown in the following example, which refers to the PSPL light curve.
-
-```
-import VBMicrolensing
-import math
-
-VBM = VBMicrolensing.VBMicrolensing()
-
-pr = [0, 0, 0]  # Array of parameters
-
-np = 100  # Number of points in the light curve
-
-u0, t0, tE = 0.01, 7550.4, 100.3  # Impact parameter, Time of closest approach, Einstein time
-
-pr[0] = math.log(u0)  # Note that we give some parameters in log scale
-pr[1] = math.log(tE)
-pr[2] = t0
-
-times=[]
-# Suppose we want to simulate the light curve with a fixed time sampling
-for i in range(np):
-    times.append(t0 - tE + 2 * tE / np * i)
-
-Mags=VBM.PSPLLightCurve(pr, times)  # Calculates the whole light curve and stores the magnifications in the array mags
-
-# Let's print the results
-for i in range(np):
-    print(times[i], Mags[0][i], Mags[1][i], Mags[2][i])
-```
-The array `Mags` contains the magnification and the source position for each time specified in the array `times`.
-
-Apart from the compactness of the code, some computational advantage of the use of the single-call light curve function emerges with higher order effects, in which some calculations are re-used and not repeated at every function call.
-
-The full light curve calculation is available for each physical scenario (PSPL, ESPL, Binary, Triple, Multiple) using the same syntax as described for single time cases.
 
 [Go to **Parallax**](Parallax.md)
