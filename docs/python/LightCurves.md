@@ -4,38 +4,35 @@
 
 VBMicrolensing offers ready-to-use functions to calculate full microlensing light curves with standard parameters. There are functions for single and multiple lenses, single and binary sources, for light curves including parallax, orbital motion or xallarap.
 
-Each of these functions comes in two flavors: calculation of a single point in the light curve with standard parameters; calculation of the whole light curve on an array of times with a single function call.
-
-We start by explaining the single-point versions for each physical case and then we discuss the full light curve calculation in the end.
-
 ## Point-Source-Point-Lens light curve
 
 Let us start with the Paczynski curve (see [Single lenses](SingleLenses.md) section). 
 
-For the calculation of the light curve on a specific time `t`, we just need to define the array of standard parameters as shown in the following example and call the function `PSPLLightCurve`:
+For the calculation of the light curve, we have to prepare the array of times at which we wish to calculate the light curve and then define the array of standard parameters as shown in the following example and call the function `PSPLLightCurve`:
 
 ```
 import VBMicrolensing
 import math
+import numpy as np
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-pr = [0, 0, 0]  # Array of parameters
 u0, t0, tE = 0.01, 7550.4, 100.3  # Impact parameter, Time of closest approach, Einstein time
 
-pr[0] = math.log(u0)  # Note that we give some parameters in log scale
-pr[1] = math.log(tE)
-pr[2] = t0
+# Array of parameters
+pr = [math.log(u0),  # Note that we give some parameters in log scale
+      math.log(tE),
+      t0]
 
-t = [7551.6]  # Time at which we want to calculate the magnification
+t = np.linspace(t0-tE, t0+tE, 300)  # Times at which we want to calculate the magnification
 
-Mag = VBM.PSPLLightCurve(pr, t)  # Calculates the PSPL magnification at different times with parameters in pr
+results = VBM.PSPLLightCurve(pr, t)  # Calculates the PSPL magnification at different times with parameters in pr
 
-print(f"PSPL Light Curve at time t: {Mag[0][0]}")  # Output should be 64.13...
+magnifications = results[0]  # array of magnifications at each time in t
+y1 = results[1] # Source trajectory
+y2 = results[2] 
 ```
-The array `Mag` contains the magnification for the time specified in the array `t`.
-
-Moreover, the source trajectory relative to the lens can be found in `Mag[1]` for y1s and in `Mag[2]` for y2s, which can be useful for plotting the source trajectory as discussed earlier.
+The `PSPLLightCurve` function returns a list of three arrays: the array of magnifications and the two components of the source trajectory in the source plane.
 
 The use of logarithms for some parameters is useful e.g. in Markov chains or other fitting algorithms when the possible values that occur in real cases may span several orders of magnitudes.
 
@@ -49,7 +46,13 @@ $$u=\sqrt{y_1^2+y_2^2}$$
 
 $u$ is the source angular separation relative to the lens in Einstein radii, as discussed in the section [Single lenses](SingleLenses.md).
 
-The coordinates of the source at time $t$ as found by these formulae are stored in the public properties `VBM.y_1` and `VBM.y_2` of the VBMicrolensing class. For a PSPL model there is rotational symmetry, so we do not care too much about the role of y1 and y2, but this notation is consistent with that used for binary lenses. The information on the source position can be useful to draw plots with the source trajectory relative to the caustics.
+For a PSPL model there is rotational symmetry, so we do not care too much about the role of y1 and y2, but this notation is consistent with that used for binary lenses. The information on the source position can be useful to draw plots with the source trajectory relative to the caustics, as shown below.
+
+Let us plot the PSPL light curve thus obtained:
+```
+import matplotlib.pyplot as plt
+plt.plot(t,magnifications)
+```
 
 ## Extended-Source-Point-Lens light curve
 
