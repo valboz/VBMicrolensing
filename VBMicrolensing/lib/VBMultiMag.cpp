@@ -923,7 +923,7 @@ _curve *VBMicrolensing::NewImages(_theta *theta) {
 	static _curve *Prov;
 	static int nminus,nplus;
 	static complex z, zc,dy,dz,J2,J3,Jalt,JJalt2,Jaltc,J1c2;
-	static complex S2, S2c, S3, S3c,vec;
+	static complex S2, S2c, S3, S3c,vec,newseed0;
 	static double ob2,dJ2,cq,Jac,imul,phi;
 	static complex newseedtrial[6] = {complex(1,0.5),complex(1,-0.5), 0.5, 0.75, 2., 4.,};
 	static int imass, iphi,nsafe;
@@ -949,8 +949,9 @@ _curve *VBMicrolensing::NewImages(_theta *theta) {
 			z = newseeds[lennewseeds];
 			_Jac
 			iter = 0;
+			newseed0 = newseeds[lennewseeds];
 			while (signbit(Jac) == signbit(Jacs[i]) && iter<6) {
-				newseeds[lennewseeds] = zr[i] + (newseeds[lennewseeds] - zr[i])*newseedtrial[iter];
+				newseeds[lennewseeds] = zr[i] + (newseed0 - zr[i])*newseedtrial[iter];
 				z = newseeds[lennewseeds];
 				_Jac
 				iter++;
@@ -960,8 +961,9 @@ _curve *VBMicrolensing::NewImages(_theta *theta) {
 			z = newseeds[lennewseeds];
 			_Jac
 			iter = 0;
+			newseed0 = newseeds[lennewseeds];
 			while (signbit(Jac) == signbit(Jacs[i]) && iter<6) {
-				newseeds[lennewseeds] = zr[i] + (newseeds[lennewseeds] - zr[i])*newseedtrial[iter];
+				newseeds[lennewseeds] = zr[i] + (newseed0 - zr[i])*newseedtrial[iter];
 				z = newseeds[lennewseeds];
 				_Jac
 				iter++;
@@ -1364,7 +1366,7 @@ void VBMicrolensing::OrderMultipleImages(_sols *Sols, _curve *Newpts) {
 	scurve = Sols->first;
 	for (int i = 0; i < Sols->length; i++) {
 		if (th < scurve->first->theta->th) {
-			if (th > scurve->first->theta->prev->prev->th) { // sembra strano ma è giusto prev->prev->th (l'inserimento di theta c'è già stato)
+			if (th > scurve->first->theta->prev->prev->th) { // sembra strano ma Ã¨ giusto prev->prev->th (l'inserimento di theta c'Ã¨ giÃ  stato)
 				cfoll[nfoll] = scurve; // immagine coinvolta all'inizio
 				nfoll++;
 				scurve2 = scurve->next;
