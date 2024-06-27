@@ -63,25 +63,33 @@ Everything is similar to what we already discussed before. We just have the sour
 ```
 import VBMicrolensing
 import math
+import numpy as np
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-pr = [0, 0, 0, 0]  # Array of parameters
-u0, t0, tE, rho = 0.01, 7550.4, 100.3, 0.01  # Impact parameter, Time of closest approach, Einstein time, Source radius
+u0, t0, tE, rho = 0.01, 7550.4, 100.3, 0.1  # Impact parameter, Time of closest approach, Einstein time, Source radius
 
-pr[0] = math.log(u0)  # Note that we give some parameters in log scale
-pr[1] = math.log(tE)
-pr[2] = t0
-pr[3] = math.log(rho)
+# Array of parameters
+pr = [math.log(u0),  # Note that we give some parameters in log scale
+      math.log(tE),
+      t0,
+      math.log(rho)]
 
-t = [7551.6]  # Time at which we want to calculate the magnification
+t = np.linspace(t0-tE, t0+tE, 300)  # Times at which we want to calculate the magnification
 
 VBM.LoadESPLTable("ESPL.tbl")  # Do not forget to load the pre-calculated tables before the first ESPL calculation!
 #Copy the file from the data folder to your path.
 
-Mag = VBM.ESPLLightCurve(pr, t)  # Calculates the ESPL magnification at time t with parameters in pr
-print("ESPL Light Curve at time t:", Mag[0][0])  # Output should be 68.09...
+results = VBM.ESPLLightCurve(pr, t)  # Calculates the PSPL magnification at different times with parameters in pr
+
+magnifications = results[0]  # array of magnifications at each time in t
+y1 = results[1] # Source trajectory
+y2 = results[2]
+
+import matplotlib.pyplot as plt
+plt.plot(t,magnifications)
 ```
+<img src="ESPL_lightcurve.png" width = 400>
 
 The source position is calculated in the same way as for the `PSPLLightCurve` function. All considerations about [Limb Darkening](LimbDarkening.md) apply to this function as well.
 
