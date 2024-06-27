@@ -136,6 +136,15 @@ plt.plot(t,magnifications)
 
 As before, the coordinates of the source are stored in the `Mag` array. These can be useful to draw the source trajectory relative to the caustics.
 
+```
+caustics = VBM.Caustics(s,q)
+for cau in caustics:
+    plt.plot(cau[0],cau[1])
+plt.plot(y1,y2)
+```
+<img src="BinaryLens_lightcurve_caustics.png" width = 400>
+
+
 [Limb Darkening](LimbDarkening.md) and [accuracy goal](AccuracyControl.md) can be specified as shown in the respective sections.
 
 We finally mention a possible variant in the parameterization. With the function `BinaryLightCurveW` the time of closest approach `t0` and the impact parameter `u0` are relative to the position of the caustic of the mass on the right, whose center lies at coordinates 
