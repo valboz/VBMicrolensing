@@ -80,7 +80,7 @@ t = np.linspace(t0-tE, t0+tE, 300)  # Times at which we want to calculate the ma
 VBM.LoadESPLTable("ESPL.tbl")  # Do not forget to load the pre-calculated tables before the first ESPL calculation!
 #Copy the file from the data folder to your path.
 
-results = VBM.ESPLLightCurve(pr, t)  # Calculates the PSPL magnification at different times with parameters in pr
+results = VBM.ESPLLightCurve(pr, t)  # Calculates the ESPL magnification at different times with parameters in pr
 
 magnifications = results[0]  # array of magnifications at each time in t
 y1 = results[1] # Source trajectory
