@@ -115,21 +115,24 @@ import math
 VBM = VBMicrolensing.VBMicrolensing()
 
 pr = [0, 0, 0, 0, 0, 0, 0]  # Array of parameters
-u0, t0, tE, rho, alpha, s, q = -0.01, 7550.4, 100.3, 0.01, 0.53, 0.8, 0.1  # Impact parameter, Time of closest approach, Einstein time, Source radius, Angle of the source trajectory, Separation between the two lenses, Mass ratio
+s = 0.9       # Separation between the lenses
+q = 0.1       # Mass ratio
+u0 = 0.0       # Impact parameter with respect to center of mass
+alpha = 1.0       # Angle of the source trajectory
+rho = 0.01       # Source radius
+tE = 30.0      # Einstein time in days
+t0 = 7500      # Time of closest approach to center of mass
 
-pr[0] = math.log(s)
-pr[1] = math.log(q)
-pr[2] = u0
-pr[3] = alpha
-pr[4] = math.log(rho)
-pr[5] = math.log(tE)
-pr[6] = t0
+# Array of parameters. Note that s, q, rho and tE are in log-scale
+pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0]
 
-t = [7551.6]  # Time at which we want to calculate the magnification
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 
-Mag = VBM.BinaryLightCurve(pr, t)  # Calculates the Binary Lens magnification at time t with parameters in pr
-print("Binary Light Curve at time t:", Mag[0][0])  # Output should be 31.00...
+magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of binary-lens light curve
+
+plt.plot(t,magnifications)
 ```
+<img src="BinaryLens_lightcurve.png" width = 400>
 
 As before, the coordinates of the source are stored in the `Mag` array. These can be useful to draw the source trajectory relative to the caustics.
 
