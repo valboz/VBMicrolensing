@@ -111,6 +111,8 @@ Let us see an example:
 ```
 import VBMicrolensing
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
@@ -165,33 +167,39 @@ Let us see an example:
 ```
 import VBMicrolensing
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-s12 = 0.765 # Separation between the first two lenses in descending order of mass in units of total ang. Einstein radii
-q2 = 0.00066 # Mass ratio lens 2
-u0 = 0.0060 # impact parameter
-alpha= 3.212 
-rho = 0.0567 # source radius in Einstein radii of the total mass.
-tE = 50.13 # einstein radius crossing time
-t0 = 0 # time of peak magnification
-s23=1.5 #separation between the last two lenses in descending order of mass in units of total ang. Einstein radii
-q3=0.000001 # Mass ratio lens 3
-psi=-1.5 
+pr = [0, 0, 0, 0, 0, 0, 0]  # Array of parameters
+s = 0.9       # Separation between the lenses
+q = 0.1       # Mass ratio
+u0 = 0.0       # Impact parameter with respect to center of mass
+alpha = 1.0       # Angle of the source trajectory
+rho = 0.01       # Source radius
+tE = 30.0      # Einstein time in days
+t0 = 7500      # Time of closest approach to center of mass
+s23 = 1.5      # Separation between the third lens and the primary
+q3 = 0.001     # Mass ratio of the third lens to the primary
+psi = 1.     # Angle between second and third lens as shown in figure
 
-num_points = 1000 # Number of points in the light curve
+# Array of parameters. Note that s, q, rho, tE, s23 and q3 are in log-scale
+pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, math.log(s23), math.log(q3), psi]
 
-t=[0.1]
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 
-parameters = [math.log(s12), math.log(q2), u0, alpha, math.log(rho), math.log(tE), t0, math.log(s23), math.log(q3), psi]
-
-# Set the Method that you want use : Singlepoly, Multipoly, Nopoly.
 VBM.SetMethod(VBM.Method.Nopoly)
 
-Mag = VBM.TripleLightCurve(parameters, t)
+magnifications, y1, y2 = VBM.TripleLightCurve(pr,t)      # Calculation of binary-lens light curve
 
-print("Triple Light Curve at time t:", Mag[0][0])  # Output should be 35.17...
+plt.plot(t,magnifications)
 ```
+<img src="TripleLens_lightcurve.png" width = 400>
+
+and then the corresponding source trajectory on the caustics
+
+<img src="TripleLens_lightcurve_caustics.png" width = 400>
 
 ## Full light curve with one call
 
