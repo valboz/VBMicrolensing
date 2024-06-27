@@ -54,6 +54,8 @@ import matplotlib.pyplot as plt
 plt.plot(t,magnifications)
 ```
 
+<img src="PSPL_lightcurve.png" width = 400>
+
 ## Extended-Source-Point-Lens light curve
 
 Everything is similar to what we already discussed before. We just have the source radius as an additional parameter
