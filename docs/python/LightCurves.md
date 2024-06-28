@@ -171,7 +171,6 @@ import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-pr = [0, 0, 0, 0, 0, 0, 0]  # Array of parameters
 s = 0.9       # Separation between the lenses
 q = 0.1       # Mass ratio
 u0 = 0.0       # Impact parameter with respect to center of mass
