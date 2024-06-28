@@ -10,21 +10,12 @@ First we will treat geocentric observations and then we will move to observation
 
 ## Target coordinates
 
-We need to specify J2000.0 equatorial coordinates for our microlensing target. This can be done by preparing a text file containing R.A. and Dec., similar to the following example:
+We need to specify J2000.0 equatorial coordinates for our microlensing target. This is done by function `SetObjectCoordinates`:
 
 ```
-17:57:05 -30:22:59
+VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 ```
-
-Then we inform VBMicrolensing of these coordinates by the function `SetObjectCoordinates`
-
-```
-VBMicrolensing VBM;
-
-VBM.SetObjectCoordinates("OB151212coords.txt",".");
-```
-
-The first argument is the name of the file we have just prepared (these are the coordinates of the event [OGLE-2015-BLG-1212](https://ui.adsabs.harvard.edu/abs/2016ApJ...820...79B/abstract)). The second argument will only be used in case of observations from space (see [below](Parallax.md#satellite-parallax)).
+The string given as argument here obviously contains Right Ascension and Declination in standard notations.
 
 ## Parallax system
 
@@ -42,6 +33,7 @@ All light curve functions defined in the [Light Curves](LightCurves.md) section 
 PSPLLightCurveParallax
 ESPLLightCurveParallax
 BinaryLightCurveParallax
+TripleLightCurveParallax
 ```
 
 The only difference is that the array of parameters must include two more entries for the components of the parallax vector. Here is a full example demonstrating the use of `BinaryLightCurveParallax`:
@@ -49,48 +41,36 @@ The only difference is that the array of parameters must include two more entrie
 ```
 import VBMicrolensing
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-pr = [0] * 9  # Array of parameters
+s = 0.9       # Separation between the lenses
+q = 0.1       # Mass ratio
+u0 = 0.0       # Impact parameter with respect to center of mass
+alpha = 1.0       # Angle of the source trajectory
+rho = 0.01       # Source radius
+tE = 30.0      # Einstein time in days
+t0 = 7500      # Time of closest approach to center of mass
+paiN = 0.3     # North component of the parallax vector
+paiE = -0.2     # East component of the parallax vector
 
-# Parameters
-u0 = -0.01  # Impact parameter
-t0 = 7550.4  # Time of closest approach to the center of mass
-tE = 100.3  # Einstein time
-rho = 0.01  # Source radius
-s = 0.8  # Separation between the two lenses
-q = 0.1  # Mass ratio
-alpha = 0.53  # Angle between a vector pointing to the left and the source velocity
-paiN = 0.3  # Parallax component in the North direction
-paiE = 0.13  # Parallax component in the East direction
+# Array of parameters. Note that s, q, rho and tE are in log-scale
+pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, paiN, paiE]
 
-# Set object coordinates
-VBM.SetObjectCoordinates("OB151212coords.txt", ".")  # Read target coordinates from file
-#Copy the file from the data folder to your path.
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 
-VBM.parallaxsystem = 1  # Here we use North-East components for parallax
+VBM.parallaxsystem = 1       # Set parallax system to North-East
+VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 
-# Assign parameters to the array
-pr[0] = math.log(s)
-pr[1] = math.log(q)
-pr[2] = u0
-pr[3] = alpha
-pr[4] = math.log(rho)
-pr[5] = math.log(tE)
-pr[6] = t0
-pr[7] = paiN
-pr[8] = paiE
+magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of binary-lens light curve
 
-t = [7551.6]  # Time at which we want to calculate the magnification
-
-# Calculate the Binary Lens magnification at time t with parameters in pr
-Mag = VBM.BinaryLightCurveParallax(pr, t)
-
-# Output the result
-print("Binary Light Curve with Parallax at time t: {}".format(Mag[0][0]))  # Output should be 31.01...
-
+plt.plot(t,magnifications,"g")
+plt.plot(t,magnificationspar,"m")
 ```
+
+
 
 In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ here.
 
@@ -120,5 +100,26 @@ print(f"Magnification as seen from satellite 1= {Mag[0][0]}"); # Output should b
 ```
 
 If you want to return to the ground do not forget to set VBM.satellite back to 0!
+
+## Target coordinates
+
+We need to specify J2000.0 equatorial coordinates for our microlensing target. 
+
+This can be done by preparing a text file containing R.A. and Dec., similar to the following example:
+
+```
+17:57:05 -30:22:59
+```
+
+Then we inform VBMicrolensing of these coordinates by the function `SetObjectCoordinates`
+
+```
+VBMicrolensing VBM;
+
+VBM.SetObjectCoordinates("OB151212coords.txt",".");
+```
+
+The first argument is the name of the file we have just prepared (these are the coordinates of the event [OGLE-2015-BLG-1212](https://ui.adsabs.harvard.edu/abs/2016ApJ...820...79B/abstract)). The second argument will only be used in case of observations from space (see [below](Parallax.md#satellite-parallax)).
+
 
 [Go to **Orbital motion**](OrbitalMotion.md)
