@@ -119,7 +119,9 @@ plt.plot(t,magnificationspar,"m")
 plt.plot(t,magnificationssat,"r")
 ```
 <img src="BinaryLens_lightcurve_parallax.png" width = 400>
+
 And here we have the source trajectories
+
 ```
 caustics = VBM.Caustics(s,q)
 for cau in caustics:
