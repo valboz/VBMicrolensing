@@ -52,7 +52,7 @@ VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our mi
 
 magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of static binary-lens light curve
 magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of light curve with parallax
-magnificationsorb, y1orb, y2orb = VBM.BinaryLightCurveOrbital(pr,t)      # Calculation of light curve with orbital motion
+magnificationsorb, y1orb, y2orb, sorb = VBM.BinaryLightCurveOrbital(pr,t)      # Calculation of light curve with orbital motion
 
 plt.plot(t,magnifications,"g")
 plt.plot(t,magnificationspar,"m")
