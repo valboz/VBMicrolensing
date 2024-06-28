@@ -94,6 +94,7 @@ In the current version, some functionalities developed for single and binary len
 
 - Limb darkening
 - Astrometry
+- Orbital motion
 - A decision tree for finite-source calculation vs point-source calculation (the equivalent of `BinaryMag2`)
 
 We are working to make these features available as soon as possible.
