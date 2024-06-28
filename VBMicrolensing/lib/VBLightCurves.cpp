@@ -110,7 +110,7 @@ void VBMicrolensing::TripleLightCurve(double *pr, double *ts, double *mags, doub
 	s[0] = exp(pr[0]) / (q[0] + q[1]);
 	s[1] = s[0] * q[0];
 	s[0] = -q[1]* s[0];
-	s[2] = exp(pr[7])*complex(cbeta, sbeta);
+	s[2] = exp(pr[7])*complex(cbeta, sbeta) + s[0];
 	//	_sols *Images; double Mag; // For debugging
 
 	SetLensGeometry(3, q, s);
@@ -145,7 +145,7 @@ void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* ma
 	s[0] = exp(pr[0]) / (q[0] + q[1]);
 	s[1] = s[0] * q[0];
 	s[0] = -q[1] * s[0];
-	s[2] = exp(pr[7]) * complex(cbeta, sbeta);
+	s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
 	//	_sols *Images; double Mag; // For debugging
 
 	SetLensGeometry(3, q, s);
