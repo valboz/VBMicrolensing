@@ -65,7 +65,7 @@ VBM.parallaxsystem = 1       # Set parallax system to North-East
 VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 
 magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of static binary-lens light curve
-magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of binary-lens light curve including parallax
+magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of light curve with parallax
 
 plt.plot(t,magnifications,"g")
 plt.plot(t,magnificationspar,"m")
