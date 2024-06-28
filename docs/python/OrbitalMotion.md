@@ -63,14 +63,17 @@ plt.plot(t,magnificationsorb,"y")
 
 The light curve including orbital motion is in yellow in this plot. 
 
-And here is the corresponding source trajectory
+And here is the corresponding source trajectory, where we plot caustics at three different phases of the microlensing event marked by dots along the source trajectory.
 ```
-caustics = VBM.Caustics(s,q)
-for cau in caustics:
-    plt.plot(cau[0],cau[1])
-plt.plot(y1,y2,"g")
-plt.plot(y1par,y2par,"m")
+caustictimes = [100,150,200]
+colors = [(0,0,1,1),(0.4,0,0.6,1),(0.6,0,0.4,1)]
+for i in range(0,3):
+    caustics = VBM.Caustics(sorb[caustictimes[i]],q)
+    for cau in caustics:
+        plt.plot(cau[0],cau[1],color = colors[i])
 plt.plot(y1orb,y2orb,"y")
+for i in range(0,3):
+    plt.plot([y1orb[caustictimes[i]]],[y2orb[caustictimes[i]]],color=colors[i],marker="o")
 ```
 
 <img src="BinaryLens_lightcurve_orbital_caustics.png" width = 400>
