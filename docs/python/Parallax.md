@@ -103,13 +103,31 @@ Examples of valid satellite ephemerid tables are in [https://github.com/valboz/V
 
 The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character) and placed in a single directory. In order to inform VBMicrolensing of these tables, there is an alternative version of the `VBM.SetObjectCoordinates` function:
 ```
-coordinatefile = "myevent.coordinates"
+coordinatefile = "OB151212coordinates.txt"
 satellitedir = "/usr/data/satellitetables"
 VBM.SetObjectCoordinates(coordinatefile, satellitedir)
 ```
-The first argument is the name of a file containing the coordinates of the event. This file contains the same string with RA and Dec as before "17:59:02.3 -29:04:15.2". The second argument is the path to the directory containing the satellite tables. When the `VBM.SetObjectCoordinates` is executed, the satellite tables are pre-loaded so that they are ready for use in any calculations.
+The first argument is the name of a file containing the coordinates of the event, i.e. a string with RA and Dec as before (this file is for the event [OGLE-2015-BLG-1212](https://ui.adsabs.harvard.edu/abs/2016ApJ...820...79B/abstract)). The second argument is the path to the directory containing the satellite tables. When the `VBM.SetObjectCoordinates` is executed, the satellite tables are pre-loaded so that they are ready for use in any calculations.
 
 If you want the magnification as seen from satellite 1, then just set VBM.satellite to 1 before the parallax calculation.
+```
+magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of light curve with parallax
+VBM.satellite = 1
+magnificationssat, y1sat, y2sat = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of light curve seen from Spitzer
+
+plt.plot(t,magnificationspar,"m")
+plt.plot(t,magnificationssat,"r")
+```
+<img src="BinaryLens_lightcurve_parallax.png" width = 400>
+And here we have the source trajectories
+```
+caustics = VBM.Caustics(s,q)
+for cau in caustics:
+    plt.plot(cau[0],cau[1])
+plt.plot(y1par,y2par,"m")
+plt.plot(y1sat,y2sat,"r")
+```
+<img src="BinaryLens_lightcurve_parallax_caustics.png" width = 400>
 
 If you want to return to the ground do not forget to set VBM.satellite back to 0!
 
