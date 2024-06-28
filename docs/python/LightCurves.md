@@ -179,7 +179,7 @@ rho = 0.01       # Source radius
 tE = 30.0      # Einstein time in days
 t0 = 7500      # Time of closest approach to center of mass
 s13 = 1.5      # Separation between the third lens and the primary
-q3 = 0.001     # Mass ratio of the third lens to the primary
+q3 = 0.003     # Mass ratio of the third lens to the primary
 psi = 1.     # Angle between second and third lens as shown in figure
 
 # Array of parameters. Note that s, q, rho, tE, s23 and q3 are in log-scale
