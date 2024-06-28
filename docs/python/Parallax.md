@@ -88,8 +88,6 @@ plt.plot(y1par,y2par,"m")
 
 In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ here.
 
-Finally, we add that all light curve functions are available in two versions as explained in [Light Curves](LightCurves.md): the version performing a single calculation of the magnification at time t (as in the example above) and the version calculating the full light curve with one single call (see [Light Curves](LightCurves.md) for details).
-
 ## Satellite Parallax
 
 VBMicrolensing can calculate the magnification as seen from a spacecraft. In order to do that, it is necessary to have the ephemerides of the satellite in the format given by the [NASA Horizons system](http://ssd.jpl.nasa.gov/horizons.cgi).
@@ -103,37 +101,16 @@ In particular, we assume five columns:
 
 Examples of valid satellite ephemerid tables are in [https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data](https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data).
 
-The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character). The satellite table files should be in the directory specified as second argument in the `VBM.SetObjectCoordinates` function, as shown [above](Parallax.md#target-coordinates). When the `VBM.SetObjectCoordinates` is executed, the satellite tables are pre-loaded so that they are ready for use in any calculations.
+The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character) and placed in a single directory. In order to inform VBMicrolensing of these tables, there is an alternative version of the `VBM.SetObjectCoordinates` function:
+```
+coordinatefile = "myevent.coordinates"
+satellitedir = "/usr/data/satellitetables"
+VBM.SetObjectCoordinates(coordinatefile, satellitedir)
+```
+The first argument is the name of a file containing the coordinates of the event. This file contains the same string with RA and Dec as before "17:59:02.3 -29:04:15.2". The second argument is the path to the directory containing the satellite tables. When the `VBM.SetObjectCoordinates` is executed, the satellite tables are pre-loaded so that they are ready for use in any calculations.
 
 If you want the magnification as seen from satellite 1, then just set VBM.satellite to 1 before the parallax calculation.
 
-```
-VBM.satellite = 1 # All following calculations will be performed as seen from satellite 1 (Spitzer in this example)
-Mag = VBM.BinaryLightCurveParallax(pr, t)
-print(f"Magnification as seen from satellite 1= {Mag[0][0]}"); # Output should be 3.88...
-```
-
 If you want to return to the ground do not forget to set VBM.satellite back to 0!
-
-## Target coordinates
-
-We need to specify J2000.0 equatorial coordinates for our microlensing target. 
-
-This can be done by preparing a text file containing R.A. and Dec., similar to the following example:
-
-```
-17:57:05 -30:22:59
-```
-
-Then we inform VBMicrolensing of these coordinates by the function `SetObjectCoordinates`
-
-```
-VBMicrolensing VBM;
-
-VBM.SetObjectCoordinates("OB151212coords.txt",".");
-```
-
-The first argument is the name of the file we have just prepared (these are the coordinates of the event [OGLE-2015-BLG-1212](https://ui.adsabs.harvard.edu/abs/2016ApJ...820...79B/abstract)). The second argument will only be used in case of observations from space (see [below](Parallax.md#satellite-parallax)).
-
 
 [Go to **Orbital motion**](OrbitalMotion.md)
