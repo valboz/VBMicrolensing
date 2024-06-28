@@ -110,7 +110,7 @@ void VBMicrolensing::TripleLightCurve(double *pr, double *ts, double *mags, doub
 	s[0] = exp(pr[0]) / (q[0] + q[1]);
 	s[1] = s[0] * q[0];
 	s[0] = -q[1]* s[0];
-	s[2] = exp(pr[7])*complex(cbeta, sbeta) + s[0];
+	s[2] = exp(pr[7])*complex(cbeta, sbeta)+s[0];
 	//	_sols *Images; double Mag; // For debugging
 
 	SetLensGeometry(3, q, s);
@@ -145,7 +145,7 @@ void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* ma
 	s[0] = exp(pr[0]) / (q[0] + q[1]);
 	s[1] = s[0] * q[0];
 	s[0] = -q[1] * s[0];
-	s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
+	s[2] = exp(pr[7]) * complex(cbeta, sbeta)+s[0];
 	//	_sols *Images; double Mag; // For debugging
 
 	SetLensGeometry(3, q, s);
@@ -704,6 +704,7 @@ double VBMicrolensing::TripleLightCurve(double *pr, double t) {
 	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]),di,mindi;
 	static double q[3];
 	static double prold[] = { 0,0,0,0,0 };
+	static Method oldmethod = Method::Nopoly;
 	static complex s[3];
 	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
 	int inew=0;
@@ -715,6 +716,10 @@ double VBMicrolensing::TripleLightCurve(double *pr, double t) {
 		}
 		inew += (i == 1) ? 6 : 1;
 	}
+	if (SelectedMethod != oldmethod) {
+		changed = true;
+		oldmethod = SelectedMethod;
+	}
 	if (changed) {
 		q[0] = 1;
 		q[1] = exp(pr[1]);
@@ -722,11 +727,10 @@ double VBMicrolensing::TripleLightCurve(double *pr, double t) {
 		s[0] = exp(pr[0]) / (q[0] + q[1]);
 		s[1] = s[0] * q[0];
 		s[0] = -q[1] * s[0];
-		s[2] = exp(pr[7])*complex(cbeta, sbeta);
-		//	_sols *Images; double Mag; // For debugging		
+		s[2] = exp(pr[7])*complex(cbeta, sbeta)+s[0];
+		SetLensGeometry(3, q, s);
 	}
-	SetLensGeometry(3, q, s);
-
+	
 	tn = (t - pr[6]) * tE_inv;
 	y_1 = pr[2] * salpha - tn * calpha;
 	y_2 = -pr[2] * calpha - tn * salpha;
