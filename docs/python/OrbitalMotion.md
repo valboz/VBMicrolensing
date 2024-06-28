@@ -81,6 +81,8 @@ for i in range(0,3):
 
 <img src="BinaryLens_lightcurve_orbital_caustics.png" width = 400>
 
+## From velocity components to orbital elements
+
 A circular orbital motion is completely specified by the three components of the angular velocity $\vec \gamma$ of the secondary mass with respect to the first mass. We have
 
 $\gamma_1 \equiv \frac{1}{s} \frac{ds}{dt}$, this is the component along the lens axis;
