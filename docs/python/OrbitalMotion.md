@@ -17,7 +17,7 @@ Both functions discussed here include the parallax calculation. Therefore, a pre
 
 Finally, the reference time for orbital motion calculation is by default $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. If you want to specify a different time, you can do it through $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)). There is no possibility to set two different reference times. Therefore, in VBMicrolensing we always have $t_{0,orb} = t_{0,par}$.
 
-## Circular orbital motion binary lenses
+## Circular orbital motion
 
 Here is an example of use of `BinaryLightCurveOrbital`:
 
