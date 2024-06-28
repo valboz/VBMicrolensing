@@ -55,9 +55,10 @@ VBMicrolensing::VBMicrolensing() {
 	n=0;
 	zr = zcr= pza = pdum = ppy =a=coefs=0;
 	s = s_sort = 0;
+	m_mp = 0;
 	zr_mp= coefs_mp=a_mp=ppy_mp=pza_mp = 0;
 	good = Jacs = m=0;
-	pmza = pyaza = ppmy = 0;
+	pmza = pyaza = ppmy = pmza2= 0;
 	pmza_mp = pyaza_mp = ppmy_mp = 0;
 	dist_mp = 0;
 	nrootsmp_mp = 0;
@@ -203,7 +204,6 @@ VBMicrolensing::~VBMicrolensing() {
 		for (int j = 0; j < n; j++) {
 			free(zr_mp[j]);
 		}
-		free(zrm);
 		free(zr_mp);
 		free(nrootsmp_mp);
 	}

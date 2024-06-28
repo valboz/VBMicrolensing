@@ -53,7 +53,7 @@ namespace VBMicrolensingLibrary {
 		double Mag0, corrquad, corrquad2, safedist;
 		double *dist_mp, *q;
 		int nim0,n,n2,nnm1,nroots, nrootsmp, *nrootsmp_mp;
-		complex *zr,*zrm, *zcr,**pmza, **pyaza , **ppmy , *pza , *pza2, **pmza2, *pdum , *ppy, *a, *s_offset, *pert,y,yc,*s;
+		complex *zr, *zcr,**pmza, **pyaza , **ppmy , *pza , *pza2, **pmza2, *pdum , *ppy, *a, *s_offset, *pert,y,yc,*s;
 		complex *y_mp, *** pmza_mp, ** pza_mp, ***pyaza_mp, ***ppmy_mp, **ppy_mp, **zr_mp;
 		complex *zaltc, *J1, *J1c,**za,**za2; 
 		complex *coefs, **coefs_mp;
