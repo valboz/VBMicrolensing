@@ -63,7 +63,10 @@ plt.plot(t,magnificationsorb,"y")
 
 The light curve including orbital motion is in yellow in this plot. 
 
-And here is the corresponding source trajectory, where we plot caustics at three different phases of the microlensing event marked by dots along the source trajectory.
+Note that the `BinaryLightCurveOrbital` returns magnifications, source positions and one additional list containing the separation between the two lenses as it evolves under the orbital motion. This is a very important information because caustics rapidly change with the separation between the lenses.
+
+In the plot for the source trajectory, we can plot caustics at different times with different colors. Here is an example
+
 ```
 caustictimes = [100,150,200]
 colors = [(0,0,1,1),(0.4,0,0.6,1),(0.6,0,0.4,1)]
