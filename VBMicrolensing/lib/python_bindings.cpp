@@ -772,8 +772,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                     return results;
                 },
                 R"mydelimiter(
-            Static binary lens light curve for a given set of parameters.
-            Uses the BinaryMag2 function.
+            Static triple lens light curve for a given set of parameters.
+            Uses the MultiMag function.
 
             Parameters
             ----------
@@ -800,13 +800,13 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                     return results;
                 },
                 R"mydelimiter(
-            Static binary lens light curve for a given set of parameters.
-            Uses the BinaryMag2 function.
+            Triple lens light curve including parallax for a given set of parameters.
+            Uses the MultiMag function.
 
             Parameters
             ----------
             params : list[float]
-                List of parameters [log(s12), log(q2), u0, alpha, log(rho), log(tE), t0, log(s13), log(q3), psi,px1,px2]
+                List of parameters [log(s12), log(q2), u0, alpha, log(rho), log(tE), t0, log(s13), log(q3), psi, px1, px2]
             times : list[float] 
                 Array of times at which the magnification is calculated.
  
@@ -873,15 +873,11 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 return caustics;
             },
             R"mydelimiter(
-            Caustics for given separation and mass ratio.
+            Caustics for a given multiple lens geometry.
 
             Parameters
             ----------
-            s : float 
-                The projected separation of the binary lens in units of the 
-                Einstein radius corresponding to the total mass.
-            q : float 
-                Binary lens mass fraction q = m1/m2 such that m1<m2 
+            None
 
             Returns
             -------
@@ -914,16 +910,12 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 return criticalcurves;
             },
             R"mydelimiter(
-            Critical curves for given separation and mass ratio.
+            Critical curves for a given multiple lens geometry.
 
             Parameters
             ----------
-            s : float 
-                The projected separation of the binary lens in units of the 
-                Einstein radius corresponding to the total mass.
-            q : float 
-                Binary lens mass fraction q = m1/m2 such that m1<m2 
-
+            None
+            
             Returns
             -------
             solutions : _sols
@@ -967,8 +959,9 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
             Returns
             -------
-            solutions : _sols
-                List of caustics.
+            caustics: list[list[list[float]].
+                Each element (caustic) is a pair of lists with x and y coordinates respectively of each point in the caustic
+            
             )mydelimiter");
 
         vbm.def("Criticalcurves",
@@ -1008,8 +1001,9 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
             Returns
             -------
-            solutions : _sols
-                List of critical curves.
+            criticalcurves: list[list[list[float]].
+                Each element (critical curve) is a pair of lists with x and y coordinates respectively of each point in the critical curve
+            
             )mydelimiter");
 
         // Limb darkening
