@@ -24,54 +24,56 @@ Here is an example of use of `BinaryLightCurveOrbital`:
 ```
 import VBMicrolensing
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-# Array of parameters
-pr = [0] * 12
+s = 0.9       # Separation between the lenses
+q = 0.1       # Mass ratio
+u0 = 0.0       # Impact parameter with respect to center of mass
+alpha = 1.0       # Angle of the source trajectory
+rho = 0.01       # Source radius
+tE = 30.0      # Einstein time in days
+t0 = 7500      # Time of closest approach to center of mass
+paiN = 0.3     # North component of the parallax vector
+paiE = -0.2     # East component of the parallax vector
+gamma1 = 0.011   # Orbital motion component ds/dt/s
+gamma2 = -0.005   # Orbital motion component dalpha/dt
+gamma3 = 0.005   # Orbital motion component dsz/dt/s
 
-# Parameters
-u0 = -0.01  # Impact parameter
-t0 = 7550.4  # Time of closest approach to the center of mass
-tE = 100.3  # Einstein time
-rho = 0.01  # Source radius
-s = 0.8  # Separation between the two lenses
-q = 0.1  # Mass ratio
-alpha = 0.53  # Angle between a vector pointing to the left and the source velocity
+# Array of parameters. Note that s, q, rho and tE are in log-scale
+pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, paiN, paiE, gamma1, gamma2, gamma3]
 
-paiN = 0.3  # Parallax component in the North direction
-paiE = 0.13  # Parallax component in the East direction
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 
-g1 = 0.001  # Orbital component gamma1
-g2 = -0.002  # Orbital component gamma2
-g3 = 0.0011  # Orbital component gamma3
+VBM.parallaxsystem = 1       # Set parallax system to North-East
+VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 
-# Set object coordinates
-VBM.SetObjectCoordinates("OB151212coords.txt", ".")  # Read target coordinates from file
-VBM.parallaxsystem = 1  # Use North-East components for parallax
+magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of static binary-lens light curve
+magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of light curve with parallax
+magnificationsorb, y1orb, y2orb = VBM.BinaryLightCurveOrbital(pr,t)      # Calculation of light curve with orbital motion
 
-# Assign parameters to the array
-pr[0] = math.log(s)
-pr[1] = math.log(q)
-pr[2] = u0
-pr[3] = alpha
-pr[4] = math.log(rho)
-pr[5] = math.log(tE)
-pr[6] = t0
-pr[7] = paiN
-pr[8] = paiE
-pr[9] = g1
-pr[10] = g2
-pr[11] = g3
-
-t = [7551.6]  # Time at which we want to calculate the magnification
-
-# Calculate the Binary Lens magnification at time t with parameters in pr
-Mag = VBM.BinaryLightCurveOrbital(pr, t)
-
-# Output the result
-print("Binary Light Curve with Parallax and Orbital Motion at time t: {}".format(Mag[0][0]))  # Output should be 30.92...
+plt.plot(t,magnifications,"g")
+plt.plot(t,magnificationspar,"m")
+plt.plot(t,magnificationsorb,"y")
 ```
+
+<img src="BinaryLens_lightcurve_orbital.png" width = 400>
+
+The light curve including orbital motion is in yellow in this plot. 
+
+And here is the corresponding source trajectory
+```
+caustics = VBM.Caustics(s,q)
+for cau in caustics:
+    plt.plot(cau[0],cau[1])
+plt.plot(y1,y2,"g")
+plt.plot(y1par,y2par,"m")
+plt.plot(y1orb,y2orb,"y")
+```
+
+<img src="BinaryLens_lightcurve_orbital_caustics.png" width = 400>
 
 A circular orbital motion is completely specified by the three components of the angular velocity $\vec \gamma$ of the secondary mass with respect to the first mass. We have
 
