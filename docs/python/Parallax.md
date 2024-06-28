@@ -64,7 +64,8 @@ t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 VBM.parallaxsystem = 1       # Set parallax system to North-East
 VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 
-magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of binary-lens light curve
+magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of static binary-lens light curve
+magnificationspar, y1par, y2par = VBM.BinaryLightCurveParallax(pr,t)      # Calculation of binary-lens light curve including parallax
 
 plt.plot(t,magnifications,"g")
 plt.plot(t,magnificationspar,"m")
@@ -75,6 +76,13 @@ plt.plot(t,magnificationspar,"m")
 The light curve including parallax is in magenta in this plot. 
 
 And here is the corresponding source trajectory
+```
+caustics = VBM.Caustics(s,q)
+for cau in caustics:
+    plt.plot(cau[0],cau[1])
+plt.plot(y1,y2,"g")
+plt.plot(y1par,y2par,"m")
+```
 
 <img src="BinaryLens_lightcurve_parallax_caustics.png" width = 400>
 
