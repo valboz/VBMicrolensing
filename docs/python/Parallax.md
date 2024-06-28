@@ -70,7 +70,13 @@ plt.plot(t,magnifications,"g")
 plt.plot(t,magnificationspar,"m")
 ```
 
+<img src="BinaryLens_lightcurve_parallax.png" width = 400>
 
+The light curve including parallax is in magenta in this plot. 
+
+And here is the corresponding source trajectory
+
+<img src="BinaryLens_lightcurve_parallax_caustics.png" width = 400>
 
 In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ here.
 
