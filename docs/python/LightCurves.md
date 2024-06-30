@@ -135,7 +135,7 @@ plt.plot(t,magnifications)
 ```
 <img src="BinaryLens_lightcurve.png" width = 400>
 
-As before, the coordinates of the source are stored in the `Mag` array. These can be useful to draw the source trajectory relative to the caustics.
+As before, the coordinates of the source are stored in the `y1` and  `y2` arrays. These can be useful to draw the source trajectory relative to the caustics.
 
 ```
 caustics = VBM.Caustics(s,q)
