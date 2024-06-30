@@ -50,10 +50,10 @@ from matplotlib import pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing() # Instance to VBMicroLensing
 
-parameters = [0,0,1,-1.2,0.5,
-              0.5,-1,0.4,
-              1.1e-1,0.6,
-              0,1.1e-2]
+parameters = [0,0,1,
+              -1.2,0.5,0.5,
+              -1,0.4,1.1e-1,
+              0.6,0,1.1e-2]
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
