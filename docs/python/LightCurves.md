@@ -8,7 +8,7 @@ VBMicrolensing offers ready-to-use functions to calculate full microlensing ligh
 
 Let us start with the Paczynski curve (see [Single lenses](SingleLenses.md) section). 
 
-For the calculation of the light curve, we have to prepare the array of times at which we wish to calculate the light curve and then define the array of standard parameters as shown in the following example and call the function `PSPLLightCurve`:
+For the calculation of the light curve, we have to prepare the array of times at which we wish to calculate the light curve and then define the array of standard parameters as shown in the following example and finally call the function `PSPLLightCurve`:
 
 ```
 import VBMicrolensing
