@@ -182,7 +182,7 @@ s13 = 1.5      # Separation between the third lens and the primary
 q3 = 0.003     # Mass ratio of the third lens to the primary
 psi = 1.     # Angle between second and third lens as shown in figure
 
-# Array of parameters. Note that s, q, rho, tE, s23 and q3 are in log-scale
+# Array of parameters. Note that s, q, rho, tE, s13 and q3 are in log-scale
 pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, math.log(s13), math.log(q3), psi]
 
 t = np.linspace(t0-tE, t0+tE, 300) # Array of times
