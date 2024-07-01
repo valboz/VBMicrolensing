@@ -77,8 +77,6 @@ double pr[] = {     //parameters
     0.6, -0.6, 1e-6   // Fourth lens: [z4_re, z4_im, q4]
 };
 
-VBM.SetMethod(VBMicrolensing::Method::Nopoly); //Choose the method: Nopoly, Multipoly, Singlepoly
-
 VBM.SetLensGeometry(nn,pr); //Initialize the lens configuration
 
 Mycurves = VBM.PlotCrit();  // Calculation of the critical curves. The result is stored in Mycurves.
