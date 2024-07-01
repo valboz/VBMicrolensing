@@ -35,6 +35,7 @@ VBMicrolensing VBM;
 double Mag, u, rho;
 
 VBM.LoadESPLTable("ESPL.tbl"); // Load the pre-calculated table (you only have to do this once)
+// The ESPL.dat file is located inside the data folder; copy it to your directory.
 
 u = 0.1; // Source-lens separation in Einstein radii
 rho = 0.01; // Source radius in units of the Einstein angle
