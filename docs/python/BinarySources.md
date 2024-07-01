@@ -77,6 +77,8 @@ Here is an example with the function `BinSourceSingleLensXallarap`. You may note
 ```
 import VBMicrolensing
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
@@ -84,40 +86,25 @@ VBM = VBMicrolensing.VBMicrolensing()
 VBM.LoadESPLTable("ESPL.tbl")
 
 # Parameters
-u0 = 0.01  # Impact parameter for the first source
+u0 = 0.1  # Impact parameter for the first source
 t0 = 7550.4  # Time of closest approach for the first source
 tE = 37.3  # Einstein time
 rho = 0.004  # Radius of the first star
 xi1 = 0.011  # Xallarap component 1
 xi2 = 0.02  # Xallarap component 2
-om = 0.04  # Orbital velocity
+om = 0.4  # Orbital velocity
 inc = 0.8  # Inclination
 phi0 = 1.4  # Phase from the line of nodes
 qs = 0.1  # Mass ratio of the two stars
 
 # Array of parameters
-pr = [0] * 10
+pr = [u0, t0, math.log(tE), math.log(rho), xi1, xi2, om, inc, phi0, math.log(qs)]
 
-# Assign parameters to the array
-pr[0] = u0
-pr[1] = t0
-pr[2] = math.log(tE)
-pr[3] = math.log(rho)
-pr[4] = xi1
-pr[5] = xi2
-pr[6] = om
-pr[7] = inc
-pr[8] = phi0
-pr[9] = math.log(qs)
+magnifications, y11, y12, y21, y22 = VBM.BinSourceSingleLensXallarap(pr, t)
 
-t = [7551.6]  # Time at which we want to calculate the magnification
-
-# Calculate the Binary Source magnification at time t with parameters in pr
-Mag = VBM.BinSourceSingleLensXallarap(pr, t)
-
-# Output the result
-print("Binary Source Light Curve at time t: {}".format(Mag[0][0]))  # Output should be 29.76...
+plt.plot(t,magnifications)
 ```
+<img src="BinarySource_lightcurve_xallarap.png" width = 400>
 
 In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
