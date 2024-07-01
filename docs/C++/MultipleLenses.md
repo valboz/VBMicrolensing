@@ -100,4 +100,16 @@ The three different alternative methods are available as `Method::Singlepoly`, `
 
 We recommend using Nopoly and, in case of doubtful results, switching to Multipoly. The full details of all algorithms will be described in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
 
+
+## Work in progress
+
+In the current version, some functionalities developed for single and binary lenses are not yet available. These include:
+
+- Limb darkening
+- A decision tree for finite-source calculation vs point-source calculation (the equivalent of `BinaryMag2`)
+- Astrometry
+- Orbital motion
+- Binary sources and xallarap
+
+We are working to make these features available as soon as possible.
 [Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
