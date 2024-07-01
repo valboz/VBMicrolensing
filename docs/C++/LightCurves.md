@@ -222,6 +222,6 @@ Moreover, we also have the source trajectory relative to the lens in the arrays 
 
 Apart from the compactness of the code, some computational advantage of the use of the single-call light curve function emerges with higher order effects, in which some calculations are re-used and not repeated at every function call.
 
-The full light curve calculation is offered for each physical case (PSPL, ESPL, Binary) with a syntax identical to the example for the PSPL light curve shown explicitly here.
+The full light curve calculation is offered for each physical case (PSPL, ESPL, Binary, Triple) with a syntax identical to the example for the PSPL light curve shown explicitly here.
 
 [Go to **Parallax**](Parallax.md)
