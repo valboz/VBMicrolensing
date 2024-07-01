@@ -173,9 +173,6 @@ pr[9] = psi;
 
 t = 0.1; // Time at which we want to calculate the magnification
 
-// Set the Method that you want use: Singlepoly, Multipoly, Nopoly.
-VBM.SetMethod(VBMicrolensing::Method::Nopoly);
-
 Mag = VBM.TripleLightCurve(pr, t); // Calculates the Triple Lens magnification at time t with parameters in pr
 printf("Triple Light Curve at time t: %lf\n", Mag); // Output should be 35.17...
 ```
