@@ -81,7 +81,7 @@ VBM.SetLensGeometry(nn,pr); //Initialize the lens configuration
 
 Mycurves = VBM.PlotCrit();  // Calculation of the critical curves. The result is stored in Mycurves.
                                   // Mycurves is a list of _curve objects
-                                  // There are n critical curves and n caustics in this list, with n=1,2,3 depending on the caustic topology.
+                                  // There are n critical curves and n caustics in this list.
 
 n = Mycurves->length / 2;
 
