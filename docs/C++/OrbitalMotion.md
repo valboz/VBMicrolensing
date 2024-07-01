@@ -1,6 +1,6 @@
 [Back to **Parallax**](Parallax.md)
 
-# Orbital motion binary lenses
+# Orbital motion
 
 Binary lenses orbit around the common center of mass. If the microlensing event is long enough, we should take orbital motion into account. However, to first order, microlensing is only sensitive to changes in the projected separation and orientation of the binary lenses, while most orbital parameters remain unconstrained. Rather than adding too many dimensions to our parameter space, in order to describe the subtle deviations in our microlensing event, it can be sufficient to restrict to circular orbits.
 
@@ -17,7 +17,7 @@ Both functions discussed here include the parallax calculation. Therefore, a pre
 
 Finally, the reference time for orbital motion calculation is by default $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. If you want to specify a different time, you can do it through $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)). There is no possibility to set two different reference times. Therefore, in VBMicrolensing we always have $t_{0,orb} = t_{0,par}$.
 
-## Circular orbital motion binary lenses
+## Circular orbital motion
 
 Here is an example of use of `BinaryLightCurveOrbital`:
 
@@ -88,7 +88,7 @@ $$ \tan \phi_0 =- \frac{\gamma_1 |\vec \gamma|}{\gamma_3 \sqrt{\gamma_1^2 + \gam
 
 where $a$ is the orbital radius (still in units of the Einstein angle), $T$ is the orbital period in days, $i$ is the inclination with respect to the sky plane, $\phi_0$ is the phase angle from the line of nodes of the orbit with the sky plane. As stated before, it is very difficult to have precise estimates of the orbital parameters even if only one of the three components is poorly constrained.
 
-## Keplerian orbital motion binary lenses
+## Keplerian orbital motion
 
 If the microlensing event is long compared to the orbital period of the binary lens, it is possible to attempt a full orbital fit including eccentricity. A convenient parameterization introduced by [Bozza, Khalouei and Bachelet (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.505..126B/abstract) considers two additional parameters to the three components of the vector $\vec \gamma$.
 
