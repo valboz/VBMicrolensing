@@ -7,35 +7,27 @@ Binary sources just give the superposition of two single-source microlensing lig
 ```
 import VBMicrolensing
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
 # Parameters
-u01 = 0.01  # Impact parameter for source 1
-u02 = 0.03  # Impact parameter for source 2
-t01 = 7550.4  # Time of closest approach to source 1
-t02 = 7551.8  # Time of closest approach to source 2
 tE = 37.3  # Einstein time
-FR = 0.1  # Flux ratio of the second source to the first
+FR = 0.4  # Flux ratio of the second source to the first
+u01 = 0.1  # Impact parameter for source 1
+u02 = 0.05  # Impact parameter for source 2
+t01 = 7550.4  # Time of closest approach to source 1
+t02 = 7555.8  # Time of closest approach to source 2
 
-# Array of parameters
-pr = [0] * 7
+# Array of parameters. Note that tE and FR are in log-scale
+pr = [math.log(tE), math.log(FR), u01, u02, t01, t02]
 
-# Assign parameters to the array
-pr[0] = math.log(tE)
-pr[1] = math.log(FR)
-pr[2] = u01
-pr[3] = u02
-pr[4] = t01
-pr[5] = t02
+t = np.linspace(t01-tE, t01+tE, 300) # Array of times
 
-t = [7551.6]  # Time at which we want to calculate the magnification
+magnifications, y1, y2 = VBM.BinSourceLightCurve(pr,t)      # Calculation of binary-source light curve
 
-# Calculate the Binary Source magnification at time t with parameters in pr
-Mag = VBM.BinSourceLightCurve(pr, t)
-
-# Output the result
-print("Binary Source Light Curve at time t: {}".format(Mag[0][0]))  # Output should be 29.97...
+plt.plot(t,magnifications)
 ```
 
 The output of BinSourceLightCurve is a magnification compared to the baseline flux. Therefore, it is the sum of two Paczynsky light curves weighted by 1/(1+FR) and FR/(1+FR) respectively.
