@@ -41,13 +41,13 @@ Currently, `VBMicroLensing` works on Linux, Windows, MacOS and python >= 2.7. Th
 ### C++
 
 If you just want to use the C++ library, clone this repository, all cpp files and the 
-`VBBinaryLensing.h` are located in in `VBBinaryLensing/lib` and shouldbe added to your project. 
+`VBMicroLensing.h` are located in in `VBMicroLensing/lib` and shouldbe added to your project. 
 
 The package also contains the following files:
-- `VBBinaryLensing/data/ESPL.tbl`  - Pre-calculated table for Extended-source-point-lens
-- `VBBinaryLensing/data/OB151212coords.txt` - Sample file with event coordinates
-- `VBBinaryLensing/data/satellite1.txt` - Sample table for satellite position (Spitzer)
-- `VBBinaryLensing/data/satellite2.txt` - Sample table for satellite position (Kepler)
+- `VBMicroLensing/data/ESPL.tbl`  - Pre-calculated table for Extended-source-point-lens
+- `VBMicroLensing/data/OB151212coords.txt` - Sample file with event coordinates
+- `VBMicroLensing/data/satellite1.txt` - Sample table for satellite position (Spitzer)
+- `VBMicroLensing/data/satellite2.txt` - Sample table for satellite position (Kepler)
   
 ## Documentation
 Full [documentation for the use of VBmicrolensing in python](/docs/python/readme.md) and [documentation for the use of VBmicrolensing in C++](/docs/C++/readme.md) are available.
