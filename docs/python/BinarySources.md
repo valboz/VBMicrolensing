@@ -37,14 +37,13 @@ Parallax is included in the `BinSourceLightCurveParallax` function, which accept
 
 ## Extended binary sources
 
-If the finite size of the sources is relevant, one can use `BinSourceLightCurve` function
+If the finite size of the sources is relevant, one can use `BinSourceExtLightCurve` function
 
 ```
-rho = 0.01 # Size of source 1
-pr[6] = math.log(rho)
+rho = 0.1 # Size of source 1
+pr = [math.log(tE), math.log(FR), u01, u02, t01, t02, math.log(rho)]
 VBM.LoadESPLTable("ESPL.tbl"); #Load ESPL table
-Mag = VBM.BinSourceExtLightCurve(pr, t) # Calculates the magnification for extended binary sources
-print("Binary Source Extended Light Curve at time t: {}".format(Mag[0][0])) 
+Mag, y1, y2 = VBM.BinSourceExtLightCurve(pr, t) # Calculates the magnification for extended binary sources
 ```
 
 Only one source size is specified as an independent parameter, while the source size of the second source is obtained through mass-radius-luminosity relations. This ensures that the user has full control on the physical consistency of the model.
