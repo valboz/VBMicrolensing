@@ -29,6 +29,7 @@ magnifications, y1, y2 = VBM.BinSourceLightCurve(pr,t)      # Calculation of bin
 
 plt.plot(t,magnifications)
 ```
+<img src="BinarySource_lightcurve.png" width = 400>
 
 The output of BinSourceLightCurve is a magnification compared to the baseline flux. Therefore, it is the sum of two Paczynsky light curves weighted by 1/(1+FR) and FR/(1+FR) respectively.
 
