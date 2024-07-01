@@ -80,3 +80,7 @@ Concerning the source coordinates $y_1$ and $y_2$, we have found no restrictions
 Above ranges apply to source radii $10^{-3}\leq \rho \leq 1.0$. Outside this range, the robustness slowly degrades.
 
 Finally, we note that lower level functions such as `BinaryMag` and `BinaryMagDark` may have local failures which do not appear in `BinaryMag2`, which takes care of these particular cases.
+
+## Image contours
+
+In classical microlensing, only the total magnification and the astrometric centroid are of interest. However, for illustration purposes or for particular diagnostics, we may be interested in the individual image contours. This functionality is currently available only in C++. See the [corresponding documentation](/docs/C%2B%2B/AdvancedControl.md).
