@@ -38,7 +38,7 @@ plt.plot(t,magnifications)
 <img src="BinaryLens_lightcurve.png" width = 400>
 
 
-In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBM.BinaryMag2``` to perform a computation of magnification by a binary lens with these parameters. 
+In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBM.BinaryLightCurve``` to calculate the light curve with these parameters. 
 
 ## Summary
 
