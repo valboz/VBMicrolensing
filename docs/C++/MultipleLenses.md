@@ -112,4 +112,5 @@ In the current version, some functionalities developed for single and binary len
 - Binary sources and xallarap
 
 We are working to make these features available as soon as possible.
+
 [Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
