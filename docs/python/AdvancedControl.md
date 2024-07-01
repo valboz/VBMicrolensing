@@ -61,7 +61,7 @@ This variant of `BinaryMag` can be useful to check how the algorithm proceeds up
 
 Another important diagnostics only available with `BinaryMag` is the error estimate `VBM.therr`. As said before, the sampling on the source boundary is increased until the estimated error falls below the accuracy or precision thresholds fixed by `VBM.Tol` and `VBM.RelTol` (see [Accuracy Control](AccuracyControl.md)). However, when the input parameters are pushed to extreme values, numerical errors will eventually dominate and preclude any possibilities to meet the desired accuracy. `BinaryMag` will always try to return a reasonable estimate of the magnification by discarding problematic points on the source boundary. This comes to the cost of leaving irreducible errors in the final result. Therefore, `VBM.therr` can track such occurrences and report an error estimate that can be useful in these particular situations.
 
-## Parameters range
+## Parameters ranges
 
 VBMicrolensing has been widely tested with particular attention on caustic crossings and all source positions close to caustics. Here we report the recommended ranges of parameters for `BinaryMag2`.
 
