@@ -76,7 +76,7 @@ print(f"Magnification with logarithmic limb darkened source = {Mag}") # Output s
 
 ## User-defined limb darkening
 
-The user-defined limb darkening is available only in the C++ version of VBMicrolensing, see the corresponding documentation.
+The user-defined limb darkening is available only in the C++ version of VBMicrolensing, see the [corresponding documentation](/docs/C%2B%2B/LimbDarkening.md).
 
 ## Multi-band observations
 
