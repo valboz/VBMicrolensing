@@ -93,9 +93,10 @@ We recommend using Nopoly and, in case of doubtful results, switching to Multipo
 In the current version, some functionalities developed for single and binary lenses are not yet available. These include:
 
 - Limb darkening
+- A decision tree for finite-source calculation vs point-source calculation (the equivalent of `BinaryMag2`)
 - Astrometry
 - Orbital motion
-- A decision tree for finite-source calculation vs point-source calculation (the equivalent of `BinaryMag2`)
+- Binary sources and xallarap
 
 We are working to make these features available as soon as possible.
 
