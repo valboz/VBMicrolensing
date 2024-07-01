@@ -42,6 +42,7 @@ All light curve functions defined in the [Light Curves](LightCurves.md) section 
 PSPLLightCurveParallax
 ESPLLightCurveParallax
 BinaryLightCurveParallax
+TripleLightCurveParallax
 ```
 
 The only difference is that the array of parameters must include two more entries for the components of the parallax vector. Here is a full example demonstrating the use of `BinaryLightCurveParallax`:
