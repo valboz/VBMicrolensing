@@ -149,16 +149,16 @@ double pr[10]; // Array of parameters
 double u0, t0, tE, rho, alpha, s12, q2, s23, q3, psi;
 double t, Mag;
 
-u0 = 0.0060; // Impact parameter
-t0 = 0.0; // Time of peak magnification
+u0 = 0.0060; // Impact parameter with respect to center of mass of the first two lenses
+t0 = 0.0; // Time of closest approach to center of mass of the first two lenses
 tE = 50.13; // Einstein radius crossing time
-rho = 0.0567; // Source radius in Einstein radii of the total mass
-s12 = 0.765; // Separation between the first two lenses in descending order of mass in units of total angular Einstein radii
-q2 = 0.00066; // Mass ratio lens 2
+rho = 0.0567; // Source radius 
+s12 = 0.765; // Separation between the second and first lens
+q2 = 0.00066; // Mass ratio of the second lens to the primary
 alpha = 3.212; // Angle of the source trajectory
-s23 = 1.5; // Separation between the last two lenses in descending order of mass in units of total angular Einstein radii
-q3 = 0.000001; // Mass ratio lens 3
-psi = -1.5; // Angle
+s13 = 1.5; // Separation between the third lens and the primary
+q3 = 0.000001; // Mass ratio of the third lens to the primary
+psi = -1.5; // Angle between second and third lens as shown in figure
 
 pr[0] = log(s12); 
 pr[1] = log(q2);
