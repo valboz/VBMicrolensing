@@ -8,26 +8,35 @@ In this document we will describe all use cases of the VBMicrolensing library an
 
 In a typical Python code, you will import the VBMicrolensing package in your project.
 
-An instance to the ```VBMicrolensing``` class should be declared in your program. The ```VBMicrolensing``` class contains all the properties and methods that the user needs to call for any microlensing computations. Here is a basic start up example with a binary lens:
+An instance to the ```VBMicrolensing``` class should be declared in your program. The ```VBMicrolensing``` class contains all the properties and methods that the user needs to call for any microlensing computations. Here is a basic start up example to draw a light curve for a binary lens:
 
 ```
 import VBMicrolensing
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Initialize VBMicrolensing() class object
 VBM = VBMicrolensing.VBMicrolensing()
 
-s = 0.8 #separation between the two lenses
-q = 0.1 # mass ratio: mass of the lens on the right divided by mass of the lens on the left
-  
-# Position of the center of the source with respect to the center of mass.
-y1 = 0.01 # y1 is the source coordinate along the axis parallel to the line joining the two lenses 
-y2 = 0.01 # y2 is the source coordinate orthogonal to the first one
-Rs = 0.01 # Source radius in Einstein radii of the total mass.
-  
-Mag = VBM.BinaryMag2(s, q, y1, y2, Rs) # Call to the BinaryMag2 function with these parameters
-print(f"Binary lens Magnification = {Mag}") # Output should be 18.28....
+s = 0.9       # Separation between the lenses
+q = 0.1       # Mass ratio
+u0 = 0.0       # Impact parameter with respect to center of mass
+alpha = 1.0       # Angle of the source trajectory
+rho = 0.01       # Source radius
+tE = 30.0      # Einstein time in days
+t0 = 7500      # Time of closest approach to center of mass
 
+# Array of parameters. Note that s, q, rho and tE are in log-scale
+pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0]
+
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times
+
+magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of binary-lens light curve
+
+plt.plot(t,magnifications)
 ```
+<img src="BinaryLens_lightcurve.png" width = 400>
+
 
 In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBM.BinaryMag2``` to perform a computation of magnification by a binary lens with these parameters. 
 
