@@ -2,7 +2,7 @@
 
 # Accuracy control
 
-The accuracy goal of the calculation can be controlled by the user through the property ```VBM.Tol```. In fact, ```ESPLMag2``` and ```BinaryMag2``` refine their calculations until they match the required accuracy goal. The result will be ```Mag``` $\pm$ ```VBM.Tol``` (absolute accuracy).
+The accuracy goal of the calculation can be controlled by the user through the property ```VBM.Tol```. In fact, ```ESPLMag2```, ```BinaryMag2``` and ```MultiMag``` refine their calculations until they match the required accuracy goal. The result will be ```Mag``` $\pm$ ```VBM.Tol``` (absolute accuracy).
 
 Keep in mind that the computational time typically scales as ```VBM.Tol^(-1/2)```. By default ```VBM.Tol``` is set to ```1.e-2```.
 
