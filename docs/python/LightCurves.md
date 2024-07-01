@@ -171,13 +171,13 @@ import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
 
-s = 0.9       # Separation between the lenses
-q = 0.1       # Mass ratio
-u0 = 0.0       # Impact parameter with respect to center of mass
+s = 0.9       # Separation between the second and first lens
+q = 0.1       # Mass ratio of the second lens to the primary
+u0 = 0.0       # Impact parameter with respect to center of mass of the first two lenses
 alpha = 1.0       # Angle of the source trajectory
 rho = 0.01       # Source radius
 tE = 30.0      # Einstein time in days
-t0 = 7500      # Time of closest approach to center of mass
+t0 = 7500      # Time of closest approach to center of mass of the first two lenses
 s13 = 1.5      # Separation between the third lens and the primary
 q3 = 0.003     # Mass ratio of the third lens to the primary
 psi = 1.     # Angle between second and third lens as shown in figure
