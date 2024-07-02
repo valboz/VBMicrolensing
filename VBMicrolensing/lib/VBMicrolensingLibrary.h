@@ -142,7 +142,6 @@ namespace VBMicrolensingLibrary {
 	// Skowron & Gould root calculation
 		void cmplx_roots_gen(complex *, complex *, int, bool, bool);
 		void cmplx_roots_multigen(complex*, complex**, int, bool, bool);
-		void cmplx_roots_multigen_nd(complex*, complex**, int, bool, bool);
 	// Bozza optimization
 		int findimagepoly(int iroot);
 		int findimagemultipoly(int iroot);
