@@ -51,9 +51,10 @@ double pr[] = {     //parameters
 
 VBM.SetLensGeometry(nn,pr); //Initialize the lens configuration
 
-complex y= complex(0.1,-0.5); //Source position 
+double y1 = 0.1; //Source position
+double y2 = -0.5;
 
-Mag=VBM.MultiMag0(y);  
+double Mag = VBM.MultiMag0(y1,y2);
 printf("Magnification of a point-source = %f", Mag); //Output should be 2.14....
 ```
 
@@ -75,12 +76,12 @@ double pr[] = {     //parameters
 
 VBM.SetLensGeometry(nn,pr); //Initialize the lens configuration
 
-complex y= complex(0.,-0.2); //Source position 
-rho=0.01; //source radius
+double y1 = 0.; //Source position
+double y2 = -0.2;
+double rho = 0.01; //source radius
 
-Mag=VBM.MultiMag(y,rho); 
+double Mag = VBM.MultiMag(y1,y2, rho);
 printf("Multiple Lens Magnification = %f", Mag); //Output should be 5.07...
-
 ```
 
 ## Three different algorithms
