@@ -1038,9 +1038,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
     
      vbm.def("MultiMag0",
-            [](VBMicrolensing& self, std::tuple<double, double> source) -> double {
-            double y1 = std::get<0>(source);
-            double y2 = std::get<1>(source);
+            [](VBMicrolensing& self, double y1, double y2) -> double {
             return self.MultiMag0(y1, y2);
             },
             py::return_value_policy::reference,
@@ -1060,9 +1058,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             )mydelimiter");
     
     vbm.def("MultiMag", 
-        [](VBMicrolensing& self, std::tuple<double, double> source, double rho) -> double {
-            double y1 = std::get<0>(source);
-            double y2 = std::get<1>(source);
+        [](VBMicrolensing& self, double y1, double y2, double rho) -> double {
             return self.MultiMag(y1, y2, rho);
             },
             py::return_value_policy::reference, 
