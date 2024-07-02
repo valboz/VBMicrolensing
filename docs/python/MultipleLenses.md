@@ -43,9 +43,10 @@ parameters = [0,0,1,            # First lens: x1_1, x1_2, m1
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
-y=(0.1,-0.5) #Source position 
+y1=0.1 #Source position 
+y2=-0.5
 
-Mag=VBM.MultiMag0(y)  
+Mag=VBM.MultiMag0(y1,y2)   
 print(f"Magnification of a point-source = {Mag}\n") #Output should be 2.14....
 ```
 
@@ -63,10 +64,11 @@ parameters = [0,0,1,            # First lens: x1_1, x1_2, m1
 
 VBM.SetLensGeometry(parameters) #Initialize the lens configuration
 
-y=(0.,-0.2) #Source position 
-rho=0.01 #source radius
+y1=0.  #Source position
+y2=-0.2 
+rho=0.01 #Source radius
 
-Mag=VBM.MultiMag(y,rho) 
+Mag=VBM.MultiMag(y1,y2,rho) 
 print(f"Multiple Lens Magnification = {Mag}\n") #Output should be 5.07...
 
 ```
