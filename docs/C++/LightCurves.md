@@ -146,7 +146,7 @@ Let us see an example:
 VBMicrolensing VBM;
 
 double pr[10]; // Array of parameters
-double u0, t0, tE, rho, alpha, s12, q2, s23, q3, psi;
+double u0, t0, tE, rho, alpha, s12, q2, s13, q3, psi;
 double t, Mag;
 
 u0 = 0.0060; // Impact parameter with respect to center of mass of the first two lenses
