@@ -167,7 +167,7 @@ pr[3] = alpha;
 pr[4] = log(rho);
 pr[5] = log(tE);
 pr[6] = t0;
-pr[7] = log(s23);
+pr[7] = log(s13);
 pr[8] = log(q3);
 pr[9] = psi;
 
