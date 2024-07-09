@@ -86,6 +86,80 @@ void VBMicrolensing::change_n(int nn) {
 		free(cpres);
 		free(cfoll);
 	}
+	if (coefs_mp) {
+		for (int i = 0; i < n; i++) {
+			free(coefs_mp[i]);
+			coefs_mp[i] = NULL;  
+		}
+		free(coefs_mp);
+		coefs_mp = NULL;  
+	}
+
+	if (m_mp) {
+		for (int i = 0; i < n; i++) {
+			free(m_mp[i]);
+			m_mp[i] = NULL;  
+			free(a_mp[i]);
+			a_mp[i] = NULL;  
+		}
+		free(m_mp);
+		m_mp = NULL; 
+		free(a_mp);
+		a_mp = NULL;  
+		free(q_sort);
+		q_sort = NULL;  
+		free(s_sort);
+		s_sort = NULL;  
+		free(y_mp);
+		y_mp = NULL;  
+	}
+
+	if (pmza_mp) {
+		for (int j = 0; j < n; j++) {
+			for (int i = 0; i < n; i++) {
+				free(pmza_mp[j][i]);
+				pmza_mp[j][i] = NULL;  
+				free(pyaza_mp[j][i]);
+				pyaza_mp[j][i] = NULL;  
+				free(ppmy_mp[j][i]);
+				ppmy_mp[j][i] = NULL; 
+			}
+		}
+		for (int i = 0; i < n; i++) {
+			free(pmza_mp[i]);
+			pmza_mp[i] = NULL;  
+			free(pyaza_mp[i]);
+			pyaza_mp[i] = NULL;  
+			free(ppmy_mp[i]);
+			ppmy_mp[i] = NULL; 
+			free(ppy_mp[i]);
+			ppy_mp[i] = NULL;  
+			free(pza_mp[i]);
+			pza_mp[i] = NULL;  
+		}
+		free(pmza_mp);
+		pmza_mp = NULL;  
+		free(pyaza_mp);
+		pyaza_mp = NULL; 
+		free(ppmy_mp);
+		ppmy_mp = NULL; 
+		free(pza_mp);
+		pza_mp = NULL;  
+		free(ppy_mp);
+		ppy_mp = NULL;  
+	}
+
+	if (zr_mp) {
+		for (int j = 0; j < n; j++) {
+			free(zr_mp[j]);
+			zr_mp[j] = NULL;  
+		}
+		free(zr_mp);
+		zr_mp = NULL;  
+		free(nrootsmp_mp);
+		nrootsmp_mp = NULL;  
+	}
+
 	n = nn;
 
 	n2 = n * n;
@@ -197,6 +271,7 @@ void VBMicrolensing::change_n_mp(int nn) {
 		free(za);
 		free(za2);
 	}
+
 	if (A) {
 		for (int i = 0; i < nroots; i++) {
 			free(A[i]);
@@ -206,6 +281,7 @@ void VBMicrolensing::change_n_mp(int nn) {
 		free(cpres);
 		free(cfoll);
 	}
+
 	if (coefs_mp) {
 		for (int i = 0; i < n; i++) {
 			free(coefs_mp[i]);
