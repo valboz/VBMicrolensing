@@ -38,7 +38,7 @@ Currently, `VBMicroLensing` works on Linux, Windows, MacOS and python >= 2.7. Th
 ### C++
 
 If you just want to use the C++ library, clone this repository, all cpp files and the 
-`VBMicroLensing.h` are located in in `VBMicroLensing/lib` and shouldbe added to your project. 
+`VBMicroLensing.h` are located in in `VBMicroLensing/lib` and should be added to your project. 
 
 The package also contains the following files:
 - `VBMicroLensing/data/ESPL.tbl`  - Pre-calculated table for Extended-source-point-lens
