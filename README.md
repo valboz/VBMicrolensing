@@ -52,6 +52,8 @@ Full [documentation for the use of VBmicrolensing in python](/docs/python/readme
 Furthermore, the vast majority of functions are documented with Python docstrings which can be accessed as, for example, `?VBBL.BinaryMag2()` in
 a Jupyter notebook.
 
+Some examples showing the capabilities of the package are in the directory [examples](examples).
+
 ## License
 VBMicrolensing is freely available to the community under the 
 GNU Lesser General Public License Version 3 included in this repository.
