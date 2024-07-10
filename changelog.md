@@ -1,2 +1,1 @@
-### 4.0
-First release
+- **4.0**: First release
