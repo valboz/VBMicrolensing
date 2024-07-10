@@ -860,11 +860,6 @@ int VBMicrolensing::froot(complex zi) {
 	err+=abs2(epsbase);
 	zf = z;
 	Jacf = Jac;
-	if (Jacf < 2) {
-	}
-	else {
-		Jacf = Jacf;
-	}
 	S2f = S2;
 	L0f = Lnew;
 	return iter2;
