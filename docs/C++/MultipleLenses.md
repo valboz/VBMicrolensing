@@ -95,11 +95,12 @@ The three different alternative methods are available as `Method::Singlepoly`, `
 
 `Method::Singlepoly` solves the lens equation with the classical associated complex polynomial. It suffers from numerical errors, making it inaccurate even with configurations involving three lenses when two lenses are small. It is offered here just as a reference, but it is not intended to be used in any scientific calculations.
 
-`Method::Multipoly` still uses associated complex polynomials but, in order to avoid numerical problems, the reference frame is re-centered on each of the lenses for the calculation of the corresponding images. The computational time is longer, but this is the most robust algorithm.
+`Method::Multipoly` still uses associated complex polynomials but, in order to avoid numerical problems, the reference frame is re-centered on each of the lenses for the calculation of the corresponding images. The computational time is longer, but this is a much safer algorithm. Problems come back only with 5 lenses or more.
 
-`Method::Nopoly` uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is much faster than Multipoly, but there is a (very remote) risk of missing some images. This is the default method if the user makes no choice.
+`Method::Nopoly` uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is slower than Multipoly for 3 lenses but is faster with 4 or more lenses, where it proves to be the most reliable and accurate method. This is the default method if the user makes no choice.
 
-We recommend using Nopoly and, in case of doubtful results, switching to Multipoly. The full details of all algorithms will be described in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
+The full details of all algorithms will be described in the forthcoming paper (V.Bozza, V.Saggese et al., currently in preparation).
+
 
 
 ## Work in progress
