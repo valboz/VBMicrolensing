@@ -26,9 +26,9 @@ If specifically relevant to your work, please also cite
 
 ### Python
 
-The easiest way to install `VBMicrolensing` is through `pip`
+The easiest way to install `VBMicrolensing` is through `pip install VBMicrolensing`
 
-Clone this repository and run
+In alternative, in order to use the latest build, clone this GitHub repository on your computer, enter your local copy of the repository and run
 ```
 pip install .
 ```
