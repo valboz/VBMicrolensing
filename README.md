@@ -33,7 +33,7 @@ In alternative, in order to use the latest build, clone this GitHub repository o
 pip install .
 ```
 
-Currently, `VBMicrolensing` works on Linux, Windows, MacOS and python >= 2.7. The package requires a C++ compiler supporting C++.
+Currently, `VBMicrolensing` works on Linux, Windows, MacOS and python >= 2.7. The package requires a C++ compiler supporting C++17.
 
 ### C++
 
