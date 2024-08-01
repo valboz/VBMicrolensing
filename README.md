@@ -10,7 +10,7 @@ In particular, VBMicrolensing is designed for the following calculations:
 
 `VBMicrolensing` is written as a C++ library and wrapped as a Python package, the user can call the code from either C++ or Python. This new code encompasses the well-known [VBBinaryLensing](https://github.com/valboz/VBBinaryLensing) code, which is at the basis of several platforms for microlensing modeling. `VBBinaryLensing` will still be available as a legacy software, but will no longer be maintained. 
 
-`VBMicrolensing` has been developed by Valerio Bozza, University of Salerno, with a substantial contribution by Vito Saggese, University of Naples. We also acknowledge a long list of collaborators who contributed to testing and development of particular aspects over the years: Etienne Bachelet, Fran Bartolic, Sebastiano Calchi Novati, Giovanni Covone, Giuseppe D'Ago, Tyler Heintz, Ava Hoag, Markus Hundertmark, Elahe Khalouei, Radek Poleski, Paolo Rota, Sedighe Sajadian, Rachel Street, Keto Zhang, Weicheng Zhang, Wei Zhu.
+`VBMicrolensing` has been developed by **Valerio Bozza**, University of Salerno, with a substantial contribution by **Vito Saggese**, University of Naples. We also acknowledge a long list of collaborators who contributed to testing and development of particular aspects over the years: Etienne Bachelet, Fran Bartolic, Sebastiano Calchi Novati, Giovanni Covone, Giuseppe D'Ago, Tyler Heintz, Ava Hoag, Markus Hundertmark, Elahe Khalouei, Radek Poleski, Paolo Rota, Sedighe Sajadian, Rachel Street, Jiyuan Zhang, Keto Zhang, Weicheng Zhang, Wei Zhu.
 
 ## Attribution
 Any use of this code for scientific publications should be acknowledged by a citation to the works relevant to your study:
