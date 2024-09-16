@@ -20,7 +20,8 @@
 #define _sign(x) ((x>0)? +1 : -1)
 
 #include<stdio.h>
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 class _curve;
 class _sols;
