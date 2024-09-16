@@ -27,7 +27,7 @@ class _sols;
 class _theta;
 class complex;
 struct annulus;
-
+/*
 class complex {
 public:
 	double re;
@@ -36,6 +36,17 @@ public:
 	complex(double);
 	complex(void);
 };
+*/
+class complex {
+public:
+	double re;
+	double im;
+	complex(double a, double b) {re = a; im = b; }
+	complex(double a)           {re = a; im = 0; }
+	complex(void)               {re = 0; im = 0; }
+};
+
+
 #ifndef __unmanaged
 namespace VBMicrolensingLibrary {
 
