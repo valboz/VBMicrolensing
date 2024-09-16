@@ -20,14 +20,15 @@
 #define _sign(x) ((x>0)? +1 : -1)
 
 #include<stdio.h>
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 class _curve;
 class _sols;
 class _theta;
 class complex;
 struct annulus;
-
+/*
 class complex {
 public:
 	double re;
@@ -36,6 +37,17 @@ public:
 	complex(double);
 	complex(void);
 };
+*/
+class complex {
+public:
+	double re;
+	double im;
+	complex(double a, double b) {re = a; im = b; }
+	complex(double a)           {re = a; im = 0; }
+	complex(void)               {re = 0; im = 0; }
+};
+
+
 #ifndef __unmanaged
 namespace VBMicrolensingLibrary {
 
@@ -329,6 +341,7 @@ public:
 
 #endif
 
+/*
 double abs(complex);
 double abs2(complex);
 complex conj(complex);
@@ -360,3 +373,152 @@ complex operator/(complex, int);
 complex operator-(complex);
 bool operator==(complex, complex);
 bool operator!=(complex, complex);
+*/
+
+//////////////////////////////
+//////////////////////////////
+////////complex methods and operators
+//////////////////////////////
+//////////////////////////////
+
+
+
+
+inline double abs2(complex z) {
+	return (z.re*z.re + z.im*z.im);
+}
+
+inline double abs(complex z) {
+	return sqrt(z.re*z.re + z.im*z.im);
+}
+
+inline complex conj(complex z) {
+	return complex(z.re, -z.im);
+}
+
+inline complex sqrt(complex z) {
+	double md = sqrt(z.re*z.re + z.im*z.im);
+	return (md>0) ? complex((sqrt((md + z.re) / 2)*((z.im>0) ? 1 : -1)), sqrt((md - z.re) / 2)) : 0.0;
+}
+
+inline double real(complex z) {
+	return z.re;
+}
+
+inline double imag(complex z) {
+	return z.im;
+}
+
+inline complex operator+(complex p1, complex p2) {
+	return complex(p1.re + p2.re, p1.im + p2.im);
+}
+
+inline complex operator-(complex p1, complex p2) {
+	return complex(p1.re - p2.re, p1.im - p2.im);
+}
+
+inline complex operator*(complex p1, complex p2) {
+	return complex(p1.re*p2.re - p1.im*p2.im, p1.re*p2.im + p1.im*p2.re);
+}
+
+inline complex operator/(complex p1, complex p2) {
+	double md = p2.re*p2.re + p2.im*p2.im;
+	return complex((p1.re*p2.re + p1.im*p2.im) / md, (p1.im*p2.re - p1.re*p2.im) / md);
+}
+
+inline complex operator+(complex z, double a) {
+	return complex(z.re + a, z.im);
+}
+
+inline complex operator-(complex z, double a) {
+	return complex(z.re - a, z.im);
+}
+
+inline complex operator*(complex z, double a) {
+	return complex(z.re*a, z.im*a);
+}
+
+inline complex operator/(complex z, double a) {
+	return complex(z.re / a, z.im / a);
+}
+
+inline complex operator+(double a, complex z) {
+	return complex(z.re + a, z.im);
+}
+
+inline complex operator-(double a, complex z) {
+	return complex(a - z.re, -z.im);
+}
+
+inline complex operator*(double a, complex z) {
+	return complex(a*z.re, a*z.im);
+}
+
+inline complex operator/(double a, complex z) {
+	double md = z.re*z.re + z.im*z.im;
+	return complex(a*z.re / md, -a * z.im / md);
+}
+
+inline complex operator+(complex z, int a) {
+	return complex(z.re + a, z.im);
+}
+
+inline complex operator-(complex z, int a) {
+	return complex(z.re - a, z.im);
+}
+
+inline complex operator*(complex z, int a) {
+	return complex(z.re*a, z.im*a);
+}
+
+inline complex operator/(complex z, int a) {
+	return complex(z.re / a, z.im / a);
+}
+
+inline complex operator+(int a, complex z) {
+	return complex(z.re + a, z.im);
+}
+
+inline complex operator-(int a, complex z) {
+	return complex(a - z.re, -z.im);
+}
+
+inline complex operator*(int a, complex z) {
+	return complex(a*z.re, a*z.im);
+}
+
+inline complex operator/(int a, complex z) {
+	double md = z.re*z.re + z.im*z.im;
+	return complex(a*z.re / md, -a * z.im / md);
+}
+
+inline complex operator-(complex z) {
+	return complex(-z.re, -z.im);
+}
+
+inline bool operator==(complex p1, complex p2) {
+	if (p1.re == p2.re && p1.im == p2.im) return true;
+	return false;
+}
+
+inline bool operator!=(complex p1, complex p2) {
+	if (p1.re == p2.re && p1.im == p2.im) return false;
+	return true;
+}
+
+inline complex expcmplx(complex p1) {
+	double r = exp(p1.re);
+	double theta = atan2(p1.im, p1.re);
+	return complex(r*cos(theta), r*sin(theta));
+}
+
+inline complex cbrt(complex z) {
+	complex zout;
+	double r, r_cube, theta, theta_cube;
+	r = abs(z);
+	r_cube = pow(r, 0.333333333333);
+	theta = atan2(z.im, z.re);
+	theta_cube = theta / 3.;
+	return 	complex(r_cube*cos(theta_cube), r_cube*sin(theta_cube));
+}
+
