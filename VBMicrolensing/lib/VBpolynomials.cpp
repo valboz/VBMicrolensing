@@ -13,7 +13,7 @@
 //////////////////////////////
 
 
-void VBMicrolensing::polyproduct(complex *p1, int n1, complex *p2, int n2, complex *pdest) {
+void VBMicrolensing::polyproduct(complex * __restrict p1, int n1, complex * __restrict p2, int n2, complex * __restrict pdest) {
 	// polynomials are with increasing degree: p1[0]+p1[1]*z+p1[2]*z^2 + ...
 	for (int i = 0; i <= n1 + n2; i++) pdest[i] = 0;
 	for (int i = 0; i <= n1; i++) {
@@ -23,7 +23,7 @@ void VBMicrolensing::polyproduct(complex *p1, int n1, complex *p2, int n2, compl
 	}
 }
 
-void VBMicrolensing::copypol(complex *p1, int n1, complex *pdest) {
+void VBMicrolensing::copypol(complex * __restrict p1, int n1, complex * __restrict pdest) {
 	for (int i = 0; i <= n1; i++) {
 
 		pdest[i] = p1[i];
