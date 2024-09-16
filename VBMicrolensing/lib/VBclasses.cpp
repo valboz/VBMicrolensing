@@ -441,7 +441,7 @@ void _thetas::remove(_theta* stheta) {
 //////////////////////////////
 //////////////////////////////
 
-
+/*
 complex::complex(double a, double b) {
 	re = a;
 	im = b;
@@ -595,3 +595,4 @@ complex cbrt(complex z) {
 	theta_cube = theta / 3.;
 	return 	complex(r_cube*cos(theta_cube), r_cube*sin(theta_cube));
 }
+*/
