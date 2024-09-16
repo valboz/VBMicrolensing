@@ -1,1 +1,2 @@
+-  **v4.1** - 2024/09/?? - Factor 3 speed-up due to inline complex functions and optimizations in polynomial calculations
 -  **v4.0** - 2024/07/10 - First release
