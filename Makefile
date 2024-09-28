@@ -3,17 +3,8 @@ CFLAGS = -O3 -Wall -Wextra -pedantic -fPIC
 # define any directories containing header files other than /usr/include
 INCLUDES = -I/VBMicrolensing/lib
 # define the C++ source files
-SRCS = VBMicrolensing/lib/VBBinaryMag.cpp \
-       VBMicrolensing/lib/VBclasses.cpp \
-       VBMicrolensing/lib/VBESPL.cpp \
-       VBMicrolensing/lib/VBLightCurves.cpp \
-       VBMicrolensing/lib/VBLimbDarkening.cpp \
-       VBMicrolensing/lib/VBMicrolensingLibrary.cpp \
-       VBMicrolensing/lib/VBMultiMag.cpp \
-       VBMicrolensing/lib/VBparallaxcaustics.cpp \
-       VBMicrolensing/lib/VBpolynomials.cpp \
-       VBMicrolensing/lib/VBSkowronGould.cpp \
-
+SRCS = VBMicrolensing/lib/VBMicrolensingLibrary.cpp \
+       
 # define the C object files 
 # This uses Suffix Replacement within a macro:
 #   $(name:string1=string2)
