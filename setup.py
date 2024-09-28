@@ -13,16 +13,7 @@ ext_modules = [
         # List of C++ source code
         sources=[
             'VBMicrolensing/lib/python_bindings.cpp',
-            'VBMicrolensing/lib/VBBinaryMag.cpp',
-            'VBMicrolensing/lib/VBclasses.cpp',
-            'VBMicrolensing/lib/VBESPL.cpp',
-            'VBMicrolensing/lib/VBLightCurves.cpp',
-            'VBMicrolensing/lib/VBLimbDarkening.cpp',
             'VBMicrolensing/lib/VBMicrolensingLibrary.cpp',
-            'VBMicrolensing/lib/VBMultiMag.cpp',
-            'VBMicrolensing/lib/VBparallaxcaustics.cpp',
-            'VBMicrolensing/lib/VBpolynomials.cpp',
-            'VBMicrolensing/lib/VBSkowronGould.cpp'
         ],
 
         # Path to dir of C++ headers
