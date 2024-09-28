@@ -1,2 +1,2 @@
--  **v4.1** - 2024/09/?? - Factor 3 speed-up due to inline complex functions and optimizations in polynomial calculations; All functions collected in only two files; Increased stability for high-mag calculations with new patch in BinaryMagSafe.
+-  **v4.1** - 2024/09/28 - All functions collected in only one file VBMicrolensingLibrary; Factor 3 speed-up due to inline complex functions and optimizations in polynomial calculations; Increased stability for high-mag calculations with new patch in BinaryMagSafe.
 -  **v4.0** - 2024/07/10 - First release
