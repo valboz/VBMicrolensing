@@ -17,7 +17,7 @@ Any use of this code for scientific publications should be acknowledged by a cit
 - [V. Bozza, MNRAS 408 (2010) 2188](https://ui.adsabs.harvard.edu/abs/2010MNRAS.408.2188B/abstract): general algorithm for binary lensing;
 - [V. Bozza et al., MNRAS 479 (2018) 5157](https://ui.adsabs.harvard.edu/abs/2018MNRAS.479.5157B/abstract): BinaryMag2 function, Extended-Source-Point-Lens methods; 
 - [V. Bozza, E. Khalouei and E. Bachelet, MNRAS 505 (2021) 126](https://ui.adsabs.harvard.edu/abs/2021MNRAS.505..126B/abstract): astrometry, generalized limb darkening, Keplerian orbital motion; 
-- V. Bozza, v. Saggese, G. Covone & P. Rota (2024), in preparation: multiple lenses.
+- V. Bozza, v. Saggese, G. Covone, P. Rota & J. Zhang (2024), in preparation: multiple lenses.
 
 If specifically relevant to your work, please also cite
 [J. Skowron and A. Gould, arXiv:1203.1034](https://arxiv.org/abs/1203.1034).
