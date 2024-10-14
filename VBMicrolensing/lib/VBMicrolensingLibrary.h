@@ -1,4 +1,4 @@
-// VBMicrolensing v4.1 (2024)
+// VBMicrolensing v4.1.1 (2024)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
