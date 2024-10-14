@@ -71,13 +71,13 @@ VBMicrolensing::VBMicrolensing() {
 	a1 = 0;
 	npLD = 0;
 	LDtab = rCLDtab = CLDtab = 0;
-	n=0;
-	zr = zcr= pza = pdum = ppy =a=coefs=0;
+	n = 0;
+	zr = zcr = pza = pdum = ppy = a = coefs = 0;
 	s = s_sort = 0;
 	m_mp = 0;
-	zr_mp= coefs_mp=a_mp=ppy_mp=pza_mp = 0;
-	good = Jacs = m=0;
-	pmza = pyaza = ppmy =  0;
+	zr_mp = coefs_mp = a_mp = ppy_mp = pza_mp = 0;
+	good = Jacs = m = 0;
+	pmza = pyaza = ppmy = 0;
 	pmza_mp = pyaza_mp = ppmy_mp = 0;
 	dist_mp = 0;
 	nrootsmp_mp = 0;
@@ -87,12 +87,12 @@ VBMicrolensing::VBMicrolensing() {
 	errs = 0;
 	newseeds = 0;
 	grads = 0;
-	S2s= S3s= S4s = 0;
+	S2s = S3s = S4s = 0;
 	s_offset = new complex;
 	q = q_sort = 0;
 	A = 0;
 	cprec = cpres = cfoll = 0;
-	worst=0;
+	worst = 0;
 	pert = 0;
 	Mag0 = 0;
 	NPcrit = 200;
@@ -110,8 +110,8 @@ VBMicrolensing::VBMicrolensing() {
 
 VBMicrolensing::~VBMicrolensing() {
 	if (nsat) {
-		for (int i = 0; i<nsat; i++) {
-			for (int j = 0; j<ndatasat[i]; j++) free(possat[i][j]);
+		for (int i = 0; i < nsat; i++) {
+			for (int j = 0; j < ndatasat[i]; j++) free(possat[i][j]);
 			free(tsat[i]);
 			free(possat[i]);
 		}
@@ -2077,7 +2077,7 @@ void VBMicrolensing::SetLensGeometry(int nn, double* pr) {
 	free(s);
 }
 
-void VBMicrolensing::SetLensGeometry(int nn, double* q, complex* s) {
+void VBMicrolensing::SetLensGeometry(int nn, double* q, complex * s) {
 	switch (SelectedMethod)
 	{
 	case Method::Singlepoly:
@@ -2096,7 +2096,7 @@ void VBMicrolensing::SetMethod(Method Met) {
 	SelectedMethod = Met;
 }
 
-void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex* s) {
+void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex * s) {
 	static double sumq, qmin, Jac;
 	static int iqmin, dg;
 	static complex pbin[2], z, S2, fac;
@@ -2160,7 +2160,7 @@ void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex* s) {
 	}
 }
 
-void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
+void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex * s) {
 	static int j, i, x, k, p, dg;
 	static double tempq, sumq;
 	static complex temps, pbin[2];
@@ -2277,10 +2277,10 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
             break;                                         \
     }
 
-double VBMicrolensing::MultiMag0(complex yi, _sols** Images) {
+double VBMicrolensing::MultiMag0(complex yi, _sols * *Images) {
 	static double Mag = -1.0;
 	_theta* stheta;
-	_curve* Prov=0, * Prov2;
+	_curve* Prov = 0, * Prov2;
 	_point* scan1, * scan2;
 
 	stheta = new _theta(-1.);
@@ -2327,7 +2327,7 @@ double VBMicrolensing::MultiMag0(double y1, double y2) {
 	return mag;
 }
 
-double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols** Images) {
+double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols * *Images) {
 	static complex y0;
 	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
 	static double errimage, maxerr, currerr, Magold, rhorad2, th2;
@@ -4805,6 +4805,58 @@ double VBMicrolensing::TripleLightCurve(double* pr, double t) {
 	}
 }
 
+double VBMicrolensing::TripleLightCurveParallax(double* pr, double t) {
+	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
+	double q[3] = { 1, exp(pr[1]), exp(pr[8]) };
+	static complex s[3];
+	static double prold[] = { 0,0,0,0,0 };
+	static Method oldmethod = Method::Nopoly;
+	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
+	static double Et[2];
+	int inew = 0;
+	bool changed = false;
+	for (int i = 0; i < 5; i++) {
+		if (pr[inew] != prold[i]) {
+			changed = true;
+			prold[i] = pr[inew];
+		}
+		inew += (i == 1) ? 6 : 1;
+	}
+	if (SelectedMethod != oldmethod) {
+		changed = true;
+		oldmethod = SelectedMethod;
+	}
+	if (changed) {
+		q[0] = 1;
+		q[1] = exp(pr[1]);
+		q[2] = exp(pr[8]);
+		s[0] = exp(pr[0]) / (q[0] + q[1]);
+		s[1] = s[0] * q[0];
+		s[0] = -q[1] * s[0];
+		s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
+		SetLensGeometry(3, q, s);
+	}
+
+	ComputeParallax(t, t0, Et);
+	tn = (t - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+	u = u0 + pai1 * Et[1] - pai2 * Et[0];
+	y_1 = u * salpha - tn * calpha;
+	y_2 = -u * calpha - tn * salpha;
+	mindi = 1.e100;
+	for (int i = 0; i < n; i++) {
+		di = fabs(y_1 - s[i].re) + fabs(y_2 - s[i].im);
+		di /= sqrt(q[i]);
+		if (di < mindi) mindi = di;
+	}
+	if (mindi >= 10.) {
+
+		return 1.;
+	}
+	else {
+		return MultiMag(complex(y_1, y_2), rho, Tol);
+	}
+}
+
 double VBMicrolensing::BinaryLightCurveW(double* pr, double t) {
 	double s = exp(pr[0]), q = exp(pr[1]), rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), t0, u0;
 	double salpha = sin(pr[3]), calpha = cos(pr[3]), xc;
@@ -5311,7 +5363,7 @@ double VBMicrolensing::LDprofile(double r) {
 	return ret;
 }
 
-double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
+double VBMicrolensing::rCLDprofile(double tc, annulus * left, annulus * right) {
 	static int ic;
 	static double rc, cb, lc, r2, cr2, cc, lb, rb;
 
@@ -5959,7 +6011,7 @@ _sols* VBMicrolensing::PlotCrit(double a1, double q1) {
 //////////////////////////////
 
 
-void VBMicrolensing::polyproduct(complex* __restrict p1, int n1, complex* __restrict p2, int n2, complex* __restrict pdest) {
+void VBMicrolensing::polyproduct(complex * __restrict p1, int n1, complex * __restrict p2, int n2, complex * __restrict pdest) {
 	// polynomials are with increasing degree: p1[0]+p1[1]*z+p1[2]*z^2 + ...
 	for (int i = 0; i <= n1 + n2; i++) pdest[i] = 0;
 	for (int i = 0; i <= n1; i++) {
@@ -5969,7 +6021,7 @@ void VBMicrolensing::polyproduct(complex* __restrict p1, int n1, complex* __rest
 	}
 }
 
-void VBMicrolensing::copypol(complex* __restrict p1, int n1, complex* __restrict pdest) {
+void VBMicrolensing::copypol(complex * __restrict p1, int n1, complex * __restrict pdest) {
 	for (int i = 0; i <= n1; i++) {
 
 		pdest[i] = p1[i];
@@ -6563,7 +6615,7 @@ void VBMicrolensing::polycoefficients_multipoly() {
 // See copyright notice for these functions
 
 
-void VBMicrolensing::cmplx_roots_gen(complex* roots, complex* poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
+void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
 	//roots - array which will hold all roots that had been found.
 	//If the flag 'use_roots_as_starting_points' is set to
 	//.true., then instead of point(0, 0) we use value from
@@ -6642,7 +6694,7 @@ void VBMicrolensing::cmplx_roots_gen(complex* roots, complex* poly, int degree, 
 	return;
 }
 
-void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
+void VBMicrolensing::cmplx_roots_multigen(complex * roots, complex * *poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
 
 	static complex poly2[MAXM];
 	static int l, j, i, k, nl, ind, degreenew, croots, n;
@@ -6794,7 +6846,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	return;
 }
 
-void VBMicrolensing::solve_quadratic_eq(complex& x0, complex& x1, complex* poly) {
+void VBMicrolensing::solve_quadratic_eq(complex & x0, complex & x1, complex * poly) {
 	static complex a, b, c, b2, delta;
 	a = poly[2];
 	b = poly[1];
@@ -6818,7 +6870,7 @@ void VBMicrolensing::solve_quadratic_eq(complex& x0, complex& x1, complex* poly)
 
 }
 
-void VBMicrolensing::solve_cubic_eq(complex& x0, complex& x1, complex& x2, complex* poly) {
+void VBMicrolensing::solve_cubic_eq(complex & x0, complex & x1, complex & x2, complex * poly) {
 	//Cubic equation solver for comples polynomial (degree=3)
 	//http://en.wikipedia.org/wiki/Cubic_function   Lagrange's method
 	// poly is an array of polynomial cooefs, length = degree+1, poly[0] is constant
@@ -6868,7 +6920,7 @@ void VBMicrolensing::solve_cubic_eq(complex& x0, complex& x1, complex& x2, compl
 
 }
 
-void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, int& iter, bool& success) {
+void VBMicrolensing::cmplx_laguerre(complex * poly, int degree, complex * root, int& iter, bool& success) {
 	//Subroutine finds one root of a complex polynomial using
 	//Laguerre's method. In every loop it calculates simplified 
 	//Adams' stopping criterion for the value of the polynomial.
@@ -7022,7 +7074,7 @@ void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, in
 	return;
 }
 
-void VBMicrolensing::cmplx_newton_spec(complex* poly, int degree, complex* root, int& iter, bool& success) {
+void VBMicrolensing::cmplx_newton_spec(complex * poly, int degree, complex * root, int& iter, bool& success) {
 	//Subroutine finds one root of a complex polynomial
 	//Newton's method. It calculates simplified Adams' stopping 
 	//criterion for the value of the polynomial once per 10 iterations (!),
@@ -7160,7 +7212,7 @@ void VBMicrolensing::cmplx_newton_spec(complex* poly, int degree, complex* root,
 	//too many iterations here
 }
 
-void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* root, int& iter, bool& success, int starting_mode) {
+void VBMicrolensing::cmplx_laguerre2newton(complex * poly, int degree, complex * root, int& iter, bool& success, int starting_mode) {
 	//Subroutine finds one root of a complex polynomial using
 	//Laguerre's method, Second-order General method and Newton's
 	//method - depending on the value of function F, which is a 
@@ -7527,7 +7579,7 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 #pragma region classes
 
 
-_point::_point(double x, double y, _theta* theta1) {
+_point::_point(double x, double y, _theta * theta1) {
 	x1 = x;
 	x2 = y;
 	theta = theta1;
@@ -7552,7 +7604,7 @@ _curve::_curve(void) {
 	partneratstart = partneratend = this;
 }
 
-_curve::_curve(_point* p1) {
+_curve::_curve(_point * p1) {
 	length = 1;
 	first = last = p1;
 	p1->prev = p1->next = 0;
@@ -7569,7 +7621,7 @@ _curve::~_curve(void) {
 	}
 }
 
-_curve* _curve::divide(_point* ref) {
+_curve* _curve::divide(_point * ref) {
 	_point* scan;
 	_curve* nc;
 	int l1;
@@ -7609,7 +7661,7 @@ void _curve::append(double x1, double x2) {
 	length++;
 }
 
-void _curve::append(_point* pp) {
+void _curve::append(_point * pp) {
 
 	pp->next = last->next;
 	pp->prev = last;
@@ -7635,7 +7687,7 @@ void _curve::prepend(double x1, double x2) {
 	length++;
 }
 
-_curve* _curve::join(_curve* nc) {
+_curve* _curve::join(_curve * nc) {
 	if (length > 0) {
 		last->next = nc->first;
 	}
@@ -7656,7 +7708,7 @@ _curve* _curve::join(_curve* nc) {
 	return this;
 }
 
-_curve* _curve::joinbefore(_curve* nc) {
+_curve* _curve::joinbefore(_curve * nc) {
 	if (length > 0) {
 		first->prev = nc->last;
 	}
@@ -7693,7 +7745,7 @@ _curve* _curve::reverse(void) {
 	return this;
 }
 
-void _curve::drop(_point* ref) {
+void _curve::drop(_point * ref) {
 	_point* scan;
 	if (length) {
 		for (scan = last; scan && (scan != ref); scan = scan->prev);
@@ -7720,7 +7772,7 @@ void _curve::drop(_point* ref) {
 	}
 }
 
-double _curve::closest2(_point* ref, _point** clos2) {
+double _curve::closest2(_point * ref, _point * *clos2) {
 	double mi = 1.e100, mi2 = 1.e100, FP;
 	_point* scan, * clos;
 	if (length > 1) {
@@ -7745,7 +7797,7 @@ double _curve::closest2(_point* ref, _point** clos2) {
 	return (**clos2 - *ref);
 }
 
-double _curve::closest(_point* ref, _point** clos) {
+double _curve::closest(_point * ref, _point * *clos) {
 	double mi = 1.e100, FP;
 	_point* scan;
 	for (scan = first; scan != 0; scan = scan->next) {
@@ -7758,7 +7810,7 @@ double _curve::closest(_point* ref, _point** clos) {
 	return mi;
 }
 
-void _curve::complement(_point** sott, int lensott, _point** res, int lenres) {
+void _curve::complement(_point * *sott, int lensott, _point * *res, int lenres) {
 	int flag, i;
 	_point* scan;
 	i = 0;
@@ -7798,7 +7850,7 @@ _sols::~_sols(void) {
 	}
 }
 
-void _sols::append(_curve* cc) {
+void _sols::append(_curve * cc) {
 	if (length == 0) {
 		first = cc;
 		last = cc;
@@ -7813,7 +7865,7 @@ void _sols::append(_curve* cc) {
 	length++;
 }
 
-void _sols::prepend(_curve* cc) {
+void _sols::prepend(_curve * cc) {
 	if (length == 0) {
 		first = cc;
 		last = cc;
@@ -7828,7 +7880,7 @@ void _sols::prepend(_curve* cc) {
 	length++;
 }
 
-void _sols::drop(_curve* ref) {
+void _sols::drop(_curve * ref) {
 	_curve* scan;
 	if (length) {
 		for (scan = last; scan && (scan != ref); scan = scan->prev);
@@ -7855,7 +7907,7 @@ void _sols::drop(_curve* ref) {
 	}
 }
 
-void _sols::join(_sols* nc) {
+void _sols::join(_sols * nc) {
 	if (length > 0) {
 		last->next = nc->first;
 	}
@@ -7935,7 +7987,7 @@ _theta* _thetas::insert(double th) {
 	return scan2;
 }
 
-void _thetas::remove(_theta* stheta) {
+void _thetas::remove(_theta * stheta) {
 	_theta* scan;
 	scan = first;
 	while (scan != 0) {
