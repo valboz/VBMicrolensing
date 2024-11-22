@@ -4173,9 +4173,9 @@ void VBMicrolensing::TripleLightCurve(double* pr, double* ts, double* mags, doub
 		y1s[i] = pr[2] * salpha - tn * calpha;
 		y2s[i] = -pr[2] * calpha - tn * salpha;
 		mindi = 1.e100;
-		for (int i = 0; i < n; i++) {
-			di = fabs(y1s[i] - s[i].re) + fabs(y2s[i] - s[i].im);
-			di /= sqrt(q[i]);
+		for (int j = 0; j < n; j++) {
+			di = fabs(y1s[i] - s[j].re) + fabs(y2s[i] - s[j].im);
+			di /= sqrt(q[j]);
 			if (di < mindi) mindi = di;
 		}
 		if (mindi >= 10.) {
@@ -4210,9 +4210,9 @@ void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* ma
 		y1s[i] = u * salpha - tn * calpha;
 		y2s[i] = -u * calpha - tn * salpha;
 		mindi = 1.e100;
-		for (int i = 0; i < n; i++) {
-			di = fabs(y1s[i] - s[i].re) + fabs(y2s[i] - s[i].im);
-			di /= sqrt(q[i]);
+		for (int j = 0; j < n; j++) {
+			di = fabs(y1s[i] - s[j].re) + fabs(y2s[i] - s[j].im);
+			di /= sqrt(q[j]);
 			if (di < mindi) mindi = di;
 		}
 		if (mindi >= 10.) {
