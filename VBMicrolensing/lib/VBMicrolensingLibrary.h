@@ -230,9 +230,9 @@ public:
 	double BinSourceSingleLensXallarap(double* parameters, double t);
 	double BinSourceBinLensPOX(double* parameters, double t);
 
-
 	double TripleLightCurve(double *parameters, double t);
-// Constructor and destructor
+	double TripleLightCurveParallax(double* parameters, double t);
+	// Constructor and destructor
 
 	VBMicrolensing();
 	~VBMicrolensing();
