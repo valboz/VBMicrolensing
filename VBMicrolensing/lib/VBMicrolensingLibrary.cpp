@@ -4416,6 +4416,7 @@ void VBMicrolensing::BinaryLightCurveKepler(double* pr, double* ts, double* mags
 		//coY2 = w2 * (-szs2 * w12 + 2 * szs*w1*w3 - w23 + ar * (-4 * szs*w1*w3 + szs2 * (w12 - w33) + (-w11 + w23)));
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0, Et);
+		M = n * (ts[i] - tperi);
 		while (M > M_PI) M -= 2 * M_PI;
 		while (M < -M_PI) M += 2 * M_PI;
 		EE = M + e * sin(M);
