@@ -27,7 +27,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         vbm.def_readwrite("a1", &VBMicrolensing::a1,
                 "Linear limb darkening coefficient. I(r)=I(0)(1-a1(1-\sqrt{1-r^2/\rho^2}))");
         vbm.def_readwrite("a2", &VBMicrolensing::a2,
-                "Secontd limb darkening coefficient.");
+                "Second limb darkening coefficient.");
         vbm.def_readwrite("minannuli", &VBMicrolensing::minannuli,
                 "Minimum number of annuli to calculate for limb darkening.");
         vbm.def_readwrite("NPcrit", &VBMicrolensing::NPcrit,
