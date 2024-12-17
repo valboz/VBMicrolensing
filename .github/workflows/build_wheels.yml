@@ -8,15 +8,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-13,macos-14] # was macos-latest
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
-        # env:
+        env:                            #
+          MACOSX_DEPLOYMENT_TARGET: "10.15" # 
         #   CIBW_SOME_OPTION: value
         #    ...
         #with:
