@@ -1,21 +1,24 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "pybind11>=2.6.1"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=0.10", "pybind11"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "VBMicrolensing"
 description = "VBMicrolensing is a tool for efficient computation in gravitational microlensing events using the advanced contour integration method, supporting single, binary and multiple lenses."
-version = "4.1.2"
+version = "4.2"
 keywords = ['Microlsening magnification and astrometry']
+authors = [
+    { name = "Valerio Bozza", email = "valboz@sa.infn.it" },
+    { name = "Vito Saggese", email = "vitosaggese.vs@gmail.com" },
+]
 
 license = { text = "GPL-3.0" }
 requires-python = ">=3.6,<4"
 readme = "README.md"
 classifiers = [
     'Development Status :: 5 - Production/Stable',
-    'Intended Audience :: Developers',
-    'Topic :: Software Development :: Build Tools',
-    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Programming Language :: Python :: 3',
 ]
 dependencies = [
@@ -23,8 +26,22 @@ dependencies = [
     "pytest",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
+[project.urls]
+Homepage = "https://github.com/valboz/VBMicrolensing"
+
+[tool.scikit-build]
+build-dir = "build"
+minimum-version = "build-system.requires"
+
+[tool.cibuildwheel]
+build-verbosity = "3"
 
 [tool.setuptools.package-data]
 "VBMicrolensing.data" = ["data/*"]
+
+
+
+
+
+
+
