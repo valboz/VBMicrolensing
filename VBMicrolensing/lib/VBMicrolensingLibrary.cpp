@@ -1,4 +1,4 @@
-// VBMicrolensing v4.1.2 (2024)
+// VBMicrolensing v4.2 (2024)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -34,6 +34,8 @@ char systemslash = '/';
 //#define _PRINT_ERRORS2
 //#define _PRINT_ERRORS
 //#define _PRINT_ERRORS_DARK
+
+char VBMicrolensing::ESPLtablefile[1024] = "fatto";
 
 #pragma region Constructor/destructor
 
@@ -267,8 +269,9 @@ double VBMicrolensing::ESPLMag(double u, double RSv) {
 	int iz, ir;
 
 	if (ESPLoff) {
-		printf("\nLoad ESPL table first!");
-		return 0;
+		//printf("\nLoad ESPL table first!");
+		//return 0;
+		LoadESPLTable(ESPLtablefile);
 	}
 
 	fr = -10.857362047581296 * log(0.01 * RSv);

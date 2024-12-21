@@ -15,7 +15,7 @@ VBMicrolensing VBM;
 PYBIND11_MODULE(VBMicrolensing, m) {
     py::options options;
     options.disable_function_signatures();
-    
+
     py::class_<VBMicrolensing> vbm(m, "VBMicrolensing");
         vbm.def(py::init());
         // Settings
@@ -53,6 +53,10 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             "Exponent for the mass-radius relation: R = M^q; default value is q=0.89");
         vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
             """Loads a pre calculated binary table for extended source calculation.""");
+        vbm.def("SetESPLtablefile", [](char* s) { 
+            VBMicrolensing::SetESPLtablefile(s);
+            },
+            """Sets the path to a pre calculated binary table for extended source calculation.""");
         // Maginfication calculations
         vbm.def("PSPLMag", &VBMicrolensing::PSPLMag,
             py::return_value_policy::reference,

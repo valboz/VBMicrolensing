@@ -1,4 +1,4 @@
-// VBMicrolensing v4.1 (2024)
+// VBMicrolensing v4.2 (2024)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -34,6 +34,7 @@
 #define _sign(x) ((x>0)? +1 : -1)
 
 #include <stdio.h>
+#include <string.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -138,6 +139,8 @@ public:
 	bool squarecheck;
 	bool astrometry;
 
+	static char ESPLtablefile[1024];
+	static void SetESPLtablefile(char *instring) { strcpy(ESPLtablefile, instring); }
 	double Tol,RelTol,a1,a2,t0_par;
 	double mass_radius_exponent, mass_luminosity_exponent;
 	int satellite,parallaxsystem,t0_par_fixed,nsat;
@@ -241,6 +244,8 @@ public:
 		LDprofiles curLDprofile;
 		Method SelectedMethod;
 };
+
+//std::string VBMicrolensing::ESPLtablefile = "";
 
 double VBDefaultCumulativeFunction(double r, double *a1);
 
