@@ -42,7 +42,6 @@ If the finite size of the sources is relevant, one can use `BinSourceExtLightCur
 ```
 rho = 0.1 # Size of source 1
 pr = [math.log(tE), math.log(FR), u01, u02, t01, t02, math.log(rho)]
-VBM.LoadESPLTable("ESPL.tbl"); #Load ESPL table
 Mag, y1, y2 = VBM.BinSourceExtLightCurve(pr, t) # Calculates the magnification for extended binary sources
 ```
 
@@ -81,9 +80,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
-
-# Load the ESPL table
-VBM.LoadESPLTable("ESPL.tbl")
 
 # Parameters
 u0 = 0.1  # Impact parameter for the first source
