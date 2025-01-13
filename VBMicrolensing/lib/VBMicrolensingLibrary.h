@@ -1,4 +1,4 @@
-// VBMicrolensing v4.2 (2024)
+// VBMicrolensing v4.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -124,6 +124,7 @@ class VBMicrolensing
 
 public: 
 
+//	bool testnewcoefs;
 
 	void SetLensGeometry(int n, double* q, complex *s);
 	void SetLensGeometry(int n, double* pr);
@@ -144,7 +145,7 @@ public:
 	double Tol,RelTol,a1,a2,t0_par;
 	double mass_radius_exponent, mass_luminosity_exponent;
 	int satellite,parallaxsystem,t0_par_fixed,nsat;
-	int minannuli,nannuli,NPS,NPcrit;
+	int minannuli,maxannuli,nannuli,NPS,NPcrit;
 	int newtonstep;
 	double y_1,y_2,av, therr, astrox1,astrox2;
 	double (*CumulativeFunction)(double r,double *LDpars);

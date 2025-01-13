@@ -1,4 +1,4 @@
-// VBMicrolensing v4.2 (2024)
+// VBMicrolensing v4.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -69,6 +69,7 @@ VBMicrolensing::VBMicrolensing() {
 	t0_par_fixed = -1;
 	t0_par = 7000;
 	minannuli = 1;
+	maxannuli = 100;
 	curLDprofile = LDlinear;
 	a1 = 0;
 	npLD = 0;
@@ -108,6 +109,7 @@ VBMicrolensing::VBMicrolensing() {
 	squarecheck = false;
 	CumulativeFunction = &VBDefaultCumulativeFunction;
 	SelectedMethod = Method::Nopoly;
+//	testnewcoefs = true;
 }
 
 VBMicrolensing::~VBMicrolensing() {
@@ -585,26 +587,26 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 	RSi = RS;
 	RSo = RS;
 	NPSsafe = NPS;
-	if (Mag < 0 || Mag * RS > 3) {
+	if (Mag < 0 || Mag * RS > 3 || therr> 1000*Tol) {
 		mag1 = -1;
 		delta1 = 3.33333333e-8;
-		while ((mag1 < 0.1 || mag1 * RSi > 3) && RSi >= 0) {
+		while ((mag1 < 0.1 || mag1 * RSi > 3 || therr > 1000 * Tol) && RSi >= 0) {
 			delete* images;
 			delta1 *= 3.;
 			RSi = RS - delta1;
 			mag1 = (RSi > 0) ? BinaryMag(s, q, y1v, y2v, RSi, Tol, images) : BinaryMag0(s, q, y1v, y2v, images);
-			//			printf("\n-safe1 %lf %lf %d", RSi, mag1, NPS);
+	//					printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
 			NPSsafe += NPS;
 		}
 		if (mag1 < 0) mag1 = 1.0;
 		mag2 = -1;
 		delta2 = 3.33333333e-8;
-		while (mag2 < 0.1 || mag2 * RSo > 3) {
+		while ((mag2 < 0.1 || mag2 * RSo > 3 || therr > 1000 * Tol) && RSo<1.e4) {
 			delta2 *= 3.;
 			RSo = RS + delta2;
 			delete* images;
 			mag2 = BinaryMag(s, q, y1v, y2v, RSo, Tol, images);
-			//			printf("\n-safe2 %lf %lf %d", RSo,mag2,NPS);
+	//					printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
 			NPSsafe += NPS;
 		}
 		Mag = (mag1 * delta2 + mag2 * delta1) / (delta1 + delta2);
@@ -737,9 +739,9 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 #ifdef _PRINT_TIMES
 		tim0 = Environment::TickCount;
 #endif
-		//if (NPS == 422) {
-		//	NPS = NPS;
-		//}
+		if (NPS == 44) {
+			NPS = NPS;
+		}
 
 		Prov = NewImages(y, coefs, stheta);
 #ifdef _PRINT_TIMES
@@ -829,7 +831,7 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 			}
 #endif
 #ifdef _PRINT_ERRORS2
-			printf("\nNPS= %d Mag = %lf maxerr= %lg currerr =%lg th = %lf", NPS, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), th);
+			printf("\nNPS= %d Mag = %lf maxerr= %lg currerr =%lg errbuff = %lg th = %lf", NPS, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), errbuff / (M_PI * RSv * RSv), th);
 #endif
 			}
 		} while ((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && ((flag < NPSold)/* || NPS<8 ||(currerr>10*errimage)*/)/*&&(flagits)*/);
@@ -969,7 +971,7 @@ double VBMicrolensing::BinaryMagDark(double a, double q, double y1, double y2, d
 		currerr = scan->err;
 		flag = 0;
 		nannuli = nannold = 1;
-		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag)) || (nannuli < minannuli)) {
+		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag) && nannuli< maxannuli) || (nannuli < minannuli)) {
 			maxerr = 0;
 			for (scan2 = first->next; scan2; scan2 = scan2->next) {
 #ifdef _PRINT_ERRORS_DARK
@@ -1167,16 +1169,35 @@ _curve* VBMicrolensing::NewImages(complex yi, complex * coefs, _theta * theta) {
 	y = yi + coefs[11];
 	yc = conj(y);
 
-	// coefs[6]=a*a; coefs[7]=a*a*a; coefs[8]=m2*m2; coefs[9]=a*a*m2*m2; coefs[10]=a*m2; coefs[11]=a*m1; coefs[20]=a; coefs[21]=m1; coefs[22]=m2;
+//	if (testnewcoefs) {
 
-	coefs[0] = coefs[9] * y;
-	coefs[1] = coefs[10] * (coefs[20] * (coefs[21] + y * (2 * yc - coefs[20])) - 2 * y);
-	coefs[2] = y * (1 - coefs[7] * yc) - coefs[20] * (coefs[21] + 2 * y * yc * (1 + coefs[22])) + coefs[6] * (yc * (coefs[21] - coefs[22]) + y * (1 + coefs[22] + yc * yc));
-	coefs[3] = 2 * y * yc + coefs[7] * yc + coefs[6] * (yc * (2 * y - yc) - coefs[21]) - coefs[20] * (y + 2 * yc * (yc * y - coefs[22]));
-	coefs[4] = yc * (2 * coefs[20] + y);
-	coefs[4] = yc * (coefs[4] - 1) - coefs[20] * (coefs[4] - coefs[21]);
-	coefs[5] = yc * (coefs[20] - yc);
+		coefs[12] = coefs[20] - yc;
+		coefs[13] = coefs[20] + y;
+		coefs[14] = coefs[13] + y;
+		coefs[15] = conj(coefs[14]);
+		coefs[16] = coefs[20] * y;
+		coefs[17] = conj(coefs[16]);
+		coefs[18] = conj(coefs[12]);
 
+		coefs[0] = coefs[9] * y;
+		coefs[1] = -coefs[9] + coefs[10] * (coefs[20] + (2 * coefs[17] - 2 - coefs[6]) * y);
+		coefs[2] = coefs[10] * (1 + coefs[16] - 2 * yc * coefs[13]) - (coefs[17] - 1) * (coefs[16] * coefs[12] - coefs[18]);
+		coefs[3] = coefs[10] * coefs[15] + (coefs[7] + 2 * (1 + coefs[6]) * y - coefs[17] * coefs[14]) * yc - coefs[20] * coefs[13];
+		coefs[4] = -coefs[10] - coefs[12] * (yc * (coefs[13] + coefs[20]) - 1);
+		coefs[5] = yc * coefs[12];
+	//}
+	//else {
+	//	///////////////Old
+	//	// coefs[6]=a*a; coefs[7]=a*a*a; coefs[8]=m2*m2; coefs[9]=a*a*m2*m2; coefs[10]=a*m2; coefs[11]=a*m1; coefs[20]=a; coefs[21]=m1; coefs[22]=m2;
+
+	//	coefs[0] = coefs[9] * y;
+	//	coefs[1] = coefs[10] * (coefs[20] * (coefs[21] + y * (2 * yc - coefs[20])) - 2 * y);
+	//	coefs[2] = y * (1 - coefs[7] * yc) - coefs[20] * (coefs[21] + 2 * y * yc * (1 + coefs[22])) + coefs[6] * (yc * (coefs[21] - coefs[22]) + y * (1 + coefs[22] + yc * yc));
+	//	coefs[3] = 2 * y * yc + coefs[7] * yc + coefs[6] * (yc * (2 * y - yc) - coefs[21]) - coefs[20] * (y + 2 * yc * (yc * y - coefs[22]));
+	//	coefs[4] = yc * (2 * coefs[20] + y);
+	//	coefs[4] = yc * (coefs[4] - 1) - coefs[20] * (coefs[4] - coefs[21]);
+	//	coefs[5] = yc * (coefs[20] - yc);
+	//}
 	bad = 1;
 	disim = -1.;
 	f1 = 0;
@@ -1254,7 +1275,7 @@ _curve* VBMicrolensing::NewImages(complex yi, complex * coefs, _theta * theta) {
 						_Jacobians3
 							corrquad += cq;
 					}
-				checkJac += (fabs(Prov->last->dJ) > 1.e-7) ? _sign(Prov->last->dJ) : 10;
+				checkJac +=  (fabs(Prov->last->dJ) > 1.e-9) ? _sign(Prov->last->dJ) : 10;
 				Prov->last->theta = theta;
 
 			}
@@ -1297,7 +1318,7 @@ _curve* VBMicrolensing::NewImages(complex yi, complex * coefs, _theta * theta) {
 						_Jacobians3
 							corrquad += cq;
 					}
-				checkJac += (fabs(Prov->last->dJ) > 1.e-7) ? _sign(Prov->last->dJ) : 10;
+				checkJac += (fabs(Prov->last->dJ) > 1.e-9) ? _sign(Prov->last->dJ) : 10;
 				Prov->last->theta = theta;
 
 				if (fabs(dJ.re) < 1.e-5) f1 = 1;
@@ -1489,7 +1510,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp * 0.04166666667;
-		parab1 = -(-scan->ds + scan2->ds) * mi;
+		parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scurve->parabstart = 0.5 * (parab1 + parab2);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: created image:
@@ -1567,7 +1588,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 		cmp = sqrt(mi / cmp2);
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp * 0.04166666666667;
-		parab1 = -(scan->ds - scan2->ds) * mi;
+		parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: destructed image:
@@ -1654,7 +1675,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp * 0.0416666666666667;  ////// (1/24 cube(delta Teta))
-		parab1 = (scan->ds + scan2->ds) * mi; // Vecchia Correzione parabolica
+		parab1 = mi/(1/scan->ds + 1/scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
@@ -1764,7 +1785,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			cmp = sqrt(mi / cmp2);
 			cmp_2 = cmp * cmp;
 			mi = cmp_2 * cmp * 0.04166666666666667;
-			parab1 = (scan->ds - scan2->ds) * mi;
+			parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
 			parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 			cfoll[issoc[0]]->parabstart = 0.5 * (parab1 + parab2);
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: created image:
@@ -1848,7 +1869,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			cmp = sqrt(mi / cmp2);
 			cmp_2 = cmp * cmp;
 			mi = cmp_2 * cmp * 0.0416666666667;
-			parab1 = -(scan->ds - scan2->ds) * mi;
+			parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
 			parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 			scan->parab = 0.5 * (parab1 + parab2);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: destructed image:
@@ -1930,7 +1951,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			cmp = (scan->theta->th - scan2->theta->th);
 			cmp_2 = cmp * cmp;
 			mi = cmp_2 * cmp * 0.041666666667;
-			parab1 = (scan->ds + scan2->ds) * mi; // Vecchia Correzione parabolica
+			parab1 = mi / (1 / scan->ds + 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
 			// Nuova correzione parabolica
 			parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 			scan->parab = 0.5 * (parab1 + parab2);
@@ -6646,6 +6667,8 @@ void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree
 	static int i, j, n, iter;
 	static bool success;
 	static complex coef, prev;
+	static int ismallest;
+	static double abssmall;
 
 	if (!use_roots_as_starting_points) {
 		for (int jj = 0; jj < degree; jj++) {
@@ -6662,6 +6685,19 @@ void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree
 	}
 
 	for (n = degree; n >= 3; n--) {
+		// Look for smallest root first
+		ismallest = n - 1;
+		abssmall = abs2(roots[ismallest]);
+		for (int i = 0; i < n - 1; i++) {
+			if (abs2(roots[i]) < abssmall) {
+				ismallest = i; abssmall = abs2(roots[ismallest]);
+			}
+		}
+		coef = roots[ismallest];
+		roots[ismallest] = roots[n - 1];
+		roots[n - 1] = coef;
+
+		// Find root
 		cmplx_laguerre2newton(poly2, n, &roots[n - 1], iter, success, 2);
 		if (!success) {
 			roots[n - 1] = complex(0, 0);
