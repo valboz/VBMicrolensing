@@ -71,7 +71,7 @@ Failures (errors larger than accuracy goal specified by `VBM.Tol`) are below 1 i
 
 $0.01< s < 10$ for $q = 1.0$
 
-$0.1 < s < 4$ for $q=10^{-9}$
+$0.1 < s < 2.5$ for $q=10^{-9}$
 
 For intermediate mass ratios, these ranges can be easily interpolated.
 
