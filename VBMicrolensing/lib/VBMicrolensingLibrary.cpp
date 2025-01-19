@@ -1,4 +1,4 @@
-// VBMicrolensing v4.2 (2025)
+// VBMicrolensing v4.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -739,9 +739,9 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 #ifdef _PRINT_TIMES
 		tim0 = Environment::TickCount;
 #endif
-		if (NPS == 44) {
-			NPS = NPS;
-		}
+		//if (NPS == 44) {
+		//	NPS = NPS;
+		//}
 
 		Prov = NewImages(y, coefs, stheta);
 #ifdef _PRINT_TIMES
