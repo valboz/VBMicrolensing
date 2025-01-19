@@ -27,13 +27,10 @@ print(f"PSPL Magnification = {Mag}") # Output should be 10.037...
 
 ## Extended-Source-Point-Lens
 
-For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicrolensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file should be loaded before any calculations involving Extended-Source-Point-Lenses (ESPL).
+For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicrolensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file is automatically loaded upon the first calculation involving Extended-Source-Point-Lenses (ESPL).
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
-
-VBM.LoadESPLTable("ESPL.tbl") # Load the pre-calculated table (you only have to do this once)
-#The ESPL.dat file is located inside the data folder; copy it to your directory.
 
 u = 0.1 # Source-lens separation in Einstein radii
 rho = 0.01 # Source radius in units of the Einstein angle
@@ -57,8 +54,6 @@ If you need astrometry calculations together with magnification, you have to tur
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
-
-VBM.LoadESPLTable("ESPL.tbl") # Load the pre-calculated table (you only have to do this once)
 
 u = 0.1 # Source-lens separation in Einstein radii
 rho = 0.01 # Source radius in units of the Einstein angle

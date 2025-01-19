@@ -59,7 +59,7 @@ This variant of `BinaryMag` can be useful to check how the algorithm proceeds up
 
 ### Estimated error
 
-Another important diagnostics only available with `BinaryMag` is the error estimate `VBM.therr`. As said before, the sampling on the source boundary is increased until the estimated error falls below the accuracy or precision thresholds fixed by `VBM.Tol` and `VBM.RelTol` (see [Accuracy Control](AccuracyControl.md)). However, when the input parameters are pushed to extreme values, numerical errors will eventually dominate and preclude any possibilities to meet the desired accuracy. `BinaryMag` will always try to return a reasonable estimate of the magnification by discarding problematic points on the source boundary. This comes to the cost of leaving irreducible errors in the final result. Therefore, `VBM.therr` can track such occurrences and report an error estimate that can be useful in these particular situations.
+Another important diagnostics is the error estimate `VBM.therr`. As said before, the sampling on the source boundary is increased until the estimated error falls below the accuracy or precision thresholds fixed by `VBM.Tol` and `VBM.RelTol` (see [Accuracy Control](AccuracyControl.md)). However, when the input parameters are pushed to extreme values, numerical errors will eventually dominate and preclude any possibilities to meet the desired accuracy. `BinaryMag` will always try to return a reasonable estimate of the magnification by discarding problematic points on the source boundary. This comes to the cost of leaving irreducible errors in the final result. Therefore, `VBM.therr` can track such occurrences and report an error estimate that can be useful in these particular situations.
 
 ## Parameters ranges
 
@@ -71,7 +71,7 @@ Failures (errors larger than accuracy goal specified by `VBM.Tol`) are below 1 i
 
 $0.01< s < 10$ for $q = 1.0$
 
-$0.1 < s < 4$ for $q=10^{-9}$
+$0.1 < s < 2.5$ for $q=10^{-9}$
 
 For intermediate mass ratios, these ranges can be easily interpolated.
 

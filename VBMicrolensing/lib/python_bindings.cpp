@@ -15,7 +15,7 @@ VBMicrolensing VBM;
 PYBIND11_MODULE(VBMicrolensing, m) {
     py::options options;
     options.disable_function_signatures();
-    
+
     py::class_<VBMicrolensing> vbm(m, "VBMicrolensing");
         vbm.def(py::init());
         // Settings
@@ -27,7 +27,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         vbm.def_readwrite("a1", &VBMicrolensing::a1,
                 "Linear limb darkening coefficient. I(r)=I(0)(1-a1(1-\sqrt{1-r^2/\rho^2}))");
         vbm.def_readwrite("a2", &VBMicrolensing::a2,
-                "Secontd limb darkening coefficient.");
+                "Second limb darkening coefficient.");
         vbm.def_readwrite("minannuli", &VBMicrolensing::minannuli,
                 "Minimum number of annuli to calculate for limb darkening.");
         vbm.def_readwrite("NPcrit", &VBMicrolensing::NPcrit,
@@ -53,6 +53,10 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             "Exponent for the mass-radius relation: R = M^q; default value is q=0.89");
         vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
             """Loads a pre calculated binary table for extended source calculation.""");
+        vbm.def("SetESPLtablefile", [](char* s) { 
+            VBMicrolensing::SetESPLtablefile(s);
+            },
+            """Sets the path to a pre calculated binary table for extended source calculation.""");
         // Maginfication calculations
         vbm.def("PSPLMag", &VBMicrolensing::PSPLMag,
             py::return_value_policy::reference,
