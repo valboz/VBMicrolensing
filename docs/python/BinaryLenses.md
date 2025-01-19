@@ -7,7 +7,11 @@ The binary lens equation reads
 
 $$ \vec{y} = \vec{x} - m_A \frac{\vec{x}- \vec{x}_A}{|\vec{x}- \vec{x}_A|^2} - m_B \frac{\vec{x}- \vec{x}_B}{|\vec{x}- \vec{x}_B|^2}$$
 
-Here $\vec{y}\equiv(y_1,y_2)$ is the source position, $\vec{x}\equiv(x_{1},x_{2}$ is the image position, $\vec{x}_A$ and $\vec{x}_B$ are the positions of the two lenses, $m_A$ and $m_B$ are the mass fractions of the two lenses. All angular coordinates are in units of the total Einstein radius, defined in terms of the total mass of the system.
+Here 
+
+$\vec{y}\equiv(y_1,y_2)$ 
+
+is the source position, $\vec{x}\equiv(x_{1},x_{2})$ is the image position, $\vec{x}_A$ and $\vec{x}_B$ are the positions of the two lenses, $m_A$ and $m_B$ are the mass fractions of the two lenses. All angular coordinates are in units of the total Einstein radius, defined in terms of the total mass of the system.
 
 The convention we use in VBMicrolensing for the binary lens is that the origin is placed in the barycenter of the system and that the two lenses are along the $x_1$ axis. Introducing the mass ratio $q\equiv m_B/m_A$, we have that all quantities are expressed in terms of two parameters: **the mass ratio $q$ and the separation between the two lenses $s$**:
 
