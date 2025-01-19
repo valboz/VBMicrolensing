@@ -1,6 +1,13 @@
 name: Build
 
-on: [push]
+on: 
+  push:
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - '**.py'
+      - '**.toml'
+      - '**.yml'
 
 jobs:
   build_wheels:
