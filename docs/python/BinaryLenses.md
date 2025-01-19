@@ -9,7 +9,7 @@ $$ \vec{y} = \vec{x} - m_A \frac{\vec{x}- \vec{x}_A}{|\vec{x}- \vec{x}_A|^2} - m
 
 Here 
 
-$\vec{y}\equiv(y_1,y_2)$ 
+$$\vec{y}\equiv(y_1,y_2)$$
 
 is the source position, $\vec{x}\equiv(x_{1},x_{2})$ is the image position, $\vec{x}_A$ and $\vec{x}_B$ are the positions of the two lenses, $m_A$ and $m_B$ are the mass fractions of the two lenses. All angular coordinates are in units of the total Einstein radius, defined in terms of the total mass of the system.
 
