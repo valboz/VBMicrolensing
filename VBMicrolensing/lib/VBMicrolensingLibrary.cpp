@@ -1510,7 +1510,8 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp * 0.04166666667;
-		parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+//		parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+		parab1 = mi *( scan->ds - scan2->ds); // Vecchia Correzione parabolica
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scurve->parabstart = 0.5 * (parab1 + parab2);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: created image:
@@ -1588,7 +1589,8 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 		cmp = sqrt(mi / cmp2);
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp * 0.04166666666667;
-		parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+//		parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+		parab1 = -mi * ( scan->ds - scan2->ds); // Vecchia Correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: destructed image:
@@ -1675,7 +1677,8 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
 		mi = cmp_2 * cmp * 0.0416666666666667;  ////// (1/24 cube(delta Teta))
-		parab1 = mi/(1/scan->ds + 1/scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+//		parab1 = mi/(1/scan->ds + 1/scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+		parab1 = mi * (scan->ds + scan2->ds); // Vecchia Correzione parabolica
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
@@ -1785,7 +1788,8 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			cmp = sqrt(mi / cmp2);
 			cmp_2 = cmp * cmp;
 			mi = cmp_2 * cmp * 0.04166666666666667;
-			parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+//			parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+			parab1 = mi * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
 			parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 			cfoll[issoc[0]]->parabstart = 0.5 * (parab1 + parab2);
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: created image:
@@ -1869,7 +1873,8 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			cmp = sqrt(mi / cmp2);
 			cmp_2 = cmp * cmp;
 			mi = cmp_2 * cmp * 0.0416666666667;
-			parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+//			parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+			parab1 = -mi *(scan->ds - scan2->ds); // Vecchia Correzione parabolica
 			parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 			scan->parab = 0.5 * (parab1 + parab2);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: destructed image:
@@ -1951,7 +1956,8 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			cmp = (scan->theta->th - scan2->theta->th);
 			cmp_2 = cmp * cmp;
 			mi = cmp_2 * cmp * 0.041666666667;
-			parab1 = mi / (1 / scan->ds + 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+//			parab1 = mi / (1 / scan->ds + 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+			parab1 = mi * (scan->ds + scan2->ds); // Vecchia Correzione parabolica
 			// Nuova correzione parabolica
 			parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 			scan->parab = 0.5 * (parab1 + parab2);
