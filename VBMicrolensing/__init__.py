@@ -1,4 +1,4 @@
-from VBMicrolensing.VBMicrolensing import VBMicrolensing
+from .VBMicrolensing import VBMicrolensing
 
 import inspect
 import os
