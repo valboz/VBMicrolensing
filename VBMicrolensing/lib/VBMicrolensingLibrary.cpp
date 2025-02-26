@@ -1,4 +1,4 @@
-// VBMicrolensing v4.2 (2025)
+﻿// VBMicrolensing v4.2 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -229,9 +229,10 @@ VBMicrolensing::~VBMicrolensing() {
 		}
 		free(zr_mp);
 		free(nrootsmp_mp);
+		free(dist_mp);
 	}
 
-	//delete s_offset;
+	delete s_offset;
 
 }
 
@@ -2163,8 +2164,8 @@ void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex * s) {
 	for (i = 0; i < n - 1; i++) {
 		for (j = i + 1; j < n; j++) {
 			if (abs(a[i] - a[j]) < m[i] + m[j])
-				centralimages[lencentralimages] = (m[j] * a[i] + m[i] * a[j]) / (m[i] + m[j]);
-			z = centralimages[lencentralimages];
+				z = (m[j] * a[i] + m[i] * a[j]) / (m[i] + m[j]);
+			centralimages[lencentralimages] = z;
 			_Jac
 				if (Jac < 0) lencentralimages++;
 		}
@@ -6187,6 +6188,8 @@ void VBMicrolensing::change_n(int nn) {
 		zr_mp = NULL;
 		free(nrootsmp_mp);
 		nrootsmp_mp = NULL;
+		free(dist_mp);
+		dist_mp = NULL;
 	}
 
 	n = nn;
@@ -6356,6 +6359,7 @@ void VBMicrolensing::change_n_mp(int nn) {
 		}
 		free(zr_mp);
 		free(nrootsmp_mp);
+		free(dist_mp);
 	}
 
 	n = nn;
@@ -6456,9 +6460,6 @@ void VBMicrolensing::change_n_mp(int nn) {
 	errs = (double*)malloc(sizeof(double) * nroots);
 	newseeds = (complex*)malloc(sizeof(complex) * (2 * nroots));
 	grads = (complex*)malloc(sizeof(complex) * (nroots));
-	S2s = (complex*)malloc(sizeof(complex) * (nroots));
-	S3s = (complex*)malloc(sizeof(complex) * (nroots));
-	S4s = (complex*)malloc(sizeof(complex) * (nroots));
 
 	cprec = (_curve**)malloc(sizeof(_curve*) * nroots);
 	cpres = (_curve**)malloc(sizeof(_curve*) * (nroots));
@@ -6740,7 +6741,7 @@ void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree
 	return;
 }
 
-void VBMicrolensing::cmplx_roots_multigen(complex * roots, complex * *poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
+void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
 
 	static complex poly2[MAXM];
 	static int l, j, i, k, nl, ind, degreenew, croots, n;
@@ -6892,7 +6893,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex * roots, complex * *poly, int 
 	return;
 }
 
-void VBMicrolensing::solve_quadratic_eq(complex & x0, complex & x1, complex * poly) {
+void VBMicrolensing::solve_quadratic_eq(complex& x0, complex& x1, complex* poly) {
 	static complex a, b, c, b2, delta;
 	a = poly[2];
 	b = poly[1];
@@ -7979,6 +7980,12 @@ void _sols::join(_sols * nc) {
 
 _theta::_theta(double th1) {
 	th = th1;
+	Mag = 0;
+	maxerr = 0;
+	errworst = 0;
+	imlength = 0;
+	next = nullptr;
+	prev = nullptr;
 }
 _thetas::_thetas(void) {
 	length = 0;
