@@ -135,6 +135,8 @@ public:
 	double MultiMag(complex y, double rho, double accuracy);
 	double MultiMag(complex y, double rho);
 	double MultiMag(double y1, double y2, double rho);
+	double MultiMagSafe(complex yi, double RS, _sols** images);
+	double MultiMagSafe(double y1, double y2, double RSv);
 	double rootaccuracy;
 	double samplingfactor;
 	bool squarecheck;

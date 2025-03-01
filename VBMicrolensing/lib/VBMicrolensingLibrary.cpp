@@ -2358,6 +2358,50 @@ double VBMicrolensing::MultiMag0(double y1, double y2) {
 	return mag;
 }
 
+double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
+	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
+	static int NPSsafe;
+	Mag = MultiMag(yi, RS, Tol, images);
+	RSi = RS;
+	RSo = RS;
+	NPSsafe = NPS;
+	if (Mag < 0 || Mag * RS > 3 || therr > 1000 * Tol) {
+		mag1 = -1;
+		delta1 = 3.33333333e-8;
+		while ((mag1 < 0.1 || mag1 * RSi > 3 || therr > 1000 * Tol) && RSi >= 0) {
+			delete* images;
+			delta1 *= 3.;
+			RSi = RS - delta1;
+			mag1 = (RSi > 0) ? MultiMag(yi, RSi, Tol, images) : MultiMag0(yi, images);
+								//printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
+			NPSsafe += NPS;
+		}
+		if (mag1 < 0) mag1 = 1.0;
+		mag2 = -1;
+		delta2 = 3.33333333e-8;
+		while ((mag2 < 0.1 || mag2 * RSo > 3 || therr > 1000 * Tol) && RSo < 1.e4) {
+			delta2 *= 3.;
+			RSo = RS + delta2;
+			delete* images;
+			mag2 = MultiMag(yi, RSo, Tol, images);
+								//printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
+			NPSsafe += NPS;
+		}
+		Mag = (mag1 * delta2 + mag2 * delta1) / (delta1 + delta2);
+	}
+	NPS = NPSsafe;
+
+	return Mag;
+}
+
+double VBMicrolensing::MultiMagSafe(double y1, double y2, double RSv) {
+	static _sols* images;
+	static double mag;
+	mag = MultiMagSafe(complex(y1, y2), RSv, &images);
+	delete images;
+	return mag;
+}
+
 double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols * *Images) {
 	static complex y0;
 	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
@@ -6791,6 +6835,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 				if (br) break;
 				//Divide by root
+				cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
 				coef = poly2[n];
 				for (i = n - 1; i >= 0; i--) {
 					prev = poly2[i];
@@ -6865,6 +6910,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				nrootsmp_mp[l] += 1;
 
 				// Divide by root
+				cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
 				coef = poly2[n];
 				for (i = n - 1; i >= 0; i--) {
 					prev = poly2[i];
