@@ -2358,50 +2358,6 @@ double VBMicrolensing::MultiMag0(double y1, double y2) {
 	return mag;
 }
 
-double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
-	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
-	static int NPSsafe;
-	Mag = MultiMag(yi, RS, Tol, images);
-	RSi = RS;
-	RSo = RS;
-	NPSsafe = NPS;
-	if (Mag < 0 || Mag * RS > 3 || therr > 1000 * Tol) {
-		mag1 = -1;
-		delta1 = 3.33333333e-8;
-		while ((mag1 < 0.1 || mag1 * RSi > 3 || therr > 1000 * Tol) && RSi >= 0) {
-			delete* images;
-			delta1 *= 3.;
-			RSi = RS - delta1;
-			mag1 = (RSi > 0) ? MultiMag(yi, RSi, Tol, images) : MultiMag0(yi, images);
-								//printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
-			NPSsafe += NPS;
-		}
-		if (mag1 < 0) mag1 = 1.0;
-		mag2 = -1;
-		delta2 = 3.33333333e-8;
-		while ((mag2 < 0.1 || mag2 * RSo > 3 || therr > 1000 * Tol) && RSo < 1.e4) {
-			delta2 *= 3.;
-			RSo = RS + delta2;
-			delete* images;
-			mag2 = MultiMag(yi, RSo, Tol, images);
-								//printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
-			NPSsafe += NPS;
-		}
-		Mag = (mag1 * delta2 + mag2 * delta1) / (delta1 + delta2);
-	}
-	NPS = NPSsafe;
-
-	return Mag;
-}
-
-double VBMicrolensing::MultiMagSafe(double y1, double y2, double RSv) {
-	static _sols* images;
-	static double mag;
-	mag = MultiMagSafe(complex(y1, y2), RSv, &images);
-	delete images;
-	return mag;
-}
-
 double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols * *Images) {
 	static complex y0;
 	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
@@ -2654,7 +2610,275 @@ double VBMicrolensing::MultiMag(double y1, double y2, double RSv) {
 	return mag;
 }
 
+double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
+	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
+	static int NPSsafe;
+	Mag = MultiMag(yi, RS, Tol, images);
+	RSi = RS;
+	RSo = RS;
+	NPSsafe = NPS;
+	if (Mag < 0 || Mag * RS > 3 || therr > 1000 * Tol) {
+		mag1 = -1;
+		delta1 = 3.33333333e-8;
+		while ((mag1 < 0.1 || mag1 * RSi > 3 || therr > 1000 * Tol) && RSi >= 0) {
+			delete* images;
+			delta1 *= 3.;
+			RSi = RS - delta1;
+			mag1 = (RSi > 0) ? MultiMag(yi, RSi, Tol, images) : MultiMag0(yi, images);
+			//printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
+			NPSsafe += NPS;
+		}
+		if (mag1 < 0) mag1 = 1.0;
+		mag2 = -1;
+		delta2 = 3.33333333e-8;
+		while ((mag2 < 0.1 || mag2 * RSo > 3 || therr > 1000 * Tol) && RSo < 1.e4) {
+			delta2 *= 3.;
+			RSo = RS + delta2;
+			delete* images;
+			mag2 = MultiMag(yi, RSo, Tol, images);
+			//printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
+			NPSsafe += NPS;
+		}
+		Mag = (mag1 * delta2 + mag2 * delta1) / (delta1 + delta2);
+	}
+	NPS = NPSsafe;
 
+	return Mag;
+}
+
+double VBMicrolensing::MultiMagSafe(double y1, double y2, double RSv) {
+	static _sols* images;
+	static double mag;
+	mag = MultiMagSafe(complex(y1, y2), RSv, &images);
+	delete images;
+	return mag;
+}
+
+double VBMicrolensing::MultiMagDark(complex yi, double RSv, double Tolnew) {
+	static double Mag, Magold, Tolv;
+	static double LDastrox1, LDastrox2;
+	static double tc, lc, rc, cb, rb;
+	static int c, flag;
+	static double currerr, maxerr;
+	static annulus* first, * scan, * scan2;
+	static int nannold, totNPS;
+	static _sols* Images;
+
+	Mag = -1.0;
+	Magold = 0.;
+	Tolv = Tol;
+	LDastrox1 = LDastrox2 = 0.0;
+	c = 0;
+	totNPS = 1;
+
+	Tol = Tolnew;
+
+	while ((Mag < 0.9) && (c < 3)) {
+
+		first = new annulus;
+		first->bin = 0.;
+		first->cum = 0.;
+		if (Mag0 > 0.5) {
+			first->Mag = Mag0;
+			first->nim = nim0;
+		}
+		else {
+			first->Mag = MultiMag0(yi, &Images);
+			first->nim = Images->length;
+			delete Images;
+		}
+		if (astrometry) {
+			first->LDastrox1 = astrox1 * first->Mag;
+			first->LDastrox2 = astrox2 * first->Mag;
+		}
+		scr2 = sscr2 = 0;
+		first->f = LDprofile(0);
+		first->err = 0;
+		first->prev = 0;
+
+
+		first->next = new annulus;
+		scan = first->next;
+		scan->prev = first;
+		scan->next = 0;
+		scan->bin = 1.;
+		scan->cum = 1.;
+		scan->Mag = MultiMagSafe(yi, RSv, &Images);
+		if (astrometry) {
+			scan->LDastrox1 = astrox1 * scan->Mag;
+			scan->LDastrox2 = astrox2 * scan->Mag;
+		}
+		totNPS += NPS;
+		scan->nim = Images->length;
+		delete Images;
+		scr2 = sscr2 = 1;
+		scan->f = LDprofile(0.9999999);
+		if (scan->nim == scan->prev->nim) {
+			scan->err = fabs((scan->Mag - scan->prev->Mag) * (scan->prev->f - scan->f) / 4);
+		}
+		else {
+			scan->err = fabs((scan->Mag) * (scan->prev->f - scan->f) / 4);
+		}
+
+		Magold = Mag = scan->Mag;
+		if (astrometry) {
+			LDastrox1 = scan->LDastrox1;
+			LDastrox2 = scan->LDastrox2;
+		}
+		//			scan->err+=scan->Mag*Tolv*0.25; //Impose calculation of intermediate annulus at mag>4. Why?
+		currerr = scan->err;
+		flag = 0;
+		nannuli = nannold = 1;
+		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag) && nannuli < maxannuli) || (nannuli < minannuli)) {
+			maxerr = 0;
+			for (scan2 = first->next; scan2; scan2 = scan2->next) {
+#ifdef _PRINT_ERRORS_DARK
+				printf("\n%d %lf %le | %lf %le", nannuli, scan2->Mag, scan2->err, Mag, currerr);
+#endif
+				if (scan2->err > maxerr) {
+					maxerr = scan2->err;
+					scan = scan2;
+				}
+			}
+
+			nannuli++;
+			Magold = Mag;
+			Mag -= (scan->Mag * scan->bin * scan->bin - scan->prev->Mag * scan->prev->bin * scan->prev->bin) * (scan->cum - scan->prev->cum) / (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin);
+			if (astrometry) {
+				LDastrox1 -= (scan->LDastrox1 * scan->bin * scan->bin - scan->prev->LDastrox1 * scan->prev->bin * scan->prev->bin) * (scan->cum - scan->prev->cum) / (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin);
+				LDastrox2 -= (scan->LDastrox2 * scan->bin * scan->bin - scan->prev->LDastrox2 * scan->prev->bin * scan->prev->bin) * (scan->cum - scan->prev->cum) / (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin);
+			}
+			currerr -= scan->err;
+			lc = scan->prev->cum;
+			rc = scan->cum;
+			tc = (lc + rc) * 0.5;
+			cb = rCLDprofile(tc, scan->prev, scan);
+			scan->prev->next = new annulus;
+			scan->prev->next->prev = scan->prev;
+			scan->prev = scan->prev->next;
+			scan->prev->next = scan;
+			scan->prev->bin = cb;
+			scan->prev->cum = tc;
+			scan->prev->f = LDprofile(cb);
+			scan->prev->Mag = MultiMagSafe(yi, RSv * cb, &Images);
+			if (astrometry) {
+				scan->prev->LDastrox1 = astrox1 * scan->prev->Mag;
+				scan->prev->LDastrox2 = astrox2 * scan->prev->Mag;
+			}
+			totNPS += NPS;
+			scan->prev->nim = Images->length;
+			if (scan->prev->prev->nim == scan->prev->nim) {
+				scan->prev->err = fabs((scan->prev->Mag - scan->prev->prev->Mag) * (scan->prev->prev->f - scan->prev->f) * (scan->prev->bin * scan->prev->bin - scan->prev->prev->bin * scan->prev->prev->bin) / 4);
+			}
+			else {
+				scan->prev->err = fabs((scan->prev->bin * scan->prev->bin * scan->prev->Mag - scan->prev->prev->bin * scan->prev->prev->bin * scan->prev->prev->Mag) * (scan->prev->prev->f - scan->prev->f) / 4);
+			}
+			if (scan->nim == scan->prev->nim) {
+				scan->err = fabs((scan->Mag - scan->prev->Mag) * (scan->prev->f - scan->f) * (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin) / 4);
+			}
+			else {
+				scan->err = fabs((scan->bin * scan->bin * scan->Mag - scan->prev->bin * scan->prev->bin * scan->prev->Mag) * (scan->prev->f - scan->f) / 4);
+			}
+			rb = (scan->Mag + scan->prev->prev->Mag - 2 * scan->prev->Mag);
+			scan->prev->err += fabs(rb * (scan->prev->prev->f - scan->prev->f) * (scan->prev->bin * scan->prev->bin - scan->prev->prev->bin * scan->prev->prev->bin));
+			scan->err += fabs(rb * (scan->prev->f - scan->f) * (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin));
+#ifdef _PRINT_ERRORS_DARK
+			printf("\n%d", Images->length);
+#endif
+			delete Images;
+
+			Mag += (scan->bin * scan->bin * scan->Mag - cb * cb * scan->prev->Mag) * (scan->cum - scan->prev->cum) / (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin);
+			Mag += (cb * cb * scan->prev->Mag - scan->prev->prev->bin * scan->prev->prev->bin * scan->prev->prev->Mag) * (scan->prev->cum - scan->prev->prev->cum) / (scan->prev->bin * scan->prev->bin - scan->prev->prev->bin * scan->prev->prev->bin);
+			currerr += scan->err + scan->prev->err;
+			if (astrometry) {
+				LDastrox1 += (scan->bin * scan->bin * scan->LDastrox1 - cb * cb * scan->prev->LDastrox1) * (scan->cum - scan->prev->cum) / (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin);
+				LDastrox1 += (cb * cb * scan->prev->LDastrox1 - scan->prev->prev->bin * scan->prev->prev->bin * scan->prev->prev->LDastrox1) * (scan->prev->cum - scan->prev->prev->cum) / (scan->prev->bin * scan->prev->bin - scan->prev->prev->bin * scan->prev->prev->bin);
+				LDastrox2 += (scan->bin * scan->bin * scan->LDastrox2 - cb * cb * scan->prev->LDastrox2) * (scan->cum - scan->prev->cum) / (scan->bin * scan->bin - scan->prev->bin * scan->prev->bin);
+				LDastrox2 += (cb * cb * scan->prev->LDastrox2 - scan->prev->prev->bin * scan->prev->prev->bin * scan->prev->prev->LDastrox2) * (scan->prev->cum - scan->prev->prev->cum) / (scan->prev->bin * scan->prev->bin - scan->prev->prev->bin * scan->prev->prev->bin);
+			}
+
+
+			if (fabs(Magold - Mag) * 2 < Tolv) {
+				flag++;
+			}
+			else {
+				flag = 0;
+				nannold = nannuli;
+			}
+
+		}
+
+		if (multidark) {
+			annlist = first;
+		}
+		else {
+			while (first) {
+				scan = first->next;
+				delete first;
+				first = scan;
+			}
+		}
+
+		Tolv /= 10;
+		c++;
+	}
+	NPS = totNPS;
+	therr = currerr;
+	if (astrometry) {
+		LDastrox1 /= Mag;
+		LDastrox2 /= Mag;
+		astrox1 = LDastrox1;
+		astrox2 = LDastrox2;
+	}
+	return Mag;
+}
+
+
+double VBMicrolensing::MultiMagDark(double y1, double y2, double RSv, double Tolnew) {
+	static _sols* images;
+	static double mag;
+	mag = MultiMagDark(complex(y1, y2), RSv, Tol);
+	delete images;
+	return mag;
+}
+
+double VBMicrolensing::MultiMag2(complex y, double rho) {
+	static double Mag, rho2, y2a, y1v, y2v;//, sms , dy1, dy2;
+	static int c;
+	static _sols* Images;
+
+	c = 0;
+	y2v = y.im;
+	y2a = fabs(y2v);
+	y1v = y.re;
+
+	Mag0 = MultiMag0(complex(y1v,y2a), & Images);
+	delete Images;
+	rho2 = rho * rho;
+	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
+	corrquad2 *= (rho + 1.e-3);
+	if (corrquad < Tol && corrquad2 < 1 && (/*rho2 * s * s<q || */ safedist > 4 * rho2)) {
+		Mag = Mag0;
+	}
+	else {
+		Mag = MultiMagDark(complex(y1v, y2a), rho, Tol);
+	}
+	Mag0 = 0;
+
+	if (y2v < 0) {
+		y_2 = y2v;
+		astrox2 = -astrox2;
+	}
+	return Mag;
+}
+
+double VBMicrolensing::MultiMag2(double y1, double y2, double rho) {
+	static _sols* images;
+	static double mag;
+	mag = MultiMag2(complex(y1,y2), rho);
+	delete images;
+	return mag;
+}
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
@@ -6835,7 +7059,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 				if (br) break;
 				//Divide by root
-				cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
+				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
 				coef = poly2[n];
 				for (i = n - 1; i >= 0; i--) {
 					prev = poly2[i];
@@ -6910,7 +7134,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				nrootsmp_mp[l] += 1;
 
 				// Divide by root
-				cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
+				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
 				coef = poly2[n];
 				for (i = n - 1; i >= 0; i--) {
 					prev = poly2[i];
