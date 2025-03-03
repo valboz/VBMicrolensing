@@ -2842,6 +2842,7 @@ double VBMicrolensing::MultiMagDark(double y1, double y2, double RSv, double Tol
 	return mag;
 }
 
+
 double VBMicrolensing::MultiMag2(complex y, double rho) {
 	static double Mag, rho2, y2a, y1v, y2v;//, sms , dy1, dy2;
 	static int c;
