@@ -1087,6 +1087,60 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             The magnification.
         )pbdoc");
 
+    vbm.def("MultiMagDark",
+        [](VBMicrolensing& self, double y1, double y2, double rho, double Tol) -> double {
+            return self.MultiMagDark(y1, y2, rho, Tol);
+        },
+        py::return_value_policy::reference,
+            R"pbdoc(
+        Compute the magnification of a uniform brightness finite source 
+        by a multiple lens.
+
+        Parameters
+        ----------
+        y1 : float 
+                x-position of the source in the source plane.
+        y2 : float 
+            y-position of the source in the source plane.
+        rho : float 
+            The source angular radius in units of the Einstein radius 
+            corresponding to the total mass.
+        accuracy : float 
+                Absolute accuracy goal for the magnification calculation.
+
+        Returns
+        -------
+        float
+            The magnification.
+        )pbdoc");
+
+    vbm.def("MultiMag2",
+        [](VBMicrolensing& self, double y1, double y2, double rho) -> double {
+            return self.MultiMag2(y1, y2, rho);
+        },
+        py::return_value_policy::reference,
+            R"pbdoc(
+        Compute the magnification of a uniform brightness finite source 
+        by a multiple lens. In v2.0, implements test described
+            in VBMicrolensing 2.0 paper.
+
+        Parameters
+        ----------
+        y1 : float 
+                x-position of the source in the source plane.
+        y2 : float 
+            y-position of the source in the source plane.
+        rho : float 
+            The source angular radius in units of the Einstein radius 
+            corresponding to the total mass.
+        
+
+        Returns
+        -------
+        float
+            The magnification.
+        )pbdoc");
+
     vbm.def("SetMethod", 
             &VBMicrolensing::SetMethod,
             "User choice of Method");
