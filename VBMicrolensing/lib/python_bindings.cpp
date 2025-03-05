@@ -1093,7 +1093,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         },
         py::return_value_policy::reference,
             R"pbdoc(
-        Compute the magnification of a uniform brightness finite source 
+        Magnification of a limb-darkened finite source 
         by a multiple lens.
 
         Parameters
@@ -1120,7 +1120,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         },
         py::return_value_policy::reference,
             R"pbdoc(
-        Compute the magnification of a uniform brightness finite source 
+        Compute the magnification of a finite source 
         by a multiple lens. In v2.0, implements test described
             in VBMicrolensing 2.0 paper.
 
