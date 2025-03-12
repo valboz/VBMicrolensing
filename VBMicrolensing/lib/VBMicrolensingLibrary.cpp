@@ -2817,11 +2817,8 @@ double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 	static _sols* Images;
 
 	c = 0;
-	y2v = y2s;
-	y2a = fabs(y2v);
-	y1v = y1s;
 
-	Mag0 = MultiMag0(y1v,y2a, & Images);
+	Mag0 = MultiMag0(y1s,y2s, & Images);
 	delete Images;
 	rho2 = rho * rho;
 	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
@@ -2830,7 +2827,7 @@ double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 		Mag = Mag0;
 	}
 	else {
-		Mag = MultiMagDark(y1v, y2a, rho, Tol);
+		Mag = MultiMagDark(y1s, y2s, rho, Tol);
 	}
 	Mag0 = 0;
 
