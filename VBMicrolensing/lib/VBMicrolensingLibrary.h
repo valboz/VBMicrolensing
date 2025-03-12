@@ -107,6 +107,7 @@ class VBMicrolensing
 	_curve *NewImagespoly(_theta *);
 	_curve* NewImagesmultipoly(_theta*);
 	double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols** images);
+	double MultiMagSafe(double y1, double y2, double RS, _sols** images);
 	void OrderImages(_sols *,_curve *);
 	void OrderMultipleImages(_sols *, _curve *);
 	void cmplx_laguerre(complex *, int, complex *, int &, bool &);
@@ -125,22 +126,6 @@ class VBMicrolensing
 public: 
 
 //	bool testnewcoefs;
-
-	void SetLensGeometry(int n, double* q, complex *s);
-	void SetLensGeometry(int n, double* pr);
-	double MultiMag0(complex y, _sols** Images);
-	double MultiMag0(complex y);
-	double MultiMag0(double y1, double y2);
-	double MultiMag(complex y, double rho, double accuracy, _sols **Images);
-	double MultiMag(complex y, double rho, double accuracy);
-	double MultiMag(complex y, double rho);
-	double MultiMag(double y1, double y2, double rho);
-	double MultiMagSafe(complex yi, double RS, _sols** images);
-	double MultiMagSafe(double y1, double y2, double RSv);
-	double MultiMagDark(complex yi, double RSv, double accuracy);
-	double MultiMagDark(double y1, double y2, double RSv, double accuracy);
-	double MultiMag2(complex y, double rho);
-	double MultiMag2(double y1, double y2, double rho);
 
 	double rootaccuracy;
 	double samplingfactor;
@@ -170,6 +155,10 @@ public:
 	int findimagepoly(int iroot);
 	int findimagemultipoly(int iroot);
 
+// Set Lens Geometry
+	void SetLensGeometry(int n, double* q, complex* s);
+	void SetLensGeometry(int n, double* pr);
+
 // Magnification calculation functions.
 
 	double BinaryMag0(double s,double q,double y1,double y2, _sols **Images);
@@ -179,6 +168,13 @@ public:
 	double BinaryMag2(double s, double q, double y1, double y2, double rho);
 	double BinaryMagDark(double s, double q, double y1, double y2, double rho, double accuracy);
 	void BinaryMagMultiDark(double s, double q, double y1, double y2, double rho, double *a1_list, int n_filters, double *mag_list, double accuracy);
+	double MultiMag0(double y1, double y2, _sols** Images);
+	double MultiMag0(double y1, double y2);
+	double MultiMag(double y1, double y2, double rho, double accuracy, _sols** Images);
+	double MultiMag(double y1, double y2, double rho, double accuracy);
+	double MultiMag(double y1, double y2, double rho);
+	double MultiMag2(double y1, double y2, double rho);
+	double MultiMagDark(double y1, double y2, double RSv, double accuracy);
 
 // Limb Darkening control
 	enum LDprofiles { LDlinear, LDquadratic, LDsquareroot, LDlog, LDuser };

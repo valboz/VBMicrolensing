@@ -2308,14 +2308,16 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex * s) {
             break;                                         \
     }
 
-double VBMicrolensing::MultiMag0(complex yi, _sols * *Images) {
+double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols * *Images) {
 	static double Mag = -1.0;
+	complex yi;
 	_theta* stheta;
 	_curve* Prov = 0, * Prov2;
 	_point* scan1, * scan2;
 
 	stheta = new _theta(-1.);
-
+	
+	yi = complex(y1s, y2s);
 	y = yi - *s_offset; // Source position relative to first (lowest) mass
 	rho = rho2 = 0;
 
@@ -2341,25 +2343,16 @@ double VBMicrolensing::MultiMag0(complex yi, _sols * *Images) {
 
 }
 
-double VBMicrolensing::MultiMag0(complex y) {
+double VBMicrolensing::MultiMag0(double y1s, double y2s) {
 	static _sols* images;
 	static double mag;
-	mag = MultiMag0(y, &images);
+	mag = MultiMag0(y1s,y2s, &images);
 	delete images;
 	return mag;
 }
 
-double VBMicrolensing::MultiMag0(double y1, double y2) {
-	static _sols* images;
-	static double mag;
-	complex y = complex(y1, y2);
-	mag = MultiMag0(y, &images);
-	delete images;
-	return mag;
-}
-
-double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols * *Images) {
-	static complex y0;
+double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, _sols **Images) {
+	static complex y0, yi;
 	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
 	static double errimage, maxerr, currerr, Magold, rhorad2, th2;
 	static int NPSmax, flag, NPSold, isquare, flagfinal;
@@ -2370,7 +2363,7 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols * *Ima
 	static int lsquares[4];
 
 
-
+	yi = complex(y1s, y2s);
 	try {
 		y0 = yi - *s_offset; // Source position relative to first (lowest) mass
 		rho = RSv;
@@ -2586,34 +2579,26 @@ double VBMicrolensing::MultiMag(complex yi, double RSv, double Tol, _sols * *Ima
 
 		}
 
-double VBMicrolensing::MultiMag(complex y, double RSv, double Tol) {
+double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv) {
 	static _sols* images;
 	static double mag;
-	mag = MultiMag(y, RSv, Tol, &images);
+	mag = MultiMag(y1s,y2s, RSv, Tol, &images);
 	delete images;
 	return mag;
 }
 
-double VBMicrolensing::MultiMag(complex y, double RSv) {
+double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol) {
 	static _sols* images;
 	static double mag;
-	mag = MultiMag(y, RSv, Tol, &images);
+	mag = MultiMag(y1s, y2s, RSv, Tol, &images);
 	delete images;
 	return mag;
 }
 
-double VBMicrolensing::MultiMag(double y1, double y2, double RSv) {
-	static _sols* images;
-	static double mag;
-	mag = MultiMag(complex(y1, y2), RSv, Tol, &images);
-	delete images;
-	return mag;
-}
-
-double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
+double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols** images) {
 	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
 	static int NPSsafe;
-	Mag = MultiMag(yi, RS, Tol, images);
+	Mag = MultiMag(y1s,y2s, RS, Tol, images);
 	RSi = RS;
 	RSo = RS;
 	NPSsafe = NPS;
@@ -2624,7 +2609,7 @@ double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
 			delete* images;
 			delta1 *= 3.;
 			RSi = RS - delta1;
-			mag1 = (RSi > 0) ? MultiMag(yi, RSi, Tol, images) : MultiMag0(yi, images);
+			mag1 = (RSi > 0) ? MultiMag(y1s,y2s, RSi, Tol, images) : MultiMag0(y1s,y2s, images);
 			//printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
 			NPSsafe += NPS;
 		}
@@ -2635,7 +2620,7 @@ double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
 			delta2 *= 3.;
 			RSo = RS + delta2;
 			delete* images;
-			mag2 = MultiMag(yi, RSo, Tol, images);
+			mag2 = MultiMag(y1s,y2s, RSo, Tol, images);
 			//printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
 			NPSsafe += NPS;
 		}
@@ -2646,15 +2631,7 @@ double VBMicrolensing::MultiMagSafe(complex yi, double RS, _sols** images) {
 	return Mag;
 }
 
-double VBMicrolensing::MultiMagSafe(double y1, double y2, double RSv) {
-	static _sols* images;
-	static double mag;
-	mag = MultiMagSafe(complex(y1, y2), RSv, &images);
-	delete images;
-	return mag;
-}
-
-double VBMicrolensing::MultiMagDark(complex yi, double RSv, double Tolnew) {
+double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double Tolnew) {
 	static double Mag, Magold, Tolv;
 	static double LDastrox1, LDastrox2;
 	static double tc, lc, rc, cb, rb;
@@ -2683,7 +2660,7 @@ double VBMicrolensing::MultiMagDark(complex yi, double RSv, double Tolnew) {
 			first->nim = nim0;
 		}
 		else {
-			first->Mag = MultiMag0(yi, &Images);
+			first->Mag = MultiMag0(y1s,y2s, &Images);
 			first->nim = Images->length;
 			delete Images;
 		}
@@ -2703,7 +2680,7 @@ double VBMicrolensing::MultiMagDark(complex yi, double RSv, double Tolnew) {
 		scan->next = 0;
 		scan->bin = 1.;
 		scan->cum = 1.;
-		scan->Mag = MultiMagSafe(yi, RSv, &Images);
+		scan->Mag = MultiMagSafe(y1s,y2s, RSv, &Images);
 		if (astrometry) {
 			scan->LDastrox1 = astrox1 * scan->Mag;
 			scan->LDastrox2 = astrox2 * scan->Mag;
@@ -2760,7 +2737,7 @@ double VBMicrolensing::MultiMagDark(complex yi, double RSv, double Tolnew) {
 			scan->prev->bin = cb;
 			scan->prev->cum = tc;
 			scan->prev->f = LDprofile(cb);
-			scan->prev->Mag = MultiMagSafe(yi, RSv * cb, &Images);
+			scan->prev->Mag = MultiMagSafe(y1s,y2s, RSv * cb, &Images);
 			if (astrometry) {
 				scan->prev->LDastrox1 = astrox1 * scan->prev->Mag;
 				scan->prev->LDastrox2 = astrox2 * scan->prev->Mag;
@@ -2834,26 +2811,17 @@ double VBMicrolensing::MultiMagDark(complex yi, double RSv, double Tolnew) {
 }
 
 
-double VBMicrolensing::MultiMagDark(double y1, double y2, double RSv, double Tolnew) {
-	static _sols* images;
-	static double mag;
-	mag = MultiMagDark(complex(y1, y2), RSv, Tol);
-	delete images;
-	return mag;
-}
-
-
-double VBMicrolensing::MultiMag2(complex y, double rho) {
+double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 	static double Mag, rho2, y2a, y1v, y2v;//, sms , dy1, dy2;
 	static int c;
 	static _sols* Images;
 
 	c = 0;
-	y2v = y.im;
+	y2v = y2s;
 	y2a = fabs(y2v);
-	y1v = y.re;
+	y1v = y1s;
 
-	Mag0 = MultiMag0(complex(y1v,y2a), & Images);
+	Mag0 = MultiMag0(y1v,y2a, & Images);
 	delete Images;
 	rho2 = rho * rho;
 	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
@@ -2862,7 +2830,7 @@ double VBMicrolensing::MultiMag2(complex y, double rho) {
 		Mag = Mag0;
 	}
 	else {
-		Mag = MultiMagDark(complex(y1v, y2a), rho, Tol);
+		Mag = MultiMagDark(y1v, y2a, rho, Tol);
 	}
 	Mag0 = 0;
 
@@ -2871,14 +2839,6 @@ double VBMicrolensing::MultiMag2(complex y, double rho) {
 		astrox2 = -astrox2;
 	}
 	return Mag;
-}
-
-double VBMicrolensing::MultiMag2(double y1, double y2, double rho) {
-	static _sols* images;
-	static double mag;
-	mag = MultiMag2(complex(y1,y2), rho);
-	delete images;
-	return mag;
 }
 
 ///////////////////////////////////////////////
@@ -4483,7 +4443,7 @@ void VBMicrolensing::TripleLightCurve(double* pr, double* ts, double* mags, doub
 			mags[i] = 1.;
 		}
 		else {
-			mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
+			mags[i] = MultiMag(y1s[i], y2s[i], rho, Tol);
 		}
 	}
 }
@@ -4520,7 +4480,7 @@ void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* ma
 			mags[i] = 1.;
 		}
 		else {
-			mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
+			mags[i] = MultiMag(y1s[i], y2s[i], rho, Tol);
 		}
 	}
 }
@@ -4562,7 +4522,7 @@ void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1
 			mags[i] = 1.;
 		}
 		else {
-			mags[i] = MultiMag(complex(y1s[i], y2s[i]), rho, Tol);
+			mags[i] = MultiMag(y1s[i], y2s[i], rho, Tol);
 		}
 	}
 
@@ -5102,7 +5062,7 @@ double VBMicrolensing::TripleLightCurve(double* pr, double t) {
 		return 1.;
 	}
 	else {
-		return MultiMag(complex(y_1, y_2), rho, Tol);
+		return MultiMag(y_1, y_2, rho, Tol);
 	}
 }
 
@@ -5154,7 +5114,7 @@ double VBMicrolensing::TripleLightCurveParallax(double* pr, double t) {
 		return 1.;
 	}
 	else {
-		return MultiMag(complex(y_1, y_2), rho, Tol);
+		return MultiMag(y_1, y_2, rho, Tol);
 	}
 }
 
