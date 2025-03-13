@@ -184,7 +184,7 @@ pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, math
 
 t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 
-magnifications, y1, y2 = VBM.TripleLightCurve(pr,t)      # Calculation of binary-lens light curve
+magnifications, y1, y2 = VBM.TripleLightCurve(pr,t)      # Calculation of triple-lens light curve
 
 plt.plot(t,magnifications)
 ```
