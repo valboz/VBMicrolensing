@@ -243,7 +243,8 @@ public:
 
 	VBMicrolensing();
 	~VBMicrolensing();
-     private:
+
+     private: // Must be declared here at the end
 	LDprofiles curLDprofile;
 	Method SelectedMethod;
 
