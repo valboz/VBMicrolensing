@@ -1,4 +1,4 @@
-// VBMicrolensing v4.2 (2025)
+// VBMicrolensing v4.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -122,6 +122,8 @@ class VBMicrolensing
 	void polycoefficients();
 	void polycoefficients_multipoly();
 	void polycritcoefficients(complex eiphi);
+	LDprofiles curLDprofile;
+	Method SelectedMethod;
 
 public: 
 
@@ -174,7 +176,7 @@ public:
 	double MultiMag(double y1, double y2, double rho, double accuracy);
 	double MultiMag(double y1, double y2, double rho);
 	double MultiMag2(double y1, double y2, double rho);
-	double MultiMagDark(double y1, double y2, double RSv, double accuracy);
+	double MultiMagDark(double y1, double y2, double rho, double accuracy);
 
 // Limb Darkening control
 	enum LDprofiles { LDlinear, LDquadratic, LDsquareroot, LDlog, LDuser };
@@ -244,9 +246,6 @@ public:
 	VBMicrolensing();
 	~VBMicrolensing();
 
-	private:
-		LDprofiles curLDprofile;
-		Method SelectedMethod;
 };
 
 //std::string VBMicrolensing::ESPLtablefile = "";
