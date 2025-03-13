@@ -122,8 +122,6 @@ class VBMicrolensing
 	void polycoefficients();
 	void polycoefficients_multipoly();
 	void polycritcoefficients(complex eiphi);
-	LDprofiles curLDprofile;
-	Method SelectedMethod;
 
 public: 
 
@@ -245,6 +243,9 @@ public:
 
 	VBMicrolensing();
 	~VBMicrolensing();
+     private:
+	LDprofiles curLDprofile;
+	Method SelectedMethod;
 
 };
 
