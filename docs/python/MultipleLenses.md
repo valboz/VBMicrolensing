@@ -52,7 +52,7 @@ print(f"Magnification of a point-source = {Mag}\n") #Output should be 2.14....
 
 ## Multiple lensing with extended sources
 
-For extended sources, the function is `MultiMag`. This function also takes $\rho$ as an argument, the source radius in units of the Einstein angle:
+For extended sources, our recommended function is `MultiMag2`. This function also takes $\rho$ as an argument, the source radius in units of the Einstein angle:
 
 ```
 VBM = VBMicrolensing.VBMicrolensing()
@@ -68,7 +68,7 @@ y1=0.  #Source position
 y2=-0.2 
 rho=0.01 #Source radius
 
-Mag=VBM.MultiMag(y1,y2,rho) 
+Mag=VBM.MultiMag2(y1,y2,rho) 
 print(f"Multiple Lens Magnification = {Mag}\n") #Output should be 5.07...
 
 ```
@@ -94,8 +94,6 @@ The full details of all algorithms are described in [V. Bozza, v. Saggese, G. Co
 
 In the current version, some functionalities developed for single and binary lenses are not yet available. These include:
 
-- Limb darkening
-- A decision tree for finite-source calculation vs point-source calculation (the equivalent of `BinaryMag2`)
 - Astrometry
 - Orbital motion
 - Binary sources and xallarap
