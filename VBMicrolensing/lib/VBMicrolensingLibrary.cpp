@@ -4440,7 +4440,7 @@ void VBMicrolensing::TripleLightCurve(double* pr, double* ts, double* mags, doub
 			mags[i] = 1.;
 		}
 		else {
-			mags[i] = MultiMag2(y1s[i], y2s[i], rho, Tol);
+			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
 		}
 	}
 }
@@ -4477,7 +4477,7 @@ void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* ma
 			mags[i] = 1.;
 		}
 		else {
-			mags[i] = MultiMag2(y1s[i], y2s[i], rho, Tol);
+			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
 		}
 	}
 }
@@ -4519,7 +4519,7 @@ void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1
 			mags[i] = 1.;
 		}
 		else {
-			mags[i] = MultiMag2(y1s[i], y2s[i], rho, Tol);
+			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
 		}
 	}
 
@@ -5059,7 +5059,7 @@ double VBMicrolensing::TripleLightCurve(double* pr, double t) {
 		return 1.;
 	}
 	else {
-		return MultiMag2(y_1, y_2, rho, Tol);
+		return MultiMag2(y_1, y_2, rho);
 	}
 }
 
@@ -5111,7 +5111,7 @@ double VBMicrolensing::TripleLightCurveParallax(double* pr, double t) {
 		return 1.;
 	}
 	else {
-		return MultiMag2(y_1, y_2, rho, Tol);
+		return MultiMag2(y_1, y_2, rho);
 	}
 }
 
