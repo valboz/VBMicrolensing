@@ -19,7 +19,7 @@ The string given as argument here obviously contains Right Ascension and Declina
 
 ## Parallax system
 
-Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 0, corresponding to the parallel/orthogonal system.
+Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 1, corresponding to the North-East system.
 
 ## Reference time for parallax $t_{0,par}$
 
@@ -61,7 +61,6 @@ pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, paiN
 
 t = np.linspace(t0-tE, t0+tE, 300) # Array of times
 
-VBM.parallaxsystem = 1       # Set parallax system to North-East
 VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 
 magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of static binary-lens light curve
