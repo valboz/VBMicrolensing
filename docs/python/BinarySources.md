@@ -157,10 +157,14 @@ plt.plot(y21,y22,'y')
 
 This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated usin mass-radius-luminosity relations starting from the flux ratio, as explained before.
 
-The separation of the sources is calculated as follows:
+The coordinates of the second source at time $t_0$ are calculated as follows:
 
-$$ s_1 = \left(\frac{1}{t_E}^{-1} + w_1 \right)(t0_1-t0_2)$$
+$$ s_1 = (t_E^{-1} + w_1)(t0_1-t0_2)$$
 $$ s_2 = (u0_1-u0_2) + w_2(t0_1-t0_2)$$
 $$s_3= -(s_1 w_1+s_2 w_2)/w_3$$
+
+The 3d separation is then $s=\sqrt{s_1^2+s_2^2+s_3^2}$ in Einstein angle units.
+
+The orbital velocity is $w=\sqrt{w_1^2+w_2^2+w_3^2}$ in Einstein units per day.
 
 [Go to **Advanced control**](AdvancedControl.md)
