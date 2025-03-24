@@ -4627,7 +4627,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 
 	tE_inv = exp(-pr[0]);
 	double w[3] = { pr[9] + 1.01e-15, pr[10] + 1.01e-15, pr[11] + 1.01e-15 };
-	double t01 = pr[4], t02 = pr[5] + w[0] * (pr[5] - pr[4]) / tE_inv, u1 = pr[2], u2 = pr[3] + w[1] * (t01 - t02), FR = exp(pr[1]), rho2, tn, u, utot, xt, xu;
+	double t01 = pr[4], t02 = pr[5] + w[0] * (pr[5] - pr[4]) / tE_inv, u1 = pr[2], u2 = pr[3] + w[1] * (pr[4] - pr[5]), FR = exp(pr[1]), rho2, tn, u, utot, xt, xu;
 	double s[3] = { (t01 - t02) * tE_inv,u2 - u1,0 };
 	double L[3], Om[3], Y[3], norm, normOm, s3D, wtot, qs;
 	double u0B, t0B, vuB, vt0B, s1, s2, uB, tnB, paitB, paiuB;
