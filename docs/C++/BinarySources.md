@@ -164,7 +164,7 @@ This parameterization has the advantage of being a direct extension of the stati
 The coordinates of the second source at time $t_0$ are calculated as follows:
 
 $$ s_1 = (t_E^{-1} + w_1)(t0_1-t0_2)$$
-$$ s_2 = (u0_1-u0_2) + w_2(t0_1-t0_2)$$
+$$ s_2 = (u0_2-u0_1) + w_2(t0_1-t0_2)$$
 $$s_3= -(s_1 w_1+s_2 w_2)/w_3$$
 
 The 3d separation is then $s=\sqrt{s_1^2+s_2^2+s_3^2}$ in Einstein angle units.
