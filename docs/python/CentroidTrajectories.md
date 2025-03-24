@@ -38,7 +38,10 @@ BinSourceAstroLightCurveXallarap(parameters, times)   # extending BinSourceExtLi
 - returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]
 ```
 
-Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, 
+Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times as arguments. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, source positions in the lens reference frame.
+
+Here is a full example with the `PSPLAstroLightCurve`:
+
 
 
 
