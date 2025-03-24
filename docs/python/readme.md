@@ -64,4 +64,6 @@ In the following pages, we will describe all functionalities of VBMicrolensing i
 
 - [Binary Sources](BinarySources.md)
 
+- [Centroid Trajectories](CentroidTrajectories.md)
+
 - [Advanced Control](AdvancedControl.md)
