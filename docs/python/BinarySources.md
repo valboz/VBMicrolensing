@@ -159,6 +159,8 @@ This parameterization has the advantage of being a direct extension of the stati
 
 The separation of the sources is calculated as follows:
 
-$$ s_1 = \frac{t0_1-t0_2}{t_E}$$
+$$ s_1 = \left(\frac{1}{t_E}^{-1} + w_1 \right)(t0_1-t0_2)$$
+$$ s_2 = (u0_1-u0_2) + w_2(t0_1-t0_2)$$
+$$s_3= -(s_1 w_1+s_2 w_2)/w_3$$
 
 [Go to **Advanced control**](AdvancedControl.md)
