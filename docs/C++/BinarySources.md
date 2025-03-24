@@ -121,6 +121,7 @@ The conventional xallarap parameterization is not effective for fitting light cu
 ```
 VBMicrolensing VBM; // Declare instance to VBMicrolensing
 VBM.LoadESPLTable("ESPL.tbl");
+VBM.SetObjectCoordinates("17:51:40.2082 -29:53:26.502");
 
 double pr[10]; // Array of parameters
 double tE, FR, u01, u02, t01, t02, rho, paiN, paiE, w1, w2, w3, Mag;
