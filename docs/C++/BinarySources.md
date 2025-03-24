@@ -171,4 +171,4 @@ The 3d separation is then $s=\sqrt{s_1^2+s_2^2+s_3^2}$ in Einstein angle units.
 
 The orbital velocity is $w=\sqrt{w_1^2+w_2^2+w_3^2}$ in Einstein units per day.
 
-[Go to **Advanced control**](AdvancedControl.md)
+[Go to **Centroid Trajectories**](CentroidTrajectories.md)
