@@ -159,7 +159,7 @@ Mag = VBM.BinSourceExtLightCurveXallarap(pr, t); // Calculates the Binary Source
 printf("Binary Source Light Curve at time t: %lf", Mag); 
 ```
 
-This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated usin mass-radius-luminosity relations starting from the flux ratio, as explained before.
+This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before.
 
 The coordinates of the second source at time $t_0$ are calculated as follows:
 
