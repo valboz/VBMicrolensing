@@ -113,4 +113,62 @@ In this function we are assuming that all properties of the sources can be deduc
 
 Xallarap is also available for binary lenses through the `BinSourceBinaryLensXallarap` function. In this case, the parameters are 13 with the seven parameters for the [static binary lens](BinaryLenses.md) followed by the six parameters for the xallarap.
 
+
+## Alternative Xallarap parameterization (experimental)
+
+The conventional xallarap parameterization is not effective for fitting light curves, since the parameters are not immediately related to effects on the light curve. We are experimenting a new parameterization similar to that used for orbital motion.
+
+```
+VBMicrolensing VBM; // Declare instance to VBMicrolensing
+VBM.LoadESPLTable("ESPL.tbl");
+
+double pr[10]; // Array of parameters
+double tE, FR, u01, u02, t01, t02, rho, paiN, paiE, w1, w2, w3, Mag;
+
+# Parameters
+tE = 37.3;  // Einstein time
+FR = 0.4;  // Flux ratio of the second source to the first
+u01 = 0.1;  // Impact parameter for source 1
+u02 = 0.05;  // Impact parameter for source 2
+t01 = 7550.4;  // Time of closest approach to source 1
+t02 = 7555.8;  // Time of closest approach to source 2
+rho = 0.004;  // Radius of the first star
+paiN = 0.03;  // North component of the parallax vector
+paiE = -0.02;  // East component of the parallax vector
+w1 = 0.021;  // Orbital motion component parallel to the primary source direction at time t01
+w2 = -0.02;  // Orbital motion component othogonal to the primary source direction at time t01
+w3 = 0.03;  // Orbital motion along the line of sight
+
+// Let us put all parameters in our array
+pr[0] = log(tE);
+pr[1] = log(FR);
+pr[2] = u01;
+pr[3] = u02;
+pr[4] = t01;
+pr[5] = t02;
+pr[6] = log(rho);
+pr[7] = paiN;
+pr[8] = paiE;
+pr[9] = w1;
+pr[10] = w2;
+pr[11] = w3;
+
+t = 7551.6; // Time at which we want to calculate the magnification
+
+Mag = VBM.BinSourceExtLightCurveXallarap(pr, t); // Calculates the Binary Source magnification at time t with parameters in pr
+printf("Binary Source Light Curve at time t: %lf", Mag); 
+```
+
+This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated usin mass-radius-luminosity relations starting from the flux ratio, as explained before.
+
+The coordinates of the second source at time $t_0$ are calculated as follows:
+
+$$ s_1 = (t_E^{-1} + w_1)(t0_1-t0_2)$$
+$$ s_2 = (u0_1-u0_2) + w_2(t0_1-t0_2)$$
+$$s_3= -(s_1 w_1+s_2 w_2)/w_3$$
+
+The 3d separation is then $s=\sqrt{s_1^2+s_2^2+s_3^2}$ in Einstein angle units.
+
+The orbital velocity is $w=\sqrt{w_1^2+w_2^2+w_3^2}$ in Einstein units per day.
+
 [Go to **Advanced control**](AdvancedControl.md)
