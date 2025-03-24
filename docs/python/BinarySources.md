@@ -153,7 +153,7 @@ plt.plot(y11,y12,'r')
 plt.plot(y21,y22,'y')
 ```
 
-<img src="BinarySource_xallarap_sources.png" width = 400>
+<img src="BinarySource__xallarap_sources.png" width = 400>
 
 This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated usin mass-radius-luminosity relations starting from the flux ratio, as explained before.
 
