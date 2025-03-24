@@ -117,6 +117,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 VBM = VBMicrolensing.VBMicrolensing()
+VBM.SetObjectCoordinates("17:51:40.2082 -29:53:26.502");
 
 # Parameters
 tE = 37.3  # Einstein time
