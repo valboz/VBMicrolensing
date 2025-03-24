@@ -1,4 +1,4 @@
-[Go to **Centroid Trajectories**](CentroidTrajectories.md)
+[Back to **Centroid Trajectories**](CentroidTrajectories.md)
 
 # Advanced control
 
