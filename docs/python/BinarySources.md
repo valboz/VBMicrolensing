@@ -29,7 +29,7 @@ magnifications, y1, y2 = VBM.BinSourceLightCurve(pr,t)      # Calculation of bin
 
 plt.plot(t,magnifications)
 ```
-<img src="BinarySource_lightcurve.png" width = 400>
+<img src="figures/BinarySource_lightcurve.png" width = 400>
 
 The output of BinSourceLightCurve is a magnification compared to the baseline flux. Therefore, it is the sum of two Paczynsky light curves weighted by 1/(1+FR) and FR/(1+FR) respectively.
 
@@ -100,7 +100,7 @@ magnifications, y11, y12, y21, y22 = VBM.BinSourceSingleLensXallarap(pr, t)
 
 plt.plot(t,magnifications)
 ```
-<img src="BinarySource_lightcurve_xallarap.png" width = 400>
+<img src="figures/BinarySource_lightcurve_xallarap.png" width = 400>
 
 In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
@@ -145,7 +145,7 @@ magnifications, y11, y12, y21, y22 = VBM.BinSourceExtLightCurveXallarap(pr, t)
 plt.plot(t,magnifications,'y')
 ```
 
-<img src="BinarySource_lightcurve_xallarap_2.png" width = 400>
+<img src="figures/BinarySource_lightcurve_xallarap_2.png" width = 400>
 
 The positions of the two sources can be also easily show
 
@@ -154,7 +154,7 @@ plt.plot(y11,y12,'r')
 plt.plot(y21,y22,'y')
 ```
 
-<img src="BinarySource__xallarap_sources.png" width = 400>
+<img src="figures/BinarySource__xallarap_sources.png" width = 400>
 
 This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before.
 
