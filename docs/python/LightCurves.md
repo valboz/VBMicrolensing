@@ -54,7 +54,7 @@ import matplotlib.pyplot as plt
 plt.plot(t,magnifications)
 ```
 
-<img src="PSPL_lightcurve.png" width = 400>
+<img src="figures/PSPL_lightcurve.png" width = 400>
 
 ## Extended-Source-Point-Lens light curve
 
@@ -86,7 +86,7 @@ y2 = results[2]
 import matplotlib.pyplot as plt
 plt.plot(t,magnifications)
 ```
-<img src="ESPL_lightcurve.png" width = 400>
+<img src="figures/ESPL_lightcurve.png" width = 400>
 
 The source position is calculated in the same way as for the `PSPLLightCurve` function. All considerations about [Limb Darkening](LimbDarkening.md) apply to this function as well.
 
@@ -101,7 +101,7 @@ $$ y_1 = u_0 ~ \sin(\alpha) - \hat t ~ \cos(\alpha) $$
 
 $$ y_2 = -u_0 ~ \cos(\alpha) - \hat t ~ \sin(\alpha) $$ 
 
-<img src="sourcetrajconvention.png" width = 600>
+<img src="figures/sourcetrajconvention.png" width = 600>
 
 Let us see an example:
 
@@ -130,7 +130,7 @@ magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of binary
 
 plt.plot(t,magnifications)
 ```
-<img src="BinaryLens_lightcurve.png" width = 400>
+<img src="figures/BinaryLens_lightcurve.png" width = 400>
 
 As before, the coordinates of the source are stored in the `y1` and  `y2` arrays. These can be useful to draw the source trajectory relative to the caustics.
 
@@ -140,7 +140,7 @@ for cau in caustics:
     plt.plot(cau[0],cau[1])
 plt.plot(y1,y2)
 ```
-<img src="BinaryLens_lightcurve_caustics.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_caustics.png" width = 400>
 
 
 [Limb Darkening](LimbDarkening.md) and [accuracy goal](AccuracyControl.md) can be specified as shown in the respective sections.
@@ -156,7 +156,7 @@ This parameterization is useful for fitting wide binary models.
 
 In the triple light curve, we add three parameters: the separation of the third lens relative to the primary, the mass ratio of the third lens relative to the primary, and the angle $\psi$, which is the angular separation of the third lens relative to the line connecting the primary and the secondary lens. Similar to the binary case, the coordinate system has its origin at the center of mass of the first two bodies.
 
-<img src="sourcetrajconvention_triple.png" width = 600>
+<img src="figures/sourcetrajconvention_triple.png" width = 600>
 
 Let us see an example:
 
@@ -188,7 +188,7 @@ magnifications, y1, y2 = VBM.TripleLightCurve(pr,t)      # Calculation of triple
 
 plt.plot(t,magnifications)
 ```
-<img src="TripleLens_lightcurve.png" width = 400>
+<img src="figures/TripleLens_lightcurve.png" width = 400>
 
 and then the corresponding source trajectory on the caustics
 ```
@@ -198,6 +198,6 @@ for cau in caustics:
 plt.plot(y1,y2)
 ```
 
-<img src="TripleLens_lightcurve_caustics.png" width = 400>
+<img src="figures/TripleLens_lightcurve_caustics.png" width = 400>
 
 [Go to **Parallax**](Parallax.md)
