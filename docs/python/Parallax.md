@@ -70,7 +70,7 @@ plt.plot(t,magnifications,"g")
 plt.plot(t,magnificationspar,"m")
 ```
 
-<img src="BinaryLens_lightcurve_parallax.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_parallax.png" width = 400>
 
 The light curve including parallax is in magenta in this plot. 
 
@@ -83,7 +83,7 @@ plt.plot(y1,y2,"g")
 plt.plot(y1par,y2par,"m")
 ```
 
-<img src="BinaryLens_lightcurve_parallax_caustics.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_parallax_caustics.png" width = 400>
 
 In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ here.
 
@@ -117,7 +117,7 @@ magnificationssat, y1sat, y2sat = VBM.BinaryLightCurveParallax(pr,t)      # Calc
 plt.plot(t,magnificationspar,"m")
 plt.plot(t,magnificationssat,"r")
 ```
-<img src="BinaryLens_lightcurve_satellite.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_satellite.png" width = 400>
 
 The light curve as seen from Spitzer (satellite 1) is in red. And here we have the source trajectories
 
@@ -128,7 +128,7 @@ for cau in caustics:
 plt.plot(y1par,y2par,"m")
 plt.plot(y1sat,y2sat,"r")
 ```
-<img src="BinaryLens_lightcurve_satellite_caustics.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_satellite_caustics.png" width = 400>
 
 If you want to return to the ground do not forget to set VBM.satellite back to 0!
 
