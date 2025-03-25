@@ -21,21 +21,20 @@ The lens parallax and proper motion components are obtained from the source para
 - **PSPLAstroLightCurve(parameters, times)**, extending PSPLLightCurveParallax <br/>
 returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
 
-`ESPLAstroLightCurve(parameters, times)              # extending ESPLLightCurveParallax
-- returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]
+- **ESPLAstroLightCurve(parameters, times)**, extending ESPLLightCurveParallax <br/>
+returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]
 
-BinaryAstroLightCurve(parameters, times)            # extending BinaryLightCurveParallax
-- returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]
+- **BinaryAstroLightCurve(parameters, times)**, extending BinaryLightCurveParallax <br/>
+returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]
 
-BinaryAstroLightCurveOrbital(parameters, times)     # extending BinaryLightCurveOrbital
-- returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]
+- **BinaryAstroLightCurveOrbital(parameters, times)**, extending BinaryLightCurveOrbital <br/>
+returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]
 
-BinaryAstroLightCurveKepler(parameters, times)      # extending BinaryLightCurveKepler
-- returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]
+- **BinaryAstroLightCurveKepler(parameters, times)**, extending BinaryLightCurveKepler <br/>
+returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]
 
-BinSourceAstroLightCurveXallarap(parameters, times)   # extending BinSourceExtLightCurveXallarap
-- returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]
-```
+- **BinSourceAstroLightCurveXallarap(parameters, times)**, extending BinSourceExtLightCurveXallarap <br/>
+returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]
 
 Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times as arguments. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, source positions in the lens reference frame.
 
