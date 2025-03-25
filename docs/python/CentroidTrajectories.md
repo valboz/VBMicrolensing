@@ -22,24 +22,59 @@ The lens parallax and proper motion components are obtained from the source para
 returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
 
 - **ESPLAstroLightCurve(parameters, times)**, extending ESPLLightCurveParallax <br/>
-returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
 
 - **BinaryAstroLightCurve(parameters, times)**, extending BinaryLightCurveParallax <br/>
-returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
 
 - **BinaryAstroLightCurveOrbital(parameters, times)**, extending BinaryLightCurveOrbital <br/>
-returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]`
 
 - **BinaryAstroLightCurveKepler(parameters, times)**, extending BinaryLightCurveKepler <br/>
-returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list, separations_list]`
 
 - **BinSourceAstroLightCurveXallarap(parameters, times)**, extending BinSourceExtLightCurveXallarap <br/>
-returns [magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]`
 
-Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times as arguments. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, source positions in the lens reference frame.
+Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times as arguments. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, and source positions in the lens reference frame.
 
 Here is a full example with the `PSPLAstroLightCurve`:
 
+```
+import VBMicrolensing
+VBM = VBMicrolensing.VBMicrolensing()
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+
+# Standard parameters for PSPL with parallax
+t0 = 5034.0
+tE = 27.0
+u0 = 0.1
+paiN = -0.1 
+paiE = +0.2
+
+# Additional parameters required for centroid trajectory
+muS_Dec = -3.597 # Source proper motion (Dec) in mas/yr
+muS_RA = -2.263 # Source proper motion (RA) in mas/yr
+paiS = 0.12 # Source parallax in mas
+thetaE = 5.15 # Einstein angle in mas
+
+VBM.SetObjectCoordinates("17:51:40.2082 -29:53:26.502");  # Coordinates of the microlensing event
+
+# Here we fill the array of parameters
+pr = [u0,math.log(tE),t0, paiN,paiE,     # Standar light curve parameters for PSPL including parallax
+     0,0,                                # Lens position (Dec, R.A.) at time t0 in mas
+     muS_Dec,muS_RA, paiS, thetaE]       # Additional parameters required for centroid trajectory
+
+t = np.linspace(-3*365.25+t0,3*365.25+t0,10000) # Array of observation epochs
+
+results = VBM.PSPLAstroLightCurve(pr,t)
+magnifications = results[0]
+plt.plot(t,magnifications) # Here we plot the light curve as usual
+```
+
+<img src="Astro_lightcurve.png" width = 400>
 
 
 
