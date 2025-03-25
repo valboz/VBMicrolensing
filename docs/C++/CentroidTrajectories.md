@@ -88,7 +88,7 @@ VBM.CombineCentroids(mags, c1s, c2s, c1l, c2l, c1comb, c2comb, g, np);
 
 ## Binary lenses and binary sources
 
-The lens centroid for binary lenses is not the center of mass but the center of light, which depends on the flux ratio, if both components are luminous. The flux ratio between the two lenses is determined using the mass ratio parameter $q$ and applying a mass-luminosity relation: $FR = q^p$, where $p$ can be set by the property $VBM.lens_mass_luminosity_exponent$. The default value is 4. This works also for planetary systems, since the mass flux would be negligible. The user can modify this property freely.
+The lens centroid for binary lenses is not the center of mass but the center of light, which depends on the flux ratio, if both components are luminous. The flux ratio between the two lenses is determined using the mass ratio parameter $q$ and applying a mass-luminosity relation: $FR = q^p$, where $p$ can be set by the property `VBM.lens_mass_luminosity_exponent`. The default value is 4. This works also for planetary systems, since the mass flux would be negligible. The user can modify this property freely.
 
 For binary sources, the centroid is determined using the flux ratio as already explained in [Binary Sources](BinarySources.md).
 
