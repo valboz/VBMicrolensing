@@ -16,6 +16,8 @@ However, in order to exploit this information and calculate the centroid positio
 
 The lens parallax and proper motion components are obtained from the source parallax and proper motion components once the microlensing parallax components $\pi_N,\pi_E$, Einstein angle and Einstein time are given. Therefore, they do not represent independent parameters.
 
+## Astro-photometric functions
+
 `VBMicrolensing` contains the following astro-photometric functions:
 
 - **PSPLAstroLightCurve(parameters, times)**, extending PSPLLightCurveParallax <br/>
@@ -76,7 +78,9 @@ plt.plot(t,magnifications) # Here we plot the light curve as usual
 
 <img src="Astro_lightcurve.png" width = 400>
 
-Now, let us plot the centroids for source and lens
+## Centroids for magnified source and lens
+
+Now, let us plot the centroids for the magnified source and for the lens
 
 ```
 sourcecentroid = [results[1],results[2]]
@@ -109,6 +113,8 @@ ax.set_xlim(ran,-ran)
 <img src="Astro_reduced_centroid.png" width = 400>
 
 Here we see the astrometric deflection along with the parallax wiggles, which have not been subtracted.
+
+## Blending
 
 Finally, we may combine lens and source centroid if we know the blending ratio $g = F_L/F_S$ using the function 'CombineCentroids'.
 
