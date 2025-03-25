@@ -76,8 +76,61 @@ plt.plot(t,magnifications) # Here we plot the light curve as usual
 
 <img src="Astro_lightcurve.png" width = 400>
 
+Now, let us plot the centroids for source and lens
 
+```
+sourcecentroid = [results[1],results[2]]
+lenscentroid = [results[3],results[4]]
 
+fig, ax = plt.subplots(figsize=(5,5))
+ax.plot(sourcecentroid[1],sourcecentroid[0])
+ax.plot(lenscentroid[1],lenscentroid[0])
+ran = 10
+ax.set_ylim(-ran,ran)
+ax.set_xlim(ran,-ran)
+ax.set_xlabel('dRA (mas)')
+ax.set_ylabel('dDec (mas)')
+```
+
+<img src="Astro_centroids.png" width = 400>
+
+In this figure the source centroid is in blue and the lens centroid is in yellow. We can appreciate the wiggles due to annual parallax (the time span is six years in this figure). The source is deflected at the time of the microlensing event.
+
+We can subtract the average source proper motion to check the astrometric deflection
+
+```
+fig, ax = plt.subplots(figsize=(5,5))
+ax.plot(np.array(sourcecentroid[1]) - muS_RA*(t - t0)/365.25,np.array(sourcecentroid[0]) - muS_Dec*(t - t0)/365.25)
+ran = 3
+ax.set_ylim(-ran,ran)
+ax.set_xlim(ran,-ran)
+```
+
+<img src="Astro_reduced_centroid.png" width = 400>
+
+Here we see the astrometric deflection along with the parallax wiggles, which have not been subtracted.
+
+Finally, we may combine lens and source centroid if we know the blending ratio $g = F_L/F_S$ using the function 'CombineCentroids'.
+
+```
+fig, ax = plt.subplots(figsize=(5,5))
+g = 0.
+combinedcentroid = VBM.CombineCentroids(results,g)
+ax.plot(combinedcentroid[1],combinedcentroid[0],'b')
+g = 0.1
+combinedcentroid = VBM.CombineCentroids(results,g)
+ax.plot(combinedcentroid[1],combinedcentroid[0],'g')
+g = 1
+combinedcentroid = VBM.CombineCentroids(results,g)
+ax.plot(combinedcentroid[1],combinedcentroid[0],'y')
+ran = 10
+ax.set_ylim(-ran,ran)
+ax.set_xlim(ran,-ran)
+ax.set_xlabel('dRA (mas)')
+ax.set_ylabel('dDec (mas)')
+```
+
+<img src="Astro_combinedcentroid.png" width = 400>
 
 
 [Go to **Advanced control**](AdvancedControl.md)
