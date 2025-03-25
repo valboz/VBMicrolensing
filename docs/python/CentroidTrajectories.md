@@ -40,7 +40,7 @@ returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid
 
 Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times as arguments. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, and source positions in the lens reference frame.
 
-Here is a full example with the `PSPLAstroLightCurve`:
+Here is a full example with the `PSPLAstroLightCurve`. For the other functions we just have to change the standard parameters accordingly, as explained in the corresponding sections [Light Curves](LightCurves.md), [Parallax](Parallax.md), [Orbital Motion](OrbitalMotion.md), [Binary Sources](BinarySources.md).
 
 ```
 import VBMicrolensing
@@ -139,5 +139,11 @@ ax.set_ylabel('dDec (mas)')
 <img src="Astro_combinedcentroid.png" width = 400>
 
 In this figure the blue line is the centroid trajectory for zero blending (basically the centroid for the magnified source), the green line is for blending = 0.1 and the yellow line for blending = 1. By increasing the blending, the lens dominates the centroid more and more.
+
+## Binary lenses and binary sources
+
+The lens centroid for binary lenses is not the center of mass but the center of light, which depends on the flux ratio, if both components are luminous. The flux ratio between the two lenses is determined using the mass ratio parameter $q$ and applying a mass-luminosity relation: $FR = q^p$, where $p$ can be set by the property $VBM.lens_mass_luminosity_exponent$. The default value is 4. This works also for planetary systems, since the mass flux would be negligible. The user can modify this property freely.
+
+For binary sources, the centroid is determined using the flux ratio as already explained in [Binary Sources](BinarySources.md).
 
 [Go to **Advanced control**](AdvancedControl.md)
