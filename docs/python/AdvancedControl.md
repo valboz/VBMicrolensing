@@ -83,4 +83,34 @@ Finally, we note that lower level functions such as `BinaryMag` and `BinaryMagDa
 
 ## Image contours
 
-In classical microlensing, only the total magnification and the astrometric centroid are of interest. However, for illustration purposes or for particular diagnostics, we may be interested in the individual image contours. This functionality is currently available only in C++. See the [corresponding documentation](/docs/C%2B%2B/AdvancedControl.md).
+In classical microlensing, only the total magnification and the astrometric centroid are of interest. However, for illustration purposes or for particular diagnostics, we may be interested in the individual image contours. These are available thanks to the function `ImageContours`. Here is an illustrative example
+
+```
+import VBMicrolensing
+VBM = VBMicrolensing.VBMicrolensing()
+import matplotlib.pyplot as plt
+
+s = 1  # Lens separation
+q = 0.1 # Mass ratio
+y1 = 0.1 # Source coordinate 1
+y2 = 0.1 # Source coordinate 2
+rho = 0.1 # Source radius
+
+images = VBM.ImageContours(s, q, y1, y2, rho)  # Calculates the image contours.
+# images is a list of images. each image is a list of x1 and x2 coordinates for its points
+
+crits = VBM.Criticalcurves(s,q) # Let us also show the critical curves for this lens
+
+fig, ax = plt.subplots(figsize=(5,5))
+# Plot the critical curves
+for crit in crits:
+    ax.plot(crit[0],crit[1],'k', linewidth=1)
+# Plot the image contours
+for image in images:
+    ax.plot(image[0],image[1])
+ran=1.5
+ax.set_xlim(-ran,ran)
+ax.set_ylim(-ran,ran)
+```
+
+<img src="figures/Image_contours.png" width = 400>
