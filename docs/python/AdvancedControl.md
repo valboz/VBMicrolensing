@@ -96,18 +96,15 @@ y1 = 0.1 # Source coordinate 1
 y2 = 0.1 # Source coordinate 2
 rho = 0.1 # Source radius
 
-images = VBM.ImageContours(s, q, y1, y2, rho)  # Calculates the image contours.
-# images is a list of images. each image is a list of x1 and x2 coordinates for its points
+images = VBM.ImageContours(s, q, y1, y2, rho)  # Calculates the image contours and stores them in a list.
 
 crits = VBM.Criticalcurves(s,q) # Let us also show the critical curves for this lens
 
 fig, ax = plt.subplots(figsize=(5,5))
-# Plot the critical curves
 for crit in crits:
-    ax.plot(crit[0],crit[1],'k', linewidth=1)
-# Plot the image contours
+    ax.plot(crit[0],crit[1],'k', linewidth=1) # Plot the critical curves
 for image in images:
-    ax.plot(image[0],image[1])
+    ax.plot(image[0],image[1]) # Plot the image contours
 ran=1.5
 ax.set_xlim(-ran,ran)
 ax.set_ylim(-ran,ran)
