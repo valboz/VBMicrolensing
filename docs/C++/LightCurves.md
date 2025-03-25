@@ -91,7 +91,7 @@ $$ y_1 = u_0 ~ \sin(\alpha) - \hat t ~ \cos(\alpha) $$
 
 $$ y_2 = -u_0 ~ \cos(\alpha) - \hat t ~ \sin(\alpha) $$ 
 
-<img src="sourcetrajconvention.png" width = 600>
+<img src="figures/sourcetrajconvention.png" width = 600>
 
 Let us see an example:
 
@@ -138,7 +138,7 @@ This parameterization is useful for fitting wide binary models.
 
 In the triple light curve, we add three parameters: the separation of the third lens relative to the primary, the mass ratio of the third lens relative to the primary, and the angle $\psi$, which is the angular separation of the third lens relative to the line connecting the primary and the secondary lens. Similar to the binary case, the coordinate system has its origin at the center of mass.
 
-<img src="sourcetrajconvention_triple.png" width = 600>
+<img src="figures/sourcetrajconvention_triple.png" width = 600>
 
 Let us see an example:
 
