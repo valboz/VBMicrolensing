@@ -18,7 +18,7 @@ The lens parallax and proper motion components are obtained from the source para
 
 `VBMicrolensing` contains the following astro-photometric functions:
 
-`PSPLAstroLightCurve(parameters, times)` extending `PSPLLightCurveParallax`
+- PSPLAstroLightCurve(parameters, times) extending PSPLLightCurveParallax <br/>
 returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
 
 `ESPLAstroLightCurve(parameters, times)              # extending ESPLLightCurveParallax
