@@ -132,5 +132,6 @@ ax.set_ylabel('dDec (mas)')
 
 <img src="Astro_combinedcentroid.png" width = 400>
 
+In this figure the blue line is the centroid trajectory for zero blending (basically the centroid for the magnified source), the green line is for blending = 0.1 and the yellow line for blending = 1. By increasing the blending, the lens dominates the centroid more and more.
 
 [Go to **Advanced control**](AdvancedControl.md)
