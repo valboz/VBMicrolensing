@@ -27,7 +27,7 @@ fig = plt.figure(figsize=(5, 5))
 for cau in caustics:
         plt.plot(cau[0], cau[1], 'k')
 ```
-<img src="Caustics_binary.png" width = 400>
+<img src="figures/Caustics_binary.png" width = 400>
 
 Similarly for critical curves:
 
@@ -40,7 +40,7 @@ for crit in criticalcurves:
         plt.plot(crit[0], crit[1], 'k')
 ```
 
-<img src="Criticalcurves_binary.png" width = 400>
+<img src="figures/Criticalcurves_binary.png" width = 400>
 
 ## Multiple Lens
 
@@ -64,7 +64,7 @@ fig = plt.figure(figsize=(5, 5))
 for cau in caustics:
         plt.plot(cau[0], cau[1], 'k')
 ```
-<img src="Caustics_multi.png" width = 400>
+<img src="figures/Caustics_multi.png" width = 400>
 
 Similarly for critical curves:
 
@@ -77,7 +77,7 @@ for crit in criticalcurves:
         plt.plot(crit[0], crit[1], 'k')
 ```
 
-<img src="Criticalcurves_multi.png" width = 400>
+<img src="figures/Criticalcurves_multi.png" width = 400>
 
 
 Critical curves and caustics are calculated through the resolution of a complex polynomial of order $2N$ (see [reviews](reviews.md)) by the [Skowron & Gould algorithm](http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/). 
