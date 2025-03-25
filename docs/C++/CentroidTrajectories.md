@@ -59,7 +59,7 @@ double pr[] = {u0,log(tE),t0, paiN,paiE,     // Standard light curve parameters 
      muS_Dec,muS_RA, paiS, thetaE};      // Additional parameters required for centroid trajectory
 
 // Here we declare all needed arrays
-double t[np],mags[np],y1[np],y2[np],y12[np],y22[np],seps[np],c1s[np],c2s[np], c1l[np], c2l[np];
+double t[np],mags[np],y1[np],y2[np],c1s[np],c2s[np], c1l[np], c2l[np];
 
 // Let us fill the array of observation epochs
 for (int i = 0; i < np; i++) {
