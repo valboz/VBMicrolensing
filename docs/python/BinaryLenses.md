@@ -58,7 +58,7 @@ print(f"Binary lens Magnification = {Mag}\n")  # Output should be 18.28....
 
 By default the `BinaryMag2` function works with uniform-brightness sources. Any possible Limb Darkening laws can be implemented in VBMicrolensing, as shown in the [next section](LimbDarkening.md) of the documentation.
 
-The `BinaryMag2` function has a quite complicated flow that optimizes the calculation according to several tests. Users interested to discover more about its internal structure are invited to read until the [end of this documentation](AdvancedControl.md).
+The `BinaryMag2` function has a quite complicated flow that optimizes the calculation according to several tests. Users interested to discover more about its internal structure are invited to read until the [end of this documentation](AdvancedControl.md). In that section we also show how to plot the image contours.
 
 ## Astrometry
 
