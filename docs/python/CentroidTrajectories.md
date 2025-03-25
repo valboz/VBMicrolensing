@@ -76,7 +76,7 @@ magnifications = results[0]
 plt.plot(t,magnifications) # Here we plot the light curve as usual
 ```
 
-<img src="Astro_lightcurve.png" width = 400>
+<img src="figures/Astro_lightcurve.png" width = 400>
 
 ## Centroids for magnified source and lens
 
@@ -96,7 +96,7 @@ ax.set_xlabel('dRA (mas)')
 ax.set_ylabel('dDec (mas)')
 ```
 
-<img src="Astro_centroids.png" width = 400>
+<img src="figures/Astro_centroids.png" width = 400>
 
 In this figure the source centroid is in blue and the lens centroid is in yellow. We can appreciate the wiggles due to annual parallax (the time span is six years in this figure). The source is deflected at the time of the microlensing event.
 
@@ -110,7 +110,7 @@ ax.set_ylim(-ran,ran)
 ax.set_xlim(ran,-ran)
 ```
 
-<img src="Astro_reduced_centroid.png" width = 400>
+<img src="figures/Astro_reduced_centroid.png" width = 400>
 
 Here we see the astrometric deflection along with the parallax wiggles, which have not been subtracted.
 
@@ -136,7 +136,7 @@ ax.set_xlabel('dRA (mas)')
 ax.set_ylabel('dDec (mas)')
 ```
 
-<img src="Astro_combinedcentroid.png" width = 400>
+<img src="figures/Astro_combinedcentroid.png" width = 400>
 
 In this figure the blue line is the centroid trajectory for zero blending (basically the centroid for the magnified source), the green line is for blending = 0.1 and the yellow line for blending = 1. By increasing the blending, the lens dominates the centroid more and more.
 
