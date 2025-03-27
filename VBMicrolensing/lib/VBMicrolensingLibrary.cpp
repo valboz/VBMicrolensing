@@ -65,7 +65,7 @@ VBMicrolensing::VBMicrolensing() {
 	nsat = 0;
 	ndatasat = 0;
 	satellite = 0;
-	parallaxsystem = 1;
+	parallaxsystem = 0;
 	t0_par_fixed = -1;
 	t0_par = 7000;
 	minannuli = 1;
@@ -534,9 +534,9 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, 
 		return -1;
 	}
 	if (q.re < 0.01) {
-		safedist = y1v + coefs[11].re - 1 / a.re;
+		safedist = y1v + (a.re - 1 / a.re) * coefs[21].re; // Note that a.re is negative 
 		safedist *= safedist;
-		safedist += y2v * y2v - 36 * q1 / (a1 * a1);
+		safedist += y2v * y2v - 4 * sqrt(q.re) / (a.re * a.re); // Caustic region of influence ~ sqrt(caustic size)
 	}
 	Mag = 0.;
 	astrox1 = 0.;
@@ -871,7 +871,7 @@ double VBMicrolensing::BinaryMag2(double s, double q, double y1v, double y2v, do
 	delete Images;
 	rho2 = rho * rho;
 	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
-	corrquad2 *= (rho + 1.e-3);
+	corrquad2 *= 256 * (rho2 + 1.e-9);
 	if (corrquad < Tol && corrquad2 < 1 && (/*rho2 * s * s<q || */ safedist > 4 * rho2)) {
 		Mag = Mag0;
 	}
@@ -1292,7 +1292,7 @@ _curve* VBMicrolensing::NewImages(complex yi, complex * coefs, _theta * theta) {
 			i = worst2;
 			_Jacobians1
 				_Jacobians4
-				if (cq > corrquad2) corrquad2 = cq;
+				if (cq < corrquad2) corrquad2 = cq;
 			//_Jacobians3
 			//corrquad2 +=  1/cq;
 
@@ -2822,7 +2822,7 @@ double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 	delete Images;
 	rho2 = rho * rho;
 	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
-	corrquad2 *= (rho + 1.e-3);
+	corrquad2 *= 256 * (rho2 + 1.e-9);
 	if (corrquad < Tol && corrquad2 < 1 && (/*rho2 * s * s<q || */ safedist > 4 * rho2)) {
 		Mag = Mag0;
 	}
@@ -3465,7 +3465,7 @@ _curve* VBMicrolensing::NewImagespoly(_theta * theta) {
 			zc = conj(z);
 			_MJacobians2
 				_MJacobians0bad
-				if (cq < corrquad2) corrquad2 = cq;
+				if (cq > corrquad2) corrquad2 = cq;
 		}
 		else {
 			for (int j = ngood; j < i; j++) { // Find the two ghost roots with minimum distance.
@@ -3556,7 +3556,7 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta * theta) {
 			zc = conj(z);
 			_MJacobians2
 				_MJacobians0bad
-				if (cq < corrquad2) corrquad2 = cq;
+				if (cq > corrquad2) corrquad2 = cq;
 		}
 		else {
 			for (int j = ngood; j < i; j++) { // Find the two ghost roots with minimum distance.
