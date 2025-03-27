@@ -53,6 +53,14 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Exponent for the mass-radius relation: R = M^q; default value is q=0.89");
     vbm.def_readwrite("lens_mass_luminosity_exponent", &VBMicrolensing::lens_mass_luminosity_exponent,
         "Exponent for the mass-luminosity relation for the lens: L = M^q; default value is q=4.0");
+    vbm.def_readwrite("corrquad", &VBMicrolensing::corrquad,
+        "Quadrupole test.");
+    vbm.def_readwrite("corrquad2", &VBMicrolensing::corrquad2,
+        "Ghost image test.");
+    vbm.def_readwrite("safedist", &VBMicrolensing::corrquad,
+        "Distance from planetary caustic.");
+
+
     vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
         """Loads a pre calculated binary table for extended source calculation.""");
     vbm.def("SetESPLtablefile", [](char* s) {
