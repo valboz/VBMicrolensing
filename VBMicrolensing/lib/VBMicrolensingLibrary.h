@@ -64,7 +64,7 @@ class VBMicrolensing
 
 	int* ndatasat;
 	double** tsat, *** possat;
-	double Mag0, corrquad, corrquad2, safedist;
+	double Mag0;
 	double* dist_mp, * q;
 	int nim0, n, n2, nnm1, nroots, nrootsmp, * nrootsmp_mp;
 	complex* zr, * zcr, ** pmza, ** pyaza, ** ppmy, * pza, * pza2, ** pmza2, * pdum, * ppy, * a, * s_offset, * pert, y, yc, * s;
@@ -127,9 +127,7 @@ class VBMicrolensing
 	void polycritcoefficients(complex eiphi);
 
 public:
-
-	//	bool testnewcoefs;
-
+	
 	double rootaccuracy;
 	double samplingfactor;
 	bool squarecheck;
@@ -141,7 +139,7 @@ public:
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;
-	int newtonstep;
+	int newtonstep, corrquad, corrquad2, safedist;
 	double y_1, y_2, av, therr, astrox1, astrox2;
 	double (*CumulativeFunction)(double r, double* LDpars);
 
