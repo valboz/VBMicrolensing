@@ -135,11 +135,11 @@ public:
 
 	static char ESPLtablefile[1024];
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
-	double Tol, RelTol, a1, a2, t0_par;
+	double Tol, RelTol, a1, a2, t0_par,corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;
-	int newtonstep, corrquad, corrquad2, safedist;
+	int newtonstep;
 	double y_1, y_2, av, therr, astrox1, astrox2;
 	double (*CumulativeFunction)(double r, double* LDpars);
 
