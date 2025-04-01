@@ -6,13 +6,11 @@ All basic magnification functions illustrated in [Single Lenses](SingleLenses.md
 
 However, in order to exploit this information and calculate the centroid positions in the sky during a microlensing event, we need some additional information:
 
-1 - The lens offset in the sky at time t0 in declination and right ascension from the reference coordinates (these can be set to zero, but are useful if you need to fit an astrometric series).
+1 - The source heliocentric proper motion in declination and right ascension in mas/yr.
 
-2 - The source heliocentric proper motion in declination and right ascension in mas/yr.
+2 - The source parallax in mas.
 
-3 - The source parallax in mas.
-
-4 - The Einstein angle in mas.
+3 - The Einstein angle in mas.
 
 The lens parallax and proper motion components are obtained from the source parallax and proper motion components once the microlensing parallax components $\pi_N,\pi_E$, Einstein angle and Einstein time are given. Therefore, they do not represent independent parameters.
 
@@ -66,7 +64,6 @@ VBM.SetObjectCoordinates("17:51:40.2082 -29:53:26.502");  # Coordinates of the m
 
 # Here we fill the array of parameters
 pr = [u0,math.log(tE),t0, paiN,paiE,     # Standar light curve parameters for PSPL including parallax
-     0,0,                                # Lens position (Dec, R.A.) at time t0 in mas
      muS_Dec,muS_RA, paiS, thetaE]       # Additional parameters required for centroid trajectory
 
 t = np.linspace(-3*365.25+t0,3*365.25+t0,10000) # Array of observation epochs
