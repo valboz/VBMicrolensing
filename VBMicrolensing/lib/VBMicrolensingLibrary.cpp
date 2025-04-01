@@ -4322,10 +4322,9 @@ void VBMicrolensing::OrderMultipleImages(_sols * Sols, _curve * Newpts) {
 
 
 void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double* c2s, double* c1l, double* c2l) {
-	double L0_1 = pr[iastro], L0_2 = pr[iastro + 1];
-	double muS1 = pr[iastro + 2] / 365.25, muS2 = pr[iastro + 3] / 365.25; // heliocentric source proper motion in mas/day
-	double paiS = pr[iastro + 4]; // source parallax in mas
-	thetaE = pr[iastro + 5]; //Einstein angle in mas
+	double muS1 = pr[iastro] / 365.25, muS2 = pr[iastro + 1] / 365.25; // heliocentric source proper motion in mas/day
+	double paiS = pr[iastro + 2]; // source parallax in mas
+	thetaE = pr[iastro + 3]; //Einstein angle in mas
 	double paiE, paiL, pairel, muL1, muL2;
 	double c1, c2, c1prov;
 
@@ -4347,8 +4346,8 @@ void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double*
 	c1 = c1prov;            // Now centroid coordinates are in North-East system, but still relative to lens
 
 	// Lens centroid in the sky
-	c1l[0] = L0_1 + muL1 * (t - t0_par) + paiL * (Ehel[0] - Et0[0]); // Note that Ehel is in South-West system
-	c2l[0] = L0_2 + muL2 * (t - t0_par) + paiL * (Ehel[1] - Et0[1]);
+	c1l[0] = muL1 * (t - t0_par) + paiL * (Ehel[0] - Et0[0]); // Note that Ehel is in South-West system
+	c2l[0] = muL2 * (t - t0_par) + paiL * (Ehel[1] - Et0[1]);
 	// Image centroid is finally composed with lens centroid
 	c1s[0] = c1 + c1l[0];
 	c2s[0] = c2 + c2l[0];
