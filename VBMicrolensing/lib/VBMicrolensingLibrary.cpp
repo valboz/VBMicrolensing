@@ -1,4 +1,4 @@
-// VBMicrolensing v4.3 (2025)
+// VBMicrolensing v5.0 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -34,6 +34,215 @@ char systemslash = '/';
 //#define _PRINT_ERRORS2
 //#define _PRINT_ERRORS
 //#define _PRINT_ERRORS_DARK
+
+
+class _augmented_priority_queue {
+public:
+
+	struct apq_node {
+		double   maxerr;
+		_theta* stheta;
+		int      index;
+	};
+
+	struct sum_tree_node {
+		double maxerr;
+		double sumerr;
+	};
+
+	std::vector<apq_node> apq_array;
+	std::vector<sum_tree_node> sum_tree_array;
+
+	_augmented_priority_queue(void) {						// constructor: avoid frequent reallocations by reserving capacity
+		apq_array.reserve(64);
+		sum_tree_array.reserve(64);
+	}
+
+
+	void push_augmented_heap(double maxerr_to_push, _theta* stheta_to_push)
+	{
+		int hole_index = apq_array.size(); 				// original_heap_size, a.k.a. new_heap_size - 1
+		int sum_tree_current_index = hole_index;
+
+		struct apq_node apq_node_to_push = { maxerr_to_push, stheta_to_push, hole_index };
+		struct sum_tree_node sum_tree_node_to_push = { maxerr_to_push, maxerr_to_push };
+
+		apq_array.push_back(apq_node_to_push);
+		sum_tree_array.push_back(sum_tree_node_to_push);
+
+		int parent_index = (hole_index - 1) / 2;
+		int sum_tree_parent_index = parent_index;
+
+		while (hole_index > 0 && apq_array[parent_index].maxerr < maxerr_to_push)
+		{
+			apq_array[hole_index] = apq_array[parent_index];
+			hole_index = parent_index;
+			parent_index = (hole_index - 1) / 2;
+		}
+
+		while (sum_tree_current_index > 0)
+		{
+			sum_tree_array[sum_tree_parent_index].sumerr += maxerr_to_push;
+			sum_tree_current_index = sum_tree_parent_index;
+			sum_tree_parent_index = (sum_tree_current_index - 1) / 2;
+		}
+
+		apq_array[hole_index] = apq_node_to_push;
+	}
+
+
+	void pop_then_push_augmented_heap(double maxerr_to_push, _theta* stheta_to_push)
+	{
+		int sum_tree_replace_index = apq_array[0].index;
+
+		struct apq_node apq_node_to_push = { maxerr_to_push, stheta_to_push, sum_tree_replace_index };
+		struct sum_tree_node sum_tree_node_to_push = { maxerr_to_push, maxerr_to_push };
+
+		int last_index = apq_array.size() - 1;
+		int hole_index = 0;
+
+		while (true)
+		{
+			int max_child_index = 2 * hole_index + 1; 		// currently, assume left child is max child
+			if (max_child_index > last_index)				// if even left child out of range
+				break;
+			int right_child_index = max_child_index + 1; 	// right child
+			if (right_child_index <= last_index && apq_array[right_child_index].maxerr > apq_array[max_child_index].maxerr)
+				max_child_index = right_child_index; 		// now, max child becomes right child
+
+			if (maxerr_to_push >= apq_array[max_child_index].maxerr)
+				break;
+			apq_array[hole_index] = apq_array[max_child_index];
+			hole_index = max_child_index;
+		}
+
+		apq_array[hole_index] = apq_node_to_push;
+
+
+		int sum_tree_left_index = 2 * sum_tree_replace_index + 1;
+		int sum_tree_parent_index = (sum_tree_replace_index - 1) / 2;
+
+		if (sum_tree_left_index <= last_index)
+		{
+			sum_tree_node_to_push.sumerr += sum_tree_array[sum_tree_left_index].sumerr;
+
+			if ((sum_tree_left_index + 1) <= last_index)
+			{
+				sum_tree_node_to_push.sumerr += sum_tree_array[sum_tree_left_index + 1].sumerr;
+			}
+		}
+
+		sum_tree_array[sum_tree_replace_index] = sum_tree_node_to_push;
+
+		if ((sum_tree_replace_index == last_index) && (sum_tree_replace_index % 2 == 1))
+		{
+			sum_tree_array[sum_tree_parent_index].sumerr = sum_tree_array[sum_tree_parent_index].maxerr + sum_tree_array[sum_tree_replace_index].sumerr;
+			sum_tree_replace_index = sum_tree_parent_index;
+			sum_tree_parent_index = (sum_tree_replace_index - 1) / 2;
+		}
+
+		while (sum_tree_replace_index > 0)
+		{
+			sum_tree_array[sum_tree_parent_index].sumerr = sum_tree_array[sum_tree_parent_index].maxerr + sum_tree_array[2 * sum_tree_parent_index + 1].sumerr + sum_tree_array[2 * sum_tree_parent_index + 2].sumerr;
+			sum_tree_replace_index = sum_tree_parent_index;
+			sum_tree_parent_index = (sum_tree_replace_index - 1) / 2;
+		}
+	}
+};
+
+
+
+class _priority_queue {
+public:
+
+	struct pq_node {
+		double   maxerr;
+		_theta* stheta;
+	};
+
+	std::vector<pq_node> pq_array;
+
+	_priority_queue(void) {									// constructor: avoid frequent reallocations by reserving capacity
+		pq_array.reserve(64);
+	}
+
+
+	void push_heap(double maxerr_to_push, _theta* stheta_to_push)
+	{
+		struct pq_node node_to_push = { maxerr_to_push, stheta_to_push };
+
+		pq_array.push_back(node_to_push);
+
+		int hole_index = pq_array.size() - 1; 				// new_heap_size - 1, a.k.a. original_heap_size				
+		int parent_index = (hole_index - 1) / 2;
+
+		while (hole_index > 0 && pq_array[parent_index].maxerr < maxerr_to_push)
+		{
+			pq_array[hole_index] = pq_array[parent_index];
+			hole_index = parent_index;
+			parent_index = (hole_index - 1) / 2;
+		}
+
+		pq_array[hole_index] = node_to_push;
+	}
+
+
+	void pop_heap()
+	{
+		int last_index = pq_array.size() - 1;
+		struct pq_node node_to_adjust = pq_array[last_index];
+		double value = node_to_adjust.maxerr;
+
+		pq_array.pop_back();
+
+		last_index--;
+		int hole_index = 0;
+
+		while (true)
+		{
+			int max_child_index = 2 * hole_index + 1; 		// currently, assume left child is max child
+			if (max_child_index > last_index)				// if even left child out of range
+				break;
+			int right_child_index = max_child_index + 1; 	// right child
+			if (right_child_index <= last_index && pq_array[right_child_index].maxerr > pq_array[max_child_index].maxerr)
+				max_child_index = right_child_index; 		// now, max child becomes right child
+
+			if (value >= pq_array[max_child_index].maxerr)
+				break;
+			pq_array[hole_index] = pq_array[max_child_index];
+			hole_index = max_child_index;
+		}
+
+		pq_array[hole_index] = node_to_adjust;
+	}
+
+
+	void pop_then_push_heap(double maxerr_to_push, _theta* stheta_to_push)
+	{
+		struct pq_node node_to_push = { maxerr_to_push, stheta_to_push };
+
+		int last_index = pq_array.size() - 1;
+		int hole_index = 0;
+
+		while (true)
+		{
+			int max_child_index = 2 * hole_index + 1; 		// currently, assume left child is max child
+			if (max_child_index > last_index)				// if even left child out of range
+				break;
+			int right_child_index = max_child_index + 1; 	// right child
+			if (right_child_index <= last_index && pq_array[right_child_index].maxerr > pq_array[max_child_index].maxerr)
+				max_child_index = right_child_index; 		// now, max child becomes right child
+
+			if (maxerr_to_push >= pq_array[max_child_index].maxerr)
+				break;
+			pq_array[hole_index] = pq_array[max_child_index];
+			hole_index = max_child_index;
+		}
+
+		pq_array[hole_index] = node_to_push;
+	}
+};
+
 
 char VBMicrolensing::ESPLtablefile[1024] = "fatto";
 
@@ -245,10 +454,10 @@ void VBMicrolensing::LoadESPLTable(char* filename) {
 	FILE* f;
 
 	if ((f = fopen(filename, "rb")) != 0) {
-		fread(ESPLin, sizeof(double), __rsize * __zsize, f);
-		fread(ESPLout, sizeof(double), __rsize * __zsize, f);
-		fread(ESPLinastro, sizeof(double), __rsize * __zsize, f);
-		fread(ESPLoutastro, sizeof(double), __rsize * __zsize, f);
+		fread(ESPLin, sizeof(double), __rsize_ESPL * __zsize_ESPL, f);
+		fread(ESPLout, sizeof(double), __rsize_ESPL * __zsize_ESPL, f);
+		fread(ESPLinastro, sizeof(double), __rsize_ESPL * __zsize_ESPL, f);
+		fread(ESPLoutastro, sizeof(double), __rsize_ESPL * __zsize_ESPL, f);
 		fclose(f);
 		ESPLoff = false;
 	}
@@ -278,7 +487,7 @@ double VBMicrolensing::ESPLMag(double u, double RSv) {
 	}
 
 	fr = -10.857362047581296 * log(0.01 * RSv);
-	if (fr > __rsize - 1) fr = __rsize - 1.000001;
+	if (fr > __rsize_ESPL - 1) fr = __rsize_ESPL - 1.000001;
 	if (fr < 0) printf("Source too large!");
 	ir = (int)floor(fr);
 	fr -= ir;
@@ -287,7 +496,7 @@ double VBMicrolensing::ESPLMag(double u, double RSv) {
 	z = u / RSv;
 
 	if (z < 1) {
-		z *= __zsize - 1;
+		z *= __zsize_ESPL - 1;
 		iz = (int)floor(z);
 		z -= iz;
 		cz = 1 - z;
@@ -300,7 +509,7 @@ double VBMicrolensing::ESPLMag(double u, double RSv) {
 	}
 	else {
 		z = 0.99999999999999 / z;
-		z *= __zsize - 1;
+		z *= __zsize_ESPL - 1;
 		iz = (int)floor(z);
 		z -= iz;
 		cz = 1 - z;
@@ -485,14 +694,15 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 #pragma region binary-mag
 
 
-double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, _sols** Images) {
+double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, _sols_for_skiplist_curve** Images) {
 	static complex a, q, m1, m2, y;
 	static double av = -1.0, qv = -1.0;
 	static complex  coefs[24], d1, d2, dy, dJ, dz;
 	static double Mag, Ai;
 
 	static _theta* stheta;
-	static _curve* Prov, * Prov2;
+	static _curve* Prov;
+	static _skiplist_curve* Prov2;
 	static _point* scan1, * scan2;
 
 	Mag = Ai = -1.0;
@@ -524,7 +734,7 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, 
 
 	}
 	y = complex(y1v, y2v);
-	(*Images) = new _sols;
+	(*Images) = new _sols_for_skiplist_curve;
 	corrquad = corrquad2 = 0;
 	safedist = 10;
 	Prov = NewImages(y, coefs, stheta);
@@ -544,13 +754,7 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, 
 	nim0 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
-		Prov2 = new _curve(scan1);
-		//Prov2->append(scan1->x1, scan1->x2);
-		//Prov2->last->theta = stheta;
-		//Prov2->last->d = Prov2->first->d;
-		//Prov2->last->dJ = Prov2->first->dJ;
-		//Prov2->last->J2 = Prov2->first->J2;
-		//Prov2->last->ds = Prov2->first->ds;
+		Prov2 = new _skiplist_curve(scan1, 0);						// create an object of class _curve with one member(_point class variable),
 		(*Images)->append(Prov2);
 		Ai = fabs(1 / scan1->dJ);
 		Mag += Ai;
@@ -574,14 +778,14 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, 
 }
 
 double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v) {
-	static _sols* images;
+	static _sols_for_skiplist_curve* images;
 	static double mag;
 	mag = BinaryMag0(a1, q1, y1v, y2v, &images);
 	delete images;
 	return mag;
 }
 
-double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v, double RS, _sols** images) {
+double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v, double RS, _sols_for_skiplist_curve** images) {
 	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
 	static int NPSsafe;
 	Mag = BinaryMag(s, q, y1v, y2v, RS, Tol, images);
@@ -617,7 +821,7 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 	return Mag;
 }
 
-double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, double RSv, double Tol, _sols** Images) {
+double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, double RSv, double Tol, _sols_for_skiplist_curve** Images) {
 	static complex a, q, m1, m2, y0, y, yc, z, zc;
 	static double av = -1.0, qv = -1.0;
 	static complex coefs[24], d1, d2, dy, dJ, dz;
@@ -626,10 +830,32 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 	////////////////////////////  
 	static double errimage, maxerr, currerr, Magold;
 	static int NPSmax, flag, NPSold, flagbad, flagbadmax = 3;
-	static _curve* Prov, * Prov2;
+	static _curve* Prov;
+	static _skiplist_curve* Prov2;
 	static _point* scan1, * scan2;
 	static _thetas* Thetas;
 	static _theta* stheta, * itheta;
+	static std::minstd_rand engine_start{ std::random_device{}() };
+
+	static _augmented_priority_queue APQ;
+
+	if (APQ.apq_array.capacity() > 2048)
+	{
+		APQ.apq_array.resize(2048);
+		APQ.sum_tree_array.resize(2048);
+
+		APQ.apq_array.shrink_to_fit();
+		APQ.sum_tree_array.shrink_to_fit();
+	}
+
+	APQ.apq_array.clear();
+	APQ.sum_tree_array.clear();
+
+	int new_and_append_Level_start = 0;
+	while (new_and_append_Level_start < max_skiplist_level && (engine_start() % 4) == 0)
+	{
+		new_and_append_Level_start++;
+	}
 
 #ifdef _PRINT_TIMES
 	static double tim0, tim1;
@@ -678,12 +904,18 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 
 	// Calculation of the images
 
-	(*Images) = new _sols;
+	(*Images) = new _sols_for_skiplist_curve;
 	Thetas = new _thetas;
 	th = thoff;
 	stheta = Thetas->insert(th);
-	stheta->maxerr = 1.e100;
+	stheta->maxerr = 0.;
+	stheta->Mag = 0.;
+	stheta->astrox1 = 0.;
+	stheta->astrox2 = 0.;
 	y = y0 + complex(RSv * cos(thoff), RSv * sin(thoff));
+	itheta = stheta;				// let itheta point to the first _theta variable. 
+	// because stheta will point to the last _theta variable later, 
+	// while we need a pointer to the first _theta variable when inserting the third _theta variable
 
 
 #ifdef _PRINT_TIMES
@@ -706,6 +938,9 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 			y = y0 + complex(RSv * cos(stheta->th), RSv * sin(stheta->th));
 		}
 	}
+	APQ.push_augmented_heap(0., itheta);	// this element will be first popped out anyway, 
+	// so we can just set maxerr_to_push to 0.
+
 #ifdef _PRINT_TIMES
 	tim1 = Environment::TickCount;
 	GM += tim1 - tim0;
@@ -718,8 +953,9 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 	stheta->errworst = Thetas->first->errworst;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
-		Prov2 = new _curve(scan1);
-		Prov2->append(scan1->x1, scan1->x2);
+		Prov2 = new _skiplist_curve(scan1, new_and_append_Level_start);			// create an object of class _curve with one member(_point class variable),
+
+		Prov2->append(scan1->x1, scan1->x2, new_and_append_Level_start);			// create a new _point variable on heap, 
 		Prov2->last->theta = stheta;
 		Prov2->last->d = Prov2->first->d;
 		Prov2->last->dJ = Prov2->first->dJ;
@@ -733,9 +969,29 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 	flag = 0;
 	Magold = -1.;
 	NPSold = 2;
+	Mag = 0.;								// initialize total Mag to 0. outside the do-loop
+	// (notice Mag is a static local variable, so should be initialized every time calls BinaryMag)
+	// 
+	// before inserting the third element, 
+	// principally we should calculate the Mag contributed by the only existing interval as current total Mag, 
+	// and the same value will be first reduced in OrderImages()
+	// but as the first interval's Mag is set to 0. previously, 
+	// we can initialize Mag to 0. then 0. - 0. = 0.
 	currerr = 1.e100;
+	//currerr = 0. ;
+	astrox1 = 0.;		
+	astrox2 = 0.;
 	do {
-		stheta = Thetas->insert(th);
+		stheta = Thetas->insert_at_certain_position(itheta, th);
+		// this method can only be used when inserting an element in the middle of linked list
+		// i.e. *first's 'th' < current 'th' < *last's 'th'
+		// but we can safely use this method as we only insert in the middle of linked list inside the do-loop
+		// 
+		// and the new element is forced to be inserted between itheta and itheta->next, 
+		// which means it's the programmer's responsibility to guarantee itheta->th < th < itheta->next->th holds
+		//
+		// however, we already know new element should be inserted in interval [itheta, itheta->next] and
+		// th is calculated to be between itheta->th and itheta->next->th
 		y = y0 + complex(RSv * cos(th), RSv * sin(th));
 #ifdef _PRINT_TIMES
 		tim0 = Environment::TickCount;
@@ -751,12 +1007,32 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 #endif
 		if (Prov->length > 0) {
 			flagbad = 0;
+			Mag -= stheta->prev->Mag;
+
+			if (astrometry) {
+				astrox1 -= stheta->prev->astrox1;
+				astrox2 -= stheta->prev->astrox2;
+			}
 			OrderImages((*Images), Prov);
+			Mag += stheta->prev->Mag;
+			Mag += stheta->Mag;
+
+
+			if (astrometry) {
+				astrox1 += stheta->prev->astrox1;
+				astrox1 += stheta->astrox1;
+
+				astrox2 += stheta->prev->astrox2;
+				astrox2 += stheta->astrox2;
+			}
 			if ((stheta->th - stheta->prev->th) * RSv < 1.e-11/* || stheta->maxerr > jumperrfactor * currerr || stheta->prev->maxerr > jumperrfactor * currerr*/) {
 				errbuff += stheta->maxerr + stheta->prev->maxerr;
 				stheta->maxerr = 0;
 				stheta->prev->maxerr = 0;
 			}
+			APQ.pop_then_push_augmented_heap(stheta->prev->maxerr, stheta->prev);
+			APQ.push_augmented_heap(stheta->maxerr, stheta);
+
 		}
 		else {
 			delete Prov;
@@ -768,6 +1044,7 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 				}
 				errbuff += stheta->prev->maxerr;
 				stheta->prev->maxerr = 0;
+				APQ.pop_then_push_augmented_heap(0., stheta->prev);
 				NPS--;
 				NPSmax--;
 			}
@@ -778,35 +1055,10 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 		}
 
 		if (flagbad == 0 || flagbad == flagbadmax) {
-			maxerr = currerr = Mag = 0.;
+			flagbad = 0;	
 
-			astrox1 = astrox2 = 0.;
-			stheta = Thetas->first;
-
-			while (stheta->next) {
-				currerr += stheta->maxerr;
-				Mag += stheta->Mag;
-
-				if (astrometry) {
-					astrox1 += stheta->astrox1;
-					astrox2 += stheta->astrox2;
-				}
-#ifndef _uniform
-				if (stheta->maxerr > maxerr) {
-					maxerr = stheta->maxerr;
-#else
-				if (stheta->next->th * 0.99999 - stheta->th > maxerr) {
-					maxerr = stheta->next->th - stheta->th;
-#endif
-					itheta = stheta;
-				}
-				stheta = stheta->next;
-#ifdef _selectimage
-				if ((NPS == NPSmax - 1) && (fabs(floor(stheta->th / M_PI * _npoints / 2 + 0.5) - stheta->th / M_PI * _npoints / 2) < 1.e-8)) {
-					printf("%d %.15le\n", (int)floor(stheta->th / M_PI * _npoints / 2 + 0.5), Mag);
-				}
-#endif
-				}
+			itheta = APQ.apq_array[0].stheta;
+			currerr = APQ.sum_tree_array[0].sumerr;
 			th = (itheta->th + itheta->next->th) / 2;
 			NPS++;
 #ifndef _uniform
@@ -834,8 +1086,8 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 #ifdef _PRINT_ERRORS2
 			printf("\nNPS= %d Mag = %lf maxerr= %lg currerr =%lg errbuff = %lg th = %lf", NPS, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), errbuff / (M_PI * RSv * RSv), th);
 #endif
-			}
-		} while ((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && ((flag < NPSold)/* || NPS<8 ||(currerr>10*errimage)*/)/*&&(flagits)*/);
+		}
+	} while ((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && ((flag < NPSold)/* || NPS<8 ||(currerr>10*errimage)*/)/*&&(flagits)*/);
 	if (astrometry) {
 		astrox1 /= (Mag);
 		astrox2 /= (Mag);
@@ -847,11 +1099,11 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 	//	if (NPS == NPSmax) return 1.e100*Tol; // Only for testing
 	return Mag;
 
-	}
+}
 
 
 double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, double RSv, double Tol) {
-	static _sols* images;
+	static _sols_for_skiplist_curve* images;
 	static double mag;
 	mag = BinaryMag(a1, q1, y1v, y2v, RSv, Tol, &images);
 	delete images;
@@ -861,7 +1113,7 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 double VBMicrolensing::BinaryMag2(double s, double q, double y1v, double y2v, double rho) {
 	static double Mag, rho2, y2a;//, sms , dy1, dy2;
 	static int c;
-	static _sols* Images;
+	static _sols_for_skiplist_curve* Images;
 
 	c = 0;
 
@@ -904,7 +1156,7 @@ double VBMicrolensing::BinaryMagDark(double a, double q, double y1, double y2, d
 	static double currerr, maxerr;
 	static annulus* first, * scan, * scan2;
 	static int nannold, totNPS;
-	static _sols* Images;
+	static _sols_for_skiplist_curve* Images;
 
 	Mag = -1.0;
 	Magold = 0.;
@@ -1130,7 +1382,6 @@ void VBMicrolensing::BinaryMagMultiDark(double a, double q, double y1, double y2
 	Prov->last->x1 -= coefs[11].re;\
 	Prov->last->dJ = dJ.re;\
 	Prov->last->d = dz;\
-	Prov->last->J2 = J2;\
 	Prov->last->ds = (imag(dy*dz*dz*J2) + coefs[23].re*coefs[23].re) / dJ.re;
 
 #define _Jacobians3\
@@ -1154,7 +1405,7 @@ void VBMicrolensing::BinaryMagMultiDark(double a, double q, double y1, double y2
 	cq=(dJ.re<-100)? 0.0 : (J3.re*J3.re+J3.im*J3.im);
 
 
-_curve* VBMicrolensing::NewImages(complex yi, complex * coefs, _theta * theta) {
+_curve* VBMicrolensing::NewImages(complex yi, complex* coefs, _theta* theta) {
 	static complex  y, yc, z, zc, J1, J1c, dy, dz, dJ, J2, J3, dza, za2, zb2, zaltc, Jalt, Jaltc, JJalt2;
 	static complex zr[5] = { 0.,0.,0.,0.,0. };
 	static double dlmin = 1.0e-4, dlmax = 1.0e-3, good[5], dJ2, ob2, cq;
@@ -1397,19 +1648,26 @@ _curve* VBMicrolensing::NewImages(complex yi, complex * coefs, _theta * theta) {
 	return Prov;
 }
 
-
-void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
+void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts) {
 	static double A[5][5];
-	static _curve* cprec[5];
-	static _curve* cpres[5];
-	static _curve* cfoll[5];
-	static _point* scan, * scan2, * scan3, * isso[2];
-	static _curve* scurve, * scurve2;
+	static _skiplist_curve* cprec[5];
+	static _skiplist_curve* cpres[5];
+	static _skiplist_curve* cfoll[5];
+	static _point* scan, * scan2, * isso[2];//*scan3, 
+	static _skiplist_curve* scurve, * scurve2;
+
+	static std::minstd_rand engine{ std::random_device{}() };
 
 	_theta* theta;
 	static double th, mi, cmp, cmp2, cmp_2, dx2, avgx2, avgx1, avg2x1, pref, d2x2, dx1, d2x1, avgwedgex1, avgwedgex2, parab1, parab2;
 
 	int nprec = 0, npres, nfoll = 0, issoc[2], ij;
+
+	int new_and_append_Level = 0;
+	while (new_and_append_Level < max_skiplist_level && (engine() % 4) == 0)
+	{
+		new_and_append_Level++;
+	}
 
 	theta = Newpts->first->theta;
 	th = theta->th;
@@ -1451,11 +1709,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 			}
 			else {
 				// immagine coinvolta al centro   
-				scan = scurve->last;
-				while (scan->theta->th > th) {
-					scan = scan->prev;
-				}
-				cfoll[nfoll] = scurve->divide(scan);
+				cfoll[nfoll] = scurve->find_prev_then_divide(th);
 				nfoll++;
 				cprec[nprec] = scurve;
 				nprec++;
@@ -1465,12 +1719,6 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 	}
 	npres = Newpts->length;
 
-	//if((theta->th>4.7116917419)&&(theta->th<4.711691759)){
-	//	theta->th=theta->th;
-	//}
-	//if((theta->prev->th>4.7116917419)&&(theta->prev->th<4.711691759)){
-	//	theta->th=theta->th;
-	//}
 
 
 	// Caso di creazione nuove immagini// 
@@ -1493,10 +1741,9 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 		}
 		Newpts->drop(isso[0]);
 		Newpts->drop(isso[1]);
-		scurve = new _curve(isso[0]);
-		isso[0]->prev = isso[0]->next = 0;
-		scurve2 = new _curve(isso[1]);
-		isso[1]->prev = isso[1]->next = 0;
+
+		scurve = new _skiplist_curve(isso[0], new_and_append_Level);
+		scurve2 = new _skiplist_curve(isso[1], new_and_append_Level);
 		scurve->partneratstart = scurve2;
 		scurve2->partneratstart = scurve;
 		Sols->append(scurve);
@@ -1728,7 +1975,7 @@ void VBMicrolensing::OrderImages(_sols * Sols, _curve * Newpts) {
 
 
 		Newpts->drop(isso[1]);
-		cprec[issoc[0]]->append(isso[1]);
+		cprec[issoc[0]]->append(isso[1], new_and_append_Level);
 		cprec[issoc[0]]->partneratend = 0;
 
 		nprec--;
@@ -2108,7 +2355,7 @@ void VBMicrolensing::SetLensGeometry(int nn, double* pr) {
 	free(s);
 }
 
-void VBMicrolensing::SetLensGeometry(int nn, double* q, complex * s) {
+void VBMicrolensing::SetLensGeometry(int nn, double* q, complex* s) {
 	switch (SelectedMethod)
 	{
 	case Method::Singlepoly:
@@ -2127,7 +2374,7 @@ void VBMicrolensing::SetMethod(Method Met) {
 	SelectedMethod = Met;
 }
 
-void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex * s) {
+void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex* s) {
 	static double sumq, qmin, Jac;
 	static int iqmin, dg;
 	static complex pbin[2], z, S2, fac;
@@ -2191,7 +2438,7 @@ void VBMicrolensing::SetLensGeometry_spnp(int nn, double* q, complex * s) {
 	}
 }
 
-void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex * s) {
+void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 	static int j, i, x, k, p, dg;
 	static double tempq, sumq;
 	static complex temps, pbin[2];
@@ -2308,11 +2555,12 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex * s) {
             break;                                         \
     }
 
-double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols * *Images) {
+double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curve** Images) {
 	static double Mag = -1.0;
 	complex yi;
 	_theta* stheta;
-	_curve* Prov = 0, * Prov2;
+	static _curve* Prov;
+	static _skiplist_curve* Prov2;
 	_point* scan1, * scan2;
 
 	stheta = new _theta(-1.);
@@ -2320,8 +2568,7 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols * *Images) {
 	yi = complex(y1s, y2s);
 	y = yi - *s_offset; // Source position relative to first (lowest) mass
 	rho = rho2 = 0;
-
-	(*Images) = new _sols;
+	(*Images) = new _sols_for_skiplist_curve;
 	corrquad = corrquad2 = 0; // to be implemented for v2.0
 	safedist = 10;
 
@@ -2331,7 +2578,9 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols * *Images) {
 	nim0 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
-		Prov2 = new _curve(scan1);
+		Prov2 = new _skiplist_curve(scan1, 0);						// create an object of class _curve with one member(_point class variable),
+		// input is pointer(scan1) that points to the member; 
+		// pointer to that object is assigned to static local variable 'Prov2'
 		(*Images)->append(Prov2);
 		Mag += fabs(1 / scan1->dJ);
 		nim0++;
@@ -2344,26 +2593,47 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols * *Images) {
 }
 
 double VBMicrolensing::MultiMag0(double y1s, double y2s) {
-	static _sols* images;
+	static _sols_for_skiplist_curve* images;
 	static double mag;
 	mag = MultiMag0(y1s, y2s, &images);
 	delete images;
 	return mag;
 }
 
-double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, _sols * *Images) {
+double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, _sols_for_skiplist_curve** Images) {
 	static complex y0, yi;
 	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
 	static double errimage, maxerr, currerr, Magold, rhorad2, th2;
 	static int NPSmax, flag, NPSold, isquare, flagfinal;
 	static _thetas* Thetas;
 	static _theta* stheta, * itheta, * jtheta;
-	static _curve* Prov, * Prov2;
+	static _curve* Prov;
+	static _skiplist_curve* Prov2;
 	static _point* scan1, * scan2;
 	static int lsquares[4];
 
 
 	yi = complex(y1s, y2s);
+	static std::minstd_rand engine_start{ std::random_device{}() };
+
+	static _augmented_priority_queue APQ;
+
+	if (APQ.apq_array.capacity() > 2048)
+	{
+		APQ.apq_array.resize(2048);
+		APQ.sum_tree_array.resize(2048);
+
+		APQ.apq_array.shrink_to_fit();
+		APQ.sum_tree_array.shrink_to_fit();
+	}
+
+	APQ.apq_array.clear();
+	APQ.sum_tree_array.clear();
+	int new_and_append_Level_start = 0;
+	while (new_and_append_Level_start < max_skiplist_level && (engine_start() % 4) == 0)
+	{
+		new_and_append_Level_start++;
+	}
 	try {
 		y0 = yi - *s_offset; // Source position relative to first (lowest) mass
 		rho = RSv;
@@ -2383,12 +2653,16 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		// Calculation of the images
 
-		(*Images) = new _sols;
+		(*Images) = new _sols_for_skiplist_curve;
 		Thetas = new _thetas;
 		th = thoff;
 		stheta = Thetas->insert(th);
-		stheta->maxerr = 1.e100;
+		stheta->maxerr = 0.;
+		stheta->Mag = 0.;
+		stheta->astrox1 = 0.;
+		stheta->astrox2 = 0.;
 		y = y0 + complex(RSv * cos(thoff), RSv * sin(thoff)); // first image
+
 
 
 #ifdef _PRINT_TIMES
@@ -2407,8 +2681,15 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		stheta->errworst = Thetas->first->errworst;
 		for (scan1 = Prov->first; scan1; scan1 = scan2) {
 			scan2 = scan1->next;
-			Prov2 = new _curve(scan1);
-			Prov2->append(scan1->x1, scan1->x2);
+			Prov2 = new _skiplist_curve(scan1, new_and_append_Level_start);			// create an object of class _curve with one member(_point class variable),
+			// input is pointer(scan1) that points to the member; 
+			// pointer to that object is assigned to static local variable 'Prov2'
+
+			Prov2->append(scan1->x1, scan1->x2, new_and_append_Level_start);			// create a new _point variable on heap, 
+			// and then append it to the end of the _curve variable pointed by 'Prov2'
+			// 
+			// constructor of _point class is called, assign input values to attributes x1, x2, 
+			// and set attribute theta(pointer) = NULL
 			Prov2->last->theta = stheta;
 			Prov2->last->d = Prov2->first->d;
 			Prov2->last->dJ = Prov2->first->dJ;
@@ -2430,54 +2711,23 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		}
 		NPS = 4;
 
-		// Let us check the number if images in a square around the source
-		if (squarecheck) {
-			itheta = Thetas->first;
-			stheta = new _theta(-1);
-			while (itheta->next) {
-				th = (itheta->th + itheta->next->th) * 0.5;
-				rhorad2 = RSv / cos((itheta->next->th - itheta->th) * 0.5);
-				y = y0 + complex(rhorad2 * cos(th), rhorad2 * sin(th));
+		currerr = Mag = 0.;
 
-				EXECUTE_METHOD(SelectedMethod, stheta)
+		stheta = Thetas->first;
+		while (stheta->next)
+		{
+			Mag += stheta->Mag;
 
-					delete Prov;
-				if (itheta->imlength != stheta->imlength && itheta->next->imlength != stheta->imlength) {
-					jtheta = Thetas->insert(th);
-					y = y0 + complex(RSv * cos(th), RSv * sin(th));
-
-					EXECUTE_METHOD(SelectedMethod, stheta)
-
-						OrderMultipleImages((*Images), Prov);
-					NPS++;
-				}
-				else {
-					itheta = itheta->next;
-				}
+			if (stheta->next->th - stheta->th > 1.e-8)
+			{
+				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
-			delete stheta;
+
+			stheta = stheta->next;
 		}
 
-		// Initial error calculation
-
-		maxerr = currerr = Mag = 0.;
-		stheta = Thetas->first;
-		while (stheta->next) {
-			Mag += stheta->Mag;
-			if (stheta->next->th - stheta->th > 1.e-8) {
-				currerr += stheta->maxerr;
-#ifndef _uniform
-				if (stheta->maxerr > maxerr) {
-					maxerr = stheta->maxerr;
-#else
-				if (stheta->next->th * 0.99999 - stheta->th > maxerr) {
-					maxerr = stheta->next->th - stheta->th;
-#endif
-					itheta = stheta;
-				}
-				}
-			stheta = stheta->next;
-			}
+		itheta = APQ.apq_array[0].stheta;
+		currerr = APQ.sum_tree_array[0].sumerr;
 		th = (itheta->th + itheta->next->th) * 0.5;
 
 		// Main cycle: sampling continues until total error is below Tol.
@@ -2486,7 +2736,17 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		NPSold = NPS + 1;
 
 		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && (flag < NPSold))) {
-			stheta = Thetas->insert(th);
+			stheta = Thetas->insert_at_certain_position(itheta, th);
+			// this method can only be used when inserting an element in the middle of linked list
+			// i.e. *first's 'th' < current 'th' < *last's 'th'
+			// but we can safely use this method as we only insert in the middle of linked list inside the do-loop
+			// 
+			// and the new element is forced to be inserted between itheta and itheta->next, 
+			// which means it's the programmer's responsibility to guarantee itheta->th < th < itheta->next->th holds
+			//
+			// however, we already know new element should be inserted in interval [itheta, itheta->next] and
+			// th is calculated to be between itheta->th and itheta->next->th
+
 			y = y0 + complex(RSv * cos(th), RSv * sin(th));
 #ifdef _PRINT_TIMES
 			tim0 = Environment::TickCount;
@@ -2500,29 +2760,23 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 #ifdef _PRINT_ERRORS2
 			int lim = Prov->length;
 #endif
+			Mag -= stheta->prev->Mag;
 			// Assign new images to correct curves
 			OrderMultipleImages((*Images), Prov);
+			Mag += stheta->prev->Mag;
+			Mag += stheta->Mag;
 
-			maxerr = currerr = Mag = 0.;
-			stheta = Thetas->first;
-			//	printf("\n");
-			while (stheta->next) {
-				//	printf("\n%lf %le", stheta->th, stheta->maxerr);
-				Mag += stheta->Mag;
-				if (stheta->next->th - stheta->th > 1.e-8) {
-					currerr += stheta->maxerr;
-#ifndef _uniform
-					if (stheta->maxerr > maxerr) {
-						maxerr = stheta->maxerr;
-#else
-					if (stheta->next->th * 0.99999 - stheta->th > maxerr) {
-						maxerr = stheta->next->th - stheta->th;
-#endif
-						itheta = stheta;
-					}
-					}
-				stheta = stheta->next;
-				}
+			if ((stheta->th - stheta->prev->th) < 1.e-8) {
+				stheta->maxerr = 0;
+				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
+			}
+
+			APQ.pop_then_push_augmented_heap(stheta->prev->maxerr, stheta->prev);
+			APQ.push_augmented_heap(stheta->maxerr, stheta);
+
+			itheta = APQ.apq_array[0].stheta;
+			currerr = APQ.sum_tree_array[0].sumerr;
+
 			th = (itheta->th + itheta->next->th) * 0.5;
 			NPS++;
 
@@ -2552,7 +2806,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			printf("\nNPS= %d nim=%d Mag = %lf maxerr= %lg currerr =%lg th = %lf", NPS, lim, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), th);
 #endif
 
-			}
+		}
 		Mag /= (M_PI * RSv * RSv);
 		therr = currerr / (M_PI * RSv * RSv);
 
@@ -2560,7 +2814,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		return Mag;
 
-		}
+	}
 	catch (...) {
 		FILE* f = fopen("Geom.txt", "w");
 		fprintf(f, "\n%d\n", n);
@@ -2577,10 +2831,10 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 
 
-		}
+}
 
 double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv) {
-	static _sols* images;
+	static _sols_for_skiplist_curve* images;
 	static double mag;
 	mag = MultiMag(y1s, y2s, RSv, Tol, &images);
 	delete images;
@@ -2588,14 +2842,14 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv) {
 }
 
 double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol) {
-	static _sols* images;
+	static _sols_for_skiplist_curve* images;
 	static double mag;
 	mag = MultiMag(y1s, y2s, RSv, Tol, &images);
 	delete images;
 	return mag;
 }
 
-double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols * *images) {
+double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, static _sols_for_skiplist_curve** images) {
 	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
 	static int NPSsafe;
 	Mag = MultiMag(y1s, y2s, RS, Tol, images);
@@ -2639,7 +2893,7 @@ double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double T
 	static double currerr, maxerr;
 	static annulus* first, * scan, * scan2;
 	static int nannold, totNPS;
-	static _sols* Images;
+	static _sols_for_skiplist_curve* Images;
 
 	Mag = -1.0;
 	Magold = 0.;
@@ -2814,7 +3068,7 @@ double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double T
 double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 	static double Mag, rho2, y2a, y1v, y2v;//, sms , dy1, dy2;
 	static int c;
-	static _sols* Images;
+	static _sols_for_skiplist_curve* Images;
 
 	c = 0;
 
@@ -2874,7 +3128,6 @@ double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 	dy = complex(-sin(theta->th)*rho, cos(theta->th)*rho);\
 	dz = (dy - J1c[worst[i]]*conj(dy)) / Jacs[worst[i]];\
 	Prov->last->d = dz;\
-	Prov->last->J2 = J2;\
 	Prov->last->ds = (imag(dy*dz*dz*J2) + rho2) / Jacs[worst[i]];\
 
 #define _MJacobians0goodnopoly\
@@ -2911,6 +3164,7 @@ double VBMicrolensing::MultiMag2(double y1s, double y2s, double rho) {
 	J3=J2*J1c[worst[i]]*JJalt2;\
 	J3=(J3-conj(J3)*Jalt)/(JJalt2*JJalt2*Jacs[worst[i]]);\
 	cq=(J3.re*J3.re+J3.im*J3.im);
+
 
 void VBMicrolensing::initroot() {
 	static complex fac, fac2, z, S2;
@@ -3124,7 +3378,7 @@ int VBMicrolensing::froot(complex zi) {
 	return iter2;
 }
 
-bool VBMicrolensing::checkroot(_theta * theta) {
+bool VBMicrolensing::checkroot(_theta* theta) {
 	static double mn, fac;
 	static int imn;
 	static complex S3, z, S4;
@@ -3173,7 +3427,7 @@ bool VBMicrolensing::checkroot(_theta * theta) {
 }
 
 
-_curve* VBMicrolensing::NewImages(_theta * theta) {
+_curve* VBMicrolensing::NewImages(_theta* theta) {
 	static _curve* Prov;
 	static int nminus, nplus;
 	static complex z, zc, dy, dz, J2, J3, Jalt, JJalt2, Jaltc, J1c2;
@@ -3382,7 +3636,7 @@ int VBMicrolensing::findimagepoly(int i) {
 	zr[i] = z;
 	return success;
 }
-_curve* VBMicrolensing::NewImagespoly(_theta * theta) {
+_curve* VBMicrolensing::NewImagespoly(_theta* theta) {
 	static complex  yc, z, zc, zo, delta, dy, dz, J2, J3, Jalt, Jaltc, JJalt2, LL, J1c2, dzita;
 	static double dlmax = 1.0e-12, dzmax = 1.e-10, dJ2, ob2, cq, Jold, LLold;
 	static int ngood, nplus, nminus, bad, isso, ncrit, igood, iter, iter2;
@@ -3480,7 +3734,7 @@ _curve* VBMicrolensing::NewImagespoly(_theta * theta) {
 	return Prov;
 }
 
-_curve* VBMicrolensing::NewImagesmultipoly(_theta * theta) {
+_curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	static complex  yc, z, zc, zo, delta, dy, dz, J2, J3, Jalt, Jaltc, JJalt2, LL, J1c2, dzita;
 	static double dlmax = 1.0e-12, dzmax = 1.e-10, dJ2, ob2, cq, Jold, LLold;
 	static int ngood, nplus, nminus, bad, isso, ncrit, igood, iter, iter2;
@@ -3571,15 +3825,24 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta * theta) {
 	return Prov;
 }
 
-void VBMicrolensing::OrderMultipleImages(_sols * Sols, _curve * Newpts) {
+void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve* Newpts) {
 	static _point* scan, * scan2, * scan3, * isso[2];
-	static _curve* scurve, * scurve2;
+	static _skiplist_curve* scurve, * scurve2;
+
+	static std::minstd_rand engine{ std::random_device{}() };
 
 	static _theta* theta;
 	static double th, mi, cmp, cmp2, cmp_2, er3, parab1, parab2;
 	static int nprec, npres, npres2, nfoll, issoc[2], ij;
 
 	nprec = nfoll = 0;
+	int new_and_append_Level = 0;
+	while (new_and_append_Level < max_skiplist_level && (engine() % 4) == 0)
+	{
+		new_and_append_Level++;
+	}
+
+
 	theta = Newpts->first->theta;
 	th = theta->th;
 	theta->Mag = theta->prev->Mag = theta->maxerr = theta->prev->maxerr = 0;
@@ -3642,12 +3905,7 @@ void VBMicrolensing::OrderMultipleImages(_sols * Sols, _curve * Newpts) {
 				}
 			}
 			else {
-				// immagine coinvolta al centro
-				scan = scurve->last;
-				while (scan->theta->th > th) {
-					scan = scan->prev;
-				}
-				cfoll[nfoll] = scurve->divide(scan);
+				cfoll[nfoll] = scurve->find_prev_then_divide(th);
 				nfoll++;
 				cprec[nprec] = scurve;
 				nprec++;
@@ -3713,7 +3971,7 @@ void VBMicrolensing::OrderMultipleImages(_sols * Sols, _curve * Newpts) {
 		theta->prev->maxerr += scan->err;
 
 		Newpts->drop(isso[1]);
-		cprec[issoc[0]]->append(isso[1]);
+		cprec[issoc[0]]->append(isso[1], new_and_append_Level);
 		cprec[issoc[0]]->partneratend = 0;
 
 		nprec--;
@@ -3775,10 +4033,8 @@ void VBMicrolensing::OrderMultipleImages(_sols * Sols, _curve * Newpts) {
 	while (npres > 1 && mi < 1.e99) {
 		Newpts->drop(isso[0]);
 		Newpts->drop(isso[1]);
-		scurve = new _curve(isso[0]);
-		isso[0]->prev = isso[0]->next = 0;
-		scurve2 = new _curve(isso[1]);
-		isso[1]->prev = isso[1]->next = 0;
+		scurve = new _skiplist_curve(isso[0], new_and_append_Level);
+		scurve2 = new _skiplist_curve(isso[1], new_and_append_Level);
 		scurve->partneratstart = scurve2;
 		scurve2->partneratstart = scurve;
 		Sols->append(scurve);
@@ -3856,8 +4112,7 @@ void VBMicrolensing::OrderMultipleImages(_sols * Sols, _curve * Newpts) {
 	while (npres > 0) {
 		scan = Newpts->first;
 		Newpts->drop(scan);
-		scurve = new _curve(scan);
-		scan->prev = scan->next = 0;
+		scurve = new _skiplist_curve(scan, new_and_append_Level);
 		scurve->partneratstart = 0;
 		Sols->append(scurve);
 		npres--;
@@ -5426,7 +5681,7 @@ double VBMicrolensing::LDprofile(double r) {
 	return ret;
 }
 
-double VBMicrolensing::rCLDprofile(double tc, annulus * left, annulus * right) {
+double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 	static int ic;
 	static double rc, cb, lc, r2, cr2, cc, lb, rb;
 
@@ -6081,7 +6336,7 @@ _sols* VBMicrolensing::PlotCrit(double a1, double q1) {
 //////////////////////////////
 
 
-void VBMicrolensing::polyproduct(complex * __restrict p1, int n1, complex * __restrict p2, int n2, complex * __restrict pdest) {
+void VBMicrolensing::polyproduct(complex* __restrict p1, int n1, complex* __restrict p2, int n2, complex* __restrict pdest) {
 	// polynomials are with increasing degree: p1[0]+p1[1]*z+p1[2]*z^2 + ...
 	for (int i = 0; i <= n1 + n2; i++) pdest[i] = 0;
 	for (int i = 0; i <= n1; i++) {
@@ -6091,7 +6346,7 @@ void VBMicrolensing::polyproduct(complex * __restrict p1, int n1, complex * __re
 	}
 }
 
-void VBMicrolensing::copypol(complex * __restrict p1, int n1, complex * __restrict pdest) {
+void VBMicrolensing::copypol(complex* __restrict p1, int n1, complex* __restrict pdest) {
 	for (int i = 0; i <= n1; i++) {
 
 		pdest[i] = p1[i];
@@ -6287,9 +6542,11 @@ void VBMicrolensing::change_n(int nn) {
 	S3s = (complex*)malloc(sizeof(complex) * (nroots));
 	S4s = (complex*)malloc(sizeof(complex) * (nroots));
 
-	cprec = (_curve**)malloc(sizeof(_curve*) * nroots);
-	cpres = (_curve**)malloc(sizeof(_curve*) * (nroots));
-	cfoll = (_curve**)malloc(sizeof(_curve*) * (nroots));
+
+	cprec = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * nroots);
+	cpres = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * (nroots));
+	cfoll = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * (nroots));
+
 	A = (double**)malloc(sizeof(double*) * (nroots));
 	for (int i = 0; i < nroots; i++) {
 		A[i] = (double*)malloc(sizeof(double) * (nroots));
@@ -6499,9 +6756,11 @@ void VBMicrolensing::change_n_mp(int nn) {
 	newseeds = (complex*)malloc(sizeof(complex) * (2 * nroots));
 	grads = (complex*)malloc(sizeof(complex) * (nroots));
 
-	cprec = (_curve**)malloc(sizeof(_curve*) * nroots);
-	cpres = (_curve**)malloc(sizeof(_curve*) * (nroots));
-	cfoll = (_curve**)malloc(sizeof(_curve*) * (nroots));
+
+	cprec = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * nroots);
+	cpres = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * (nroots));
+	cfoll = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * (nroots));
+
 	A = (double**)malloc(sizeof(double*) * (nroots));
 	for (int i = 0; i < nroots; i++) {
 		A[i] = (double*)malloc(sizeof(double) * (nroots));
@@ -6685,7 +6944,7 @@ void VBMicrolensing::polycoefficients_multipoly() {
 // See copyright notice for these functions
 
 
-void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
+void VBMicrolensing::cmplx_roots_gen(complex* roots, complex* poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
 	//roots - array which will hold all roots that had been found.
 	//If the flag 'use_roots_as_starting_points' is set to
 	//.true., then instead of point(0, 0) we use value from
@@ -6771,7 +7030,7 @@ void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree
 
 
 	if (polish_roots_after) {
-		for (n = 0; n < degree; n++) {
+		for (n = 0; n < degree - 1; n++) {
 			cmplx_newton_spec(poly, degree, &roots[n], iter, success); // Polish roots with full polynomial
 		}
 	}
@@ -6779,7 +7038,7 @@ void VBMicrolensing::cmplx_roots_gen(complex * roots, complex * poly, int degree
 	return;
 }
 
-void VBMicrolensing::cmplx_roots_multigen(complex * roots, complex * *poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
+void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
 
 	static complex poly2[MAXM];
 	static int l, j, i, k, nl, ind, degreenew, croots, n;
@@ -6933,7 +7192,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex * roots, complex * *poly, int 
 	return;
 }
 
-void VBMicrolensing::solve_quadratic_eq(complex & x0, complex & x1, complex * poly) {
+void VBMicrolensing::solve_quadratic_eq(complex& x0, complex& x1, complex* poly) {
 	static complex a, b, c, b2, delta;
 	a = poly[2];
 	b = poly[1];
@@ -6957,7 +7216,7 @@ void VBMicrolensing::solve_quadratic_eq(complex & x0, complex & x1, complex * po
 
 }
 
-void VBMicrolensing::solve_cubic_eq(complex & x0, complex & x1, complex & x2, complex * poly) {
+void VBMicrolensing::solve_cubic_eq(complex& x0, complex& x1, complex& x2, complex* poly) {
 	//Cubic equation solver for comples polynomial (degree=3)
 	//http://en.wikipedia.org/wiki/Cubic_function   Lagrange's method
 	// poly is an array of polynomial cooefs, length = degree+1, poly[0] is constant
@@ -7007,7 +7266,7 @@ void VBMicrolensing::solve_cubic_eq(complex & x0, complex & x1, complex & x2, co
 
 }
 
-void VBMicrolensing::cmplx_laguerre(complex * poly, int degree, complex * root, int& iter, bool& success) {
+void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, int& iter, bool& success) {
 	//Subroutine finds one root of a complex polynomial using
 	//Laguerre's method. In every loop it calculates simplified 
 	//Adams' stopping criterion for the value of the polynomial.
@@ -7128,13 +7387,8 @@ void VBMicrolensing::cmplx_laguerre(complex * poly, int degree, complex * root, 
 			F_half = fac_newton * fac_extra;
 			denom_sqrt = sqrt(c_one - two_n_div_n_1 * F_half);
 
-			//NEXT LINE PROBABLY CAN BE COMMENTED OUT. Check if compiler outputs positive real
-			if (real(denom_sqrt) >= 0.0) {
-				denom = c_one_nth + n_1_nth * denom_sqrt;
-			}
-			else {
-				denom = c_one_nth - n_1_nth * denom_sqrt;
-			}
+
+			denom = c_one_nth + n_1_nth * denom_sqrt;		// denom = 1/n + (n-1)/n * sqrt( 1 - n/(n-1) * F(z) ), 
 		}
 
 		if (denom == 0) {
@@ -7161,7 +7415,7 @@ void VBMicrolensing::cmplx_laguerre(complex * poly, int degree, complex * root, 
 	return;
 }
 
-void VBMicrolensing::cmplx_newton_spec(complex * poly, int degree, complex * root, int& iter, bool& success) {
+void VBMicrolensing::cmplx_newton_spec(complex* poly, int degree, complex* root, int& iter, bool& success) {
 	//Subroutine finds one root of a complex polynomial
 	//Newton's method. It calculates simplified Adams' stopping 
 	//criterion for the value of the polynomial once per 10 iterations (!),
@@ -7299,7 +7553,7 @@ void VBMicrolensing::cmplx_newton_spec(complex * poly, int degree, complex * roo
 	//too many iterations here
 }
 
-void VBMicrolensing::cmplx_laguerre2newton(complex * poly, int degree, complex * root, int& iter, bool& success, int starting_mode) {
+void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* root, int& iter, bool& success, int starting_mode) {
 	//Subroutine finds one root of a complex polynomial using
 	//Laguerre's method, Second-order General method and Newton's
 	//method - depending on the value of function F, which is a 
@@ -7464,15 +7718,9 @@ void VBMicrolensing::cmplx_laguerre2newton(complex * poly, int degree, complex *
 
 					denom_sqrt = sqrt(c_one - two_n_div_n_1 * F_half);
 
-					//NEXT LINE PROBABLY CAN BE COMMENTED OUT 
-					if (real(denom_sqrt) > 0.0) {
-						//real part of a square root is positive for probably all compilers. You can y
-						//test this on your compiler and if so, you can omit this check
-						denom = c_one_nth + n_1_nth * denom_sqrt;
-					}
-					else {
-						denom = c_one_nth - n_1_nth * denom_sqrt;
-					}
+
+
+					denom = c_one_nth + n_1_nth * denom_sqrt;		// denom = 1/n + (n-1)/n * sqrt( 1 - n/(n-1) * F(z) ), 
 				}
 				if (denom == zero) {//test if demoninators are > 0.0 not to divide by zero
 					dx = (abs(*root) + 1.0) + expcmplx(complex(0.0, FRAC_JUMPS[i % FRAC_JUMP_LEN] * 2 * M_PI)); //make some random jump
@@ -7666,19 +7914,6 @@ void VBMicrolensing::cmplx_laguerre2newton(complex * poly, int degree, complex *
 #pragma region classes
 
 
-_point::_point(double x, double y, _theta * theta1) {
-	x1 = x;
-	x2 = y;
-	theta = theta1;
-}
-
-double _point::operator-(_point p2) {
-	static double dx1, dx2;
-	dx1 = x1 - p2.x1;
-	dx2 = x2 - p2.x2;
-	return dx1 * dx1 + dx2 * dx2;
-}
-
 //////////////////////////////
 //////////////////////////////
 ////////_curve methods
@@ -7691,7 +7926,7 @@ _curve::_curve(void) {
 	partneratstart = partneratend = this;
 }
 
-_curve::_curve(_point * p1) {
+_curve::_curve(_point* p1) {
 	length = 1;
 	first = last = p1;
 	p1->prev = p1->next = 0;
@@ -7708,7 +7943,7 @@ _curve::~_curve(void) {
 	}
 }
 
-_curve* _curve::divide(_point * ref) {
+_curve* _curve::divide(_point* ref) {
 	_point* scan;
 	_curve* nc;
 	int l1;
@@ -7748,7 +7983,7 @@ void _curve::append(double x1, double x2) {
 	length++;
 }
 
-void _curve::append(_point * pp) {
+void _curve::append(_point* pp) {
 
 	pp->next = last->next;
 	pp->prev = last;
@@ -7774,7 +8009,7 @@ void _curve::prepend(double x1, double x2) {
 	length++;
 }
 
-_curve* _curve::join(_curve * nc) {
+_curve* _curve::join(_curve* nc) {
 	if (length > 0) {
 		last->next = nc->first;
 	}
@@ -7795,7 +8030,7 @@ _curve* _curve::join(_curve * nc) {
 	return this;
 }
 
-_curve* _curve::joinbefore(_curve * nc) {
+_curve* _curve::joinbefore(_curve* nc) {
 	if (length > 0) {
 		first->prev = nc->last;
 	}
@@ -7832,7 +8067,7 @@ _curve* _curve::reverse(void) {
 	return this;
 }
 
-void _curve::drop(_point * ref) {
+void _curve::drop(_point* ref) {
 	_point* scan;
 	if (length) {
 		for (scan = last; scan && (scan != ref); scan = scan->prev);
@@ -7859,7 +8094,7 @@ void _curve::drop(_point * ref) {
 	}
 }
 
-double _curve::closest2(_point * ref, _point * *clos2) {
+double _curve::closest2(_point* ref, _point** clos2) {
 	double mi = 1.e100, mi2 = 1.e100, FP;
 	_point* scan, * clos;
 	if (length > 1) {
@@ -7884,7 +8119,7 @@ double _curve::closest2(_point * ref, _point * *clos2) {
 	return (**clos2 - *ref);
 }
 
-double _curve::closest(_point * ref, _point * *clos) {
+double _curve::closest(_point* ref, _point** clos) {
 	double mi = 1.e100, FP;
 	_point* scan;
 	for (scan = first; scan != 0; scan = scan->next) {
@@ -7897,7 +8132,7 @@ double _curve::closest(_point * ref, _point * *clos) {
 	return mi;
 }
 
-void _curve::complement(_point * *sott, int lensott, _point * *res, int lenres) {
+void _curve::complement(_point** sott, int lensott, _point** res, int lenres) {
 	int flag, i;
 	_point* scan;
 	i = 0;
@@ -7913,6 +8148,267 @@ void _curve::complement(_point * *sott, int lensott, _point * *res, int lenres) 
 			i++;
 		}
 	}
+}
+
+//////////////////////////////
+//////////////////////////////
+////////_skiplist_curve methods
+//////////////////////////////
+//////////////////////////////
+
+_skiplist_curve::_skiplist_curve(_point* p1, int new_Level)
+{											// constructor: used one time in BinaryMag() (and) two times in OrderImages(): if (nprec<npres)
+											// 				create a _skiplist_curve class variable with one member(_point class variable),
+											//              input is pointer(p1) that points to the member, 
+											//              set length_notation=1, first=last=p1, 
+											//              set p1->prev = p1->next = NULL,
+											//              set partner_at_start=partner_at_end=NULL
+	length_notation = 1;
+	first = last = p1;
+	p1->prev = p1->next = 0;
+	partneratstart = partneratend = 0;
+
+	head = new _point(0.0, 0.0, 0);		// head->next_array[0-max_skiplist_level] set to NULL through constructor
+	//   p1->next_array[0-max_skiplist_level] should be set to all NULL previously
+	for (int i = 0; i < (max_skiplist_level + 1); i++)
+	{
+		last_array[i] = head;
+	}
+
+	// Level = 0 ;
+	// while ( Level < max_skiplist_level && (rand() % 4) == 0 ) 
+	// {
+	// 	Level++ ;
+	// } 
+	Level = new_Level;
+
+	for (int i = 0; i < (Level + 1); i++)
+	{
+		head->next_array[i] = p1;
+		last_array[i] = p1;
+	}
+}
+
+_skiplist_curve::_skiplist_curve(void)
+{											// constructor: used one time in find_prev_then_divide()
+											//				create a _skiplist_curve class variable without any member(_point class variables), 
+											//              set length_notation=0, first=last=NULL, partner_at_start=partner_at_end=NULL
+	length_notation = 0;
+	first = last = 0;
+	partneratstart = partneratend = 0;
+
+	head = new _point(0.0, 0.0, 0);		// head->next_array[] set to NULL through constructor
+
+	for (int i = 0; i < (max_skiplist_level + 1); i++)
+	{
+		last_array[i] = head;
+	}
+
+	Level = 0;
+}
+
+_skiplist_curve::~_skiplist_curve(void)
+{											// destructor:  delete _point varialbes from *first to *last
+	_point* scan1, * scan2;
+	scan1 = first;
+
+	if (length_notation > 0)
+	{
+		while (scan1)
+		{
+			scan2 = scan1->next;
+			delete scan1;
+			scan1 = scan2;
+		}
+	}
+
+	delete head;
+}
+
+_skiplist_curve* _skiplist_curve::join(_skiplist_curve* new_curve)
+{	     									// method: used one time in OrderImages(): while (npres)
+											// input is a pointer (new_curve) to '_skiplist_curve' variable
+											// join all elements of 'new_curve' at the end of current curve
+											// return the pointer to current curve
+
+	last->next = new_curve->first;			// as we already know length of current curve and new_curve all >= 1, 
+	// we only need to change 'last' and two edge elements' 'next'/'prev'
+	new_curve->first->prev = last;
+	last = new_curve->last;
+
+	length_notation = 2;					// length_notation=2 means length>=2, as two curves both have length>=1
+
+	partneratend = new_curve->partneratend;      			// set current curve's attribute 'partner_at_end' to new_curve's
+	if (partneratend) partneratend->partneratend = this; 	// redirect new_curve->partner_at_end's attribute 'partner_at_end' from 'new_curve' to current curve
+	// 'this' is a pointer pointed to current curve
+	//
+	// Suppose that you create an object named x of class A, 
+	// and class A has a nonstatic member function f(). 
+	// If you call the function x.f(), the keyword 'this' in the body of f() stores the address of x.
+
+	for (int i = 0; i < (new_curve->Level + 1); i++)
+	{
+		last_array[i]->next_array[i] = new_curve->head->next_array[i];
+		last_array[i] = new_curve->last_array[i];
+	}
+	if (Level < new_curve->Level)
+	{
+		Level = new_curve->Level;
+	}
+
+	new_curve->first = 0;
+	new_curve->last = 0;
+	new_curve->length_notation = 0;
+	delete new_curve;						// Although original new_curve's elements have been linked to current curve, 
+	// these elements still can be accessed by 'new_curve'. 
+	// So directly delete new_curve will cause the deletion of these elements. 
+	// So we need to break the relation between 'new_curve' and these elements before delete new_curve. 
+	// Note: destructor is called through delete keyword
+	return this;
+}
+
+void _skiplist_curve::append(_point* pp, int append_Level)
+{ 											// method: only used one time in OrderImages()
+											// 		   append an existing _point variable (pointed by input pointer 'pp') 
+											//         to the end of the skiplist (object of class _skiplist_curve)
+											//         (the skiplist must already have at least one element)
+	pp->next = last->next; // set to NULL
+	pp->prev = last;
+	last->next = pp;
+	last = pp;
+
+	length_notation = 2;					// length_notation=2 means length>=2, as the skiplist must already have at least one element
+
+	// int append_Level = 0 ;
+	// while ( append_Level < max_skiplist_level && (rand() % 4) == 0 ) 
+	// {
+	// 	append_Level++ ;
+	// } 
+
+	for (int i = 0; i < (append_Level + 1); i++)// pp->next_array[0-max_skiplist_level] should be set to all NULL previously
+	{
+		last_array[i]->next_array[i] = pp;
+		last_array[i] = pp;
+	}
+	if (Level < append_Level)
+	{
+		Level = append_Level;
+	}
+}
+
+void _skiplist_curve::append(double x1, double x2, int append_Level)
+{ 											// method: only used one time in BinaryMag()
+											// 		   create a new _point variable on heap, 
+											//         and then append it to the end of the skiplist (object of class _skiplist_curve)
+											// has no return value
+											//         (the skiplist must already have at least one element)
+	_point* pp;
+	pp = new _point(x1, x2, 0); 			// create an object of class _point on heap, the pointer to that object is assigned to 'pp'
+	// constructor is called, assign value to attributes x1, x2, 
+	// and set attribute theta(pointer) = NULL
+	// (note each _point variable corresponds to a _theta variable, but now has not pointed to its _theta variable)
+	//
+	// pp->next_array[] set to NULL through constructor
+	last->next = pp;
+	pp->prev = last;
+	last = pp;
+	pp->next = 0;
+
+	length_notation = 2;					// length_notation=2 means length>=2, as the skiplist must already have at least one element
+
+	// int append_Level = 0 ;
+	// while ( append_Level < max_skiplist_level && (rand() % 4) == 0 ) 
+	// {
+	// 	append_Level++ ;
+	// } 
+
+	for (int i = 0; i < (append_Level + 1); i++)// pp->next_array[0-max_skiplist_level] already set to all NULL through constructor
+	{
+		last_array[i]->next_array[i] = pp;
+		last_array[i] = pp;
+	}
+	if (Level < append_Level)
+	{
+		Level = append_Level;
+	}
+}
+
+
+_skiplist_curve* _skiplist_curve::find_prev_then_divide(double th)
+{											// method: only used one time in OrderImages()
+											// 		   scurve->first->theta <= 'th' <= scurve->last->theta already statisfied when using this method
+											// 		   as 'th' is a unique value, scurve->first->theta < 'th' < scurve->last->theta is thus statisfied
+	_point* current = head;
+	_point* update_array[max_skiplist_level + 1];
+
+	_skiplist_curve* new_curve;
+
+	for (int i = 0; i < (max_skiplist_level + 1); i++)
+	{
+		update_array[i] = head;
+	}
+
+	for (int i = Level; i >= 0; i--)
+	{
+		while (current->next_array[i] && current->next_array[i]->theta->th < th)
+		{
+			current = current->next_array[i];
+		}
+		update_array[i] = current;
+	}
+
+
+	new_curve = new _skiplist_curve();		// create another object of class _skiplist_curve using 'new' keyword, 
+	// memory of the object is allocated on heap and the pointer to that object is assigned to new_curve, 
+	// constructor is called (create a _skiplist_curve class variable without any member).
+	// (as the object is on heap, we can return it's pointer;
+	// if the object is on stack, the returned pointer will be a dangling pointer)
+
+	new_curve->first = current->next;  	// new_curve consists of current->next to original curve's last
+	new_curve->first->prev = 0;
+	new_curve->last = last;
+
+	new_curve->length_notation = (new_curve->first == new_curve->last) ? 1 : 2; 	// length_notation=1 means length=1
+	// length_notation=2 means length>=2
+	new_curve->partneratend = partneratend;
+	if (partneratend) partneratend->partneratend = new_curve; 	// if partner_at_end really points to a _skiplist_curve variable, 
+	// then redirect *partner_at_end's attribute 'partner_at_end' from original curve to 'new_curve'
+	// (seems can direct endlessly, like partner_at_end -> partner_at_end -> ... partner_at_end -> ...)
+
+	last = current;						// change original curve, original curve now consists of first to current
+	current->next = 0;
+
+	length_notation = (first == last) ? 1 : 2; 									// length_notation=1 means length=1
+	// length_notation=2 means length>=2
+	partneratend = 0;       // set from xxx to NULL
+
+
+	int i = 0;
+	//while (i < () && update_array[i]->next_array[i]) 
+	while (i < (max_skiplist_level + 1) && update_array[i]->next_array[i])
+	{
+		new_curve->head->next_array[i] = update_array[i]->next_array[i];
+		new_curve->last_array[i] = last_array[i];
+		i++;
+	}
+	new_curve->Level = i - 1;
+
+	for (int k = 0; k < (new_curve->Level + 1); k++)
+	{
+		last_array[k] = update_array[k];
+		update_array[k]->next_array[k] = 0;
+	}
+
+	int j = 0;
+	//while (update_array[j] != head)
+	while (j < (max_skiplist_level + 1) && update_array[j] != head)
+	{
+		j++;
+	}
+	Level = j - 1;
+
+
+	return new_curve;
 }
 
 //////////////////////////////
@@ -7937,7 +8433,7 @@ _sols::~_sols(void) {
 	}
 }
 
-void _sols::append(_curve * cc) {
+void _sols::append(_curve* cc) {
 	if (length == 0) {
 		first = cc;
 		last = cc;
@@ -7952,7 +8448,7 @@ void _sols::append(_curve * cc) {
 	length++;
 }
 
-void _sols::prepend(_curve * cc) {
+void _sols::prepend(_curve* cc) {
 	if (length == 0) {
 		first = cc;
 		last = cc;
@@ -7967,7 +8463,7 @@ void _sols::prepend(_curve * cc) {
 	length++;
 }
 
-void _sols::drop(_curve * ref) {
+void _sols::drop(_curve* ref) {
 	_curve* scan;
 	if (length) {
 		for (scan = last; scan && (scan != ref); scan = scan->prev);
@@ -7994,7 +8490,7 @@ void _sols::drop(_curve * ref) {
 	}
 }
 
-void _sols::join(_sols * nc) {
+void _sols::join(_sols* nc) {
 	if (length > 0) {
 		last->next = nc->first;
 	}
@@ -8014,6 +8510,96 @@ void _sols::join(_sols * nc) {
 
 //////////////////////////////
 //////////////////////////////
+////////_sols_for_skiplist_curve methods
+//////////////////////////////
+//////////////////////////////
+
+_sols_for_skiplist_curve::_sols_for_skiplist_curve(void)				// constructor: create a _sols class variable without any member(_curve class variables), 
+//              set length=0, first=last=NULL
+{
+	length = 0;
+	first = last = 0;
+}
+
+
+_sols_for_skiplist_curve::~_sols_for_skiplist_curve(void)				// destructor:  delete _skiplist_curve varialbes from *first to *last
+//              internally will use 'delete scan1 ;' for 'length' times. 
+//
+//              'delete scan1 ;' will call destructor of _skiplist_curve class, 
+//              which will delete all _point varialbes of the curve pointed by 'scan1'
+{
+	_skiplist_curve* scan1, * scan2;
+	scan1 = first;
+	while (scan1)
+	{
+		scan2 = scan1->next;
+		delete scan1;           // 'delete scan1' will call destructor of _skiplist_curve class, 
+		// which will delete all _point varialbes of the curve pointed by scan1
+		scan1 = scan2;
+	}
+}
+
+void _sols_for_skiplist_curve::drop(_skiplist_curve* ref)
+{ 											// method: used only one time in OrderImages(): if-if, which near the while loop and divide
+											//
+											//         input a pointer(ref) to an element/curve of current sols
+											//         drop that element/curve out of the current sols, 
+											//         but the element/curve isn't deleted, still can be accessed by 'ref'
+											//         no return valve
+											// (if length==0 or 'ref' doesn't point to an element/curve, then nothing happens)
+											// (use for loop to check if 'ref' really points to an element, thus O(N), but loop is from 'last' to 'first')
+											//
+											// totally same to   void _curve::drop(_point *ref)
+	_skiplist_curve* scan;
+	if (length) {
+		for (scan = last; scan && (scan != ref); scan = scan->prev);
+		if (scan) {
+			if (length == 1) {
+				first = last = 0;
+			}
+			else {
+				if (ref->prev) {
+					ref->prev->next = ref->next;
+					if (ref == last) {
+						last = ref->prev;
+					}
+				}
+				if (ref->next) {
+					ref->next->prev = ref->prev;
+					if (ref == first) {
+						first = ref->next;
+					}
+				}
+			}
+			length--;
+		}
+	}
+}
+
+
+void _sols_for_skiplist_curve::append(_skiplist_curve* cc)
+{											// method: used one time  in BinaryMag() (and) 
+											//              two times in OrderImages(): if (nprec<npres) (and) 
+											//              two times in OrderImages(): if (npres<nfoll)
+											//		   append an existing _curve variable (pointed by input pointer 'cc') 
+											//         to the end of current sols (a linked list, object of class _sols)
+											//       no return value
+	if (length == 0) {
+		first = cc;
+		last = cc;
+		cc->prev = 0;
+	}
+	else {
+		last->next = cc;
+		cc->prev = last;
+		last = cc;
+	}
+	cc->next = 0;
+	length++;
+}
+
+//////////////////////////////
+//////////////////////////////
 ////////_theta methods
 //////////////////////////////
 //////////////////////////////
@@ -8027,6 +8613,7 @@ _theta::_theta(double th1) {
 	next = nullptr;
 	prev = nullptr;
 }
+
 _thetas::_thetas(void) {
 	length = 0;
 }
@@ -8080,7 +8667,31 @@ _theta* _thetas::insert(double th) {
 	return scan2;
 }
 
-void _thetas::remove(_theta * stheta) {
+
+_theta* _thetas::insert_at_certain_position(_theta* itheta, double th)
+{
+	_theta* scan2;
+
+	scan2 = new _theta(th); // create an object of class _theta using 'new' keyword, 
+	// memory of the object is allocated on heap and the pointer to that object is assigned to scan2, 
+	// constructor is called.
+	// (as the object is on heap, we can return it's pointer;
+	// if the object is on stack, the returned pointer will be a dangling pointer) 
+	scan2->prev = itheta;
+	scan2->next = itheta->next;
+
+	itheta->next->prev = scan2;
+	itheta->next = scan2;
+
+	length++;
+
+	return scan2;			// this method can only be used when inserting an element in the middle of linked list
+	// i.e. *first's 'th' < current 'th' < *last's 'th'
+	// and the new element is forced to be inserted between itheta and itheta->next, 
+	// which means it's the programmer's responsibility to guarantee itheta->th < th < itheta->next->th holds
+}
+
+void _thetas::remove(_theta* stheta) {
 	_theta* scan;
 	scan = first;
 	while (scan != 0) {

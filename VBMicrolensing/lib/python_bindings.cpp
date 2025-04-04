@@ -303,11 +303,11 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("ImageContours",
         [](VBMicrolensing& self, double s, double q, double y1, double y2, double rho)
         {
-            _sols* cimages;
+            _sols_for_skiplist_curve* cimages;
             std::vector<std::vector<std::vector<double> > > images;
             self.BinaryMag(s,q,y1,y2,rho,self.Tol,&cimages);
  
-            for (_curve* scurve = cimages->first; scurve; scurve = scurve->next) {
+            for (_skiplist_curve* scurve = cimages->first; scurve; scurve = scurve->next) {
                 std::vector<std::vector<double> > newimage(2);
                 for (_point* scan = scurve->first; scan; scan = scan->next) {
                     newimage[0].push_back(scan->x1);
@@ -985,7 +985,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             params : list[float]
                  List of parameters [u0, log_tE, t0, 
                                     paiN, paiE,     #components of the parallax vector
-                                    L0_N, L0_E,     # lens position at time t0
                                     muS_N, muS_E,   # proper motion components of the source (mas/yr)
                                     pai_S,          # parallax of the source (mas)
                                     thetaE          # Einstein angle (mas) 
@@ -1026,7 +1025,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             params : list[float]
                 List of parameters [u0, log_tE, t0, log_rho, 
                                     paiN, paiE,     #components of the parallax vector
-                                    L0_N, L0_E,     # lens position at time t0
                                     muS_N, muS_E,   # proper motion components of the source (mas/yr)
                                     pai_S,          # parallax of the source (mas)
                                     thetaE          # Einstein angle (mas) 
@@ -1069,7 +1067,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             params : list[float]
                 List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0, 
                                     paiN, paiE,     #components of the parallax vector
-                                    L0_N, L0_E,     # lens position at time t0
                                     muS_N, muS_E,   # proper motion components of the source (mas/yr)
                                     pai_S,          # parallax of the source (mas)
                                     thetaE          # Einstein angle (mas) 
@@ -1113,7 +1110,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0, 
                                     paiN, paiE,     # components of the parallax vector
                                     w1, w2, w3,      # relative angular orbital velocity components (Einstein angle/day)
-                                    L0_N, L0_E,     # lens position at time t0
                                     muS_N, muS_E,   # proper motion components of the source (mas/yr)
                                     pai_S,          # parallax of the source (mas)
                                     thetaE          # Einstein angle (mas) 
@@ -1159,7 +1155,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                                     w1, w2, w3,      # relative angular orbital velocity components (Einstein angle/day)
                                     sz_s,          # Ratio of separation along the line of sight and the transverse separation at t0
                                     a_stot,         # Semimajor axis over the 3D separation at time t0
-                                    L0_N, L0_E,     # lens position at time t0
                                     muS_N, muS_E,   # proper motion components of the source (mas/yr)
                                     pai_S,          # parallax of the source (mas)
                                     thetaE          # Einstein angle (mas) 
@@ -1204,7 +1199,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 List of parameters [log_tE, log_FR, u01, u02, t01, t02, log_rho1, 
                                     paiN, paiE,     # components of the parallax vector
                                     w1, w2, w3,      # relative angular orbital velocity components (Einstein angle/day)
-                                    L0_N, L0_E,     # lens position at time t0
                                     muS_N, muS_E,   # proper motion components of the source (mas/yr)
                                     pai_S,          # parallax of the source (mas)
                                     thetaE          # Einstein angle (mas) 
@@ -1555,10 +1549,23 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         .def_readwrite("next", &_curve::next)
         .def_readwrite("prev", &_curve::prev);
 
+    py::class_<_skiplist_curve>(m, "_skiplist_curve")
+        .def(py::init<_point*,int>()) //constructor 1
+        .def(py::init()) //constructor 2
+        .def_readwrite("first", &_skiplist_curve::first)
+        .def_readwrite("last", &_skiplist_curve::last)
+        .def_readwrite("next", &_skiplist_curve::next)
+        .def_readwrite("prev", &_skiplist_curve::prev);
+
     py::class_<_sols>(m, "_sols")
         .def(py::init()) //constructor
         .def_readwrite("first", &_sols::first)
         .def_readwrite("last", &_sols::last);
+
+    py::class_<_sols_for_skiplist_curve>(m, "_sols_for_skiplist_curve")
+        .def(py::init()) //constructor
+        .def_readwrite("first", &_sols_for_skiplist_curve::first)
+        .def_readwrite("last", &_sols_for_skiplist_curve::last);
 
     py::class_<complex>(m, "complex")
         .def(py::init<double, double>())

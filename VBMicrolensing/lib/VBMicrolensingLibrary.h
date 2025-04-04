@@ -1,4 +1,4 @@
-// VBMicrolensing v4.3 (2025)
+// VBMicrolensing v5.0 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -28,8 +28,8 @@
 #define _J3 6.0*(coefs[21]/((z-coefs[20])*(z-coefs[20])*(z-coefs[20])*(z-coefs[20]))+coefs[22]/(z*z*z*z))
 #define _skew(p1,p2,q1,q2) p1*q2-p2*q1
 #define _NP 200.0
-#define __rsize 151
-#define __zsize 101
+#define __rsize_ESPL 151
+#define __zsize_ESPL 101
 
 #define _sign(x) ((x>0)? +1 : -1)
 
@@ -37,6 +37,11 @@
 #include <string.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <vector>
+#include <random>
+class _sols_for_skiplist_curve;
+class _skiplist_curve;
+/*******************************************   end   *******************************************/
 
 class _curve;
 class _sols;
@@ -85,13 +90,13 @@ class VBMicrolensing
 	double Obj[3], rad[3], tang[3], t0old;
 	double Eq2000[3], Quad2000[3], North2000[3];
 	double Et0[2], vt0[2], Et[2], Ehel[2];
-	double ESPLout[__rsize][__zsize], ESPLin[__rsize][__zsize], ESPLoutastro[__rsize][__zsize], ESPLinastro[__rsize][__zsize];
+	double ESPLout[__rsize_ESPL][__zsize_ESPL], ESPLin[__rsize_ESPL][__zsize_ESPL], ESPLoutastro[__rsize_ESPL][__zsize_ESPL], ESPLinastro[__rsize_ESPL][__zsize_ESPL];
 	bool ESPLoff, multidark;
 	double* LDtab, * rCLDtab, * CLDtab;
 	double scr2, sscr2;
 	int npLD;
 	annulus* annlist;
-	_curve** cprec, ** cpres, ** cfoll;
+	_skiplist_curve** cprec, ** cpres, ** cfoll;
 	double** A;
 
 	void ComputeCentroids(double* pr, double t, double* c1s, double* c2s, double* c1l, double* c2l);
@@ -109,10 +114,11 @@ class VBMicrolensing
 	_curve* NewImages(_theta*);
 	_curve* NewImagespoly(_theta*);
 	_curve* NewImagesmultipoly(_theta*);
-	double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols** images);
-	double MultiMagSafe(double y1, double y2, double RS, _sols** images);
-	void OrderImages(_sols*, _curve*);
-	void OrderMultipleImages(_sols*, _curve*);
+	double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols_for_skiplist_curve** images);
+	double MultiMagSafe(double y1, double y2, double rho, _sols_for_skiplist_curve** images);
+	void OrderImages(_sols_for_skiplist_curve*, _curve*);
+
+	void OrderMultipleImages(_sols_for_skiplist_curve*, _curve*);
 	void cmplx_laguerre(complex*, int, complex*, int&, bool&);
 	void cmplx_newton_spec(complex*, int, complex*, int&, bool&);
 	void cmplx_laguerre2newton(complex*, int, complex*, int&, bool&, int);
@@ -162,16 +168,17 @@ public:
 
 	// Magnification calculation functions.
 
-	double BinaryMag0(double s, double q, double y1, double y2, _sols** Images);
+	double BinaryMag0(double s, double q, double y1, double y2, _sols_for_skiplist_curve** Images);
 	double BinaryMag0(double s, double q, double y1, double y2);
-	double BinaryMag(double s, double q, double y1, double y2, double rho, double accuracy, _sols** Images);
+
+	double BinaryMag(double s, double q, double y1, double y2, double rho, double accuracy, _sols_for_skiplist_curve** Images);
 	double BinaryMag(double s, double q, double y1, double y2, double rho, double accuracy);
 	double BinaryMag2(double s, double q, double y1, double y2, double rho);
 	double BinaryMagDark(double s, double q, double y1, double y2, double rho, double accuracy);
 	void BinaryMagMultiDark(double s, double q, double y1, double y2, double rho, double* a1_list, int n_filters, double* mag_list, double accuracy);
-	double MultiMag0(double y1, double y2, _sols** Images);
+	double MultiMag0(double y1, double y2, _sols_for_skiplist_curve** Images);
 	double MultiMag0(double y1, double y2);
-	double MultiMag(double y1, double y2, double rho, double accuracy, _sols** Images);
+	double MultiMag(double y1, double y2, double rho, double accuracy, _sols_for_skiplist_curve** Images);
 	double MultiMag(double y1, double y2, double rho, double accuracy);
 	double MultiMag(double y1, double y2, double rho);
 	double MultiMag2(double y1, double y2, double rho);
@@ -298,19 +305,30 @@ public:
 	_thetas(void);
 	~_thetas(void);
 	_theta* insert(double);
+	_theta* insert_at_certain_position(_theta*, double);
+	// method: this method can only be used when inserting an element in the middle of linked list
+	// 		   i.e. *first's 'th' < current 'th' < *last's 'th'
+	// 		   and the new element is forced to be inserted between itheta and itheta->next, 
+	// 		   which means it's the programmer's responsibility to guarantee itheta->th < th < itheta->next->th holds
+	//         (O(1) complexity)
 	void remove(_theta*);
 
 };
+
+#define max_skiplist_level 2
 
 class _point {
 public:
 	double x1;
 	double x2;
-	double parab, ds, dJ, Mag, err, parabastrox1, parabastrox2;;
-	complex d, J2;
-	_theta* theta;
+	double parab, ds, dJ, Mag, err, parabastrox1;
+	complex d;								  	  // d is z'(theta) at this point
+	_theta* theta;							  // pointer
+	_point* next, * prev;                       // pointers that point to _point variable
+	_point* next_array[max_skiplist_level + 1];
+
+	double parabastrox2;
 	_point(double, double, _theta*);
-	_point* next, * prev;
 	double operator-(_point);
 };
 
@@ -354,6 +372,46 @@ public:
 };
 
 
+class _skiplist_curve {							 // a _skiplist_curve class variable is a skip list of _point variables
+public:
+	_point* first, * last;
+
+	_point* head;
+	_point* last_array[max_skiplist_level + 1];
+	int Level;
+
+	int length_notation;
+
+	_skiplist_curve* next, * prev;
+	_skiplist_curve* partneratstart, * partneratend;
+	double parabstart, Magstart, errstart, parabastrox1, parabastrox2;
+
+	_skiplist_curve(_point* p1, int new_Level);
+	_skiplist_curve(void);
+	~_skiplist_curve(void);
+	_skiplist_curve* join(_skiplist_curve* new_curve);
+	void append(_point* pp, int append_Level);
+	void append(double x1, double x2, int append_Level);
+	_skiplist_curve* find_prev_then_divide(double th);
+
+};
+
+
+
+
+class _sols_for_skiplist_curve {                 //       a  _sols_for_skiplist_curve class variable is a linked list of _skiplist_curve variables, 
+	// while a _skiplist_curve class variable           is a skip list   of _point variables
+public:
+	int length;
+	_skiplist_curve* first, * last;
+
+	_sols_for_skiplist_curve(void);
+	~_sols_for_skiplist_curve(void);
+	void drop(_skiplist_curve* ref);
+	void append(_skiplist_curve* cc);
+
+};
+
 #define MR 8
 #define MT 10
 #define MAXIT (MT*MR)
@@ -379,8 +437,10 @@ inline complex conj(complex z) {
 
 inline complex sqrt(complex z) {
 	double md = sqrt(z.re * z.re + z.im * z.im);
-	return (md > 0) ? complex((sqrt((md + z.re) / 2) * ((z.im > 0) ? 1 : -1)), sqrt((md - z.re) / 2)) : 0.0;
+	return (md > 0) ? complex(sqrt((md + z.re) / 2), (sqrt((md - z.re) / 2) * ((z.im > 0) ? 1 : -1))) : 0.0;
 }
+
+
 
 inline double real(complex z) {
 	return z.re;
@@ -502,5 +562,26 @@ inline complex cbrt(complex z) {
 	theta_cube = theta / 3.;
 	return 	complex(r_cube * cos(theta_cube), r_cube * sin(theta_cube));
 }
+
+
+inline _point::_point(double x, double y, _theta* theta1) {
+	x1 = x;
+	x2 = y;
+	theta = theta1;
+	next = 0;
+	prev = 0;
+	for (int i = 0; i < (max_skiplist_level + 1); i++)
+	{
+		next_array[i] = 0;
+	}
+}
+
+inline double _point::operator-(_point p2) {
+	static double dx1, dx2;
+	dx1 = x1 - p2.x1;
+	dx2 = x2 - p2.x2;
+	return dx1 * dx1 + dx2 * dx2;
+}
+
 
 #endif
