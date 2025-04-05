@@ -2849,7 +2849,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol) 
 	return mag;
 }
 
-double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, static _sols_for_skiplist_curve** images) {
+double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols_for_skiplist_curve** images) {
 	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
 	static int NPSsafe;
 	Mag = MultiMag(y1s, y2s, RS, Tol, images);
