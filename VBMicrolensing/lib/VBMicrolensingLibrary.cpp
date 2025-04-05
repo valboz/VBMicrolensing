@@ -2297,7 +2297,7 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 	}\
 	Jac=1-abs2(S2);
 
-#define _L0\
+#define _L_0\
 	S1 = 0;\
 	for (int ik = 0; ik < n; ik++) {\
 		S1=S1 +pmza[ik][ik];\
@@ -2849,7 +2849,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol) 
 	return mag;
 }
 
-double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols_for_skiplist_curve** images) {
+double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, static _sols_for_skiplist_curve** images) {
 	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
 	static int NPSsafe;
 	Mag = MultiMag(y1s, y2s, RS, Tol, images);
@@ -3214,7 +3214,7 @@ int VBMicrolensing::froot(complex zi) {
 	iter = iter2 = 1;
 	z = zi;
 	_Jac
-		_L0
+		_L_0
 		_S3
 		fad = 1. - Jac;
 	epsbase = epsn = ((Jac > -15) ? fad * (sqrt(sqrt(fad)) - 1) : fad) / (conj(S2) * S3) * 0.5;
@@ -3298,7 +3298,7 @@ int VBMicrolensing::froot(complex zi) {
 					}
 					if (iter4 < 6) {
 						// Accept new point and proceed to next step
-						_L0
+						_L_0
 							if (Lnew > Lold) {
 								flagmain = 2;
 							}
@@ -3312,7 +3312,7 @@ int VBMicrolensing::froot(complex zi) {
 					}
 				}
 				else {
-					_L0
+					_L_0
 						if (Lnew > Lold) {
 							dz = z;
 							z = zo;
@@ -3331,7 +3331,7 @@ int VBMicrolensing::froot(complex zi) {
 									epsn = epsn * 0.5;
 									z = zo + epsn;
 									_Jac
-										_L0
+										_L_0
 										iter4++;
 								}
 							}
@@ -3349,7 +3349,7 @@ int VBMicrolensing::froot(complex zi) {
 											z = zl + epsl;
 											_Jac
 										}
-									_L0
+									_L_0
 								}
 							}
 						}
@@ -6317,7 +6317,7 @@ _sols* VBMicrolensing::PlotCrit(double a1, double q1) {
 		for (_point* scanpoint = Prov->first; scanpoint; scanpoint = scanpoint->next) {
 			x1 = complex(scanpoint->x1 - centeroffset, 0.0);
 			x2 = complex(scanpoint->x2, 0.0);
-			Prov2->append(real(_L1) + centeroffset, real(_L2));
+			Prov2->append(real(_L_1) + centeroffset, real(_L_2));
 		}
 		CriticalCurves->append(Prov2);
 	}
