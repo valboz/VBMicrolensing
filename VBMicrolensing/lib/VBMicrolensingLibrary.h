@@ -12,6 +12,12 @@
 // The original Fortran code available on http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/
 // has been translated to C++ by Tyler M. Heintz and Ava R. Hoag (2017)
 //
+// The Multipoly method for the calculation of multiple-lens microlensing was developed
+// with Vito Saggese (2024).
+// 
+// Optimizations for complex functions and for high-mag regime have been developed 
+// by Jiyuan Zhang (2025).
+//
 // GNU Lesser General Public License applies to all parts of this code.
 // Please read the separate LICENSE.txt file for more details.
 
