@@ -12,6 +12,12 @@
 // The original Fortran code available on http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/
 // has been translated to C++ by Tyler M. Heintz and Ava R. Hoag (2017)
 //
+// The Multipoly method for the calculation of multiple-lens microlensing was developed
+// with Vito Saggese (2024).
+// 
+// Optimizations for complex functions and for high-mag regime have been developed 
+// by Jiyuan Zhang (2025).
+// 
 // GNU Lesser General Public License applies to all parts of this code.
 // Please read the separate LICENSE.txt file for more details.
 
@@ -1100,14 +1106,14 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 			th = (itheta->th + itheta->next->th) / 2;
 			NPS++;
 #ifndef _uniform
-			if (fabs(Magold - Mag) * 2 < errimage) {
-				flag++;
-			}
-			else {
-				flag = 0;
-				Magold = Mag;
-				NPSold = NPS + 8;
-			}
+			//if (fabs(Magold - Mag) * 2 < errimage) {
+			//	flag++;
+			//}
+			//else {
+			//	flag = 0;
+			//	Magold = Mag;
+			//	NPSold = NPS + 8;
+			//}
 #else
 			currerr = 2 * errimage;
 			if (NPS == 2 * NPSold) {
@@ -2773,7 +2779,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		Magold = -1.;
 		NPSold = NPS + 1;
 
-		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && (flag < NPSold))) {
+		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax)  && (flag < NPSold))) {
 			stheta = Thetas->insert_at_certain_position(itheta, th);
 			// this method can only be used when inserting an element in the middle of linked list
 			// i.e. *first's 'th' < current 'th' < *last's 'th'
@@ -2819,14 +2825,14 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			NPS++;
 
 #ifndef _uniform
-			if (fabs(Magold - Mag) * 2 < errimage) {
-				flag++;
-			}
-			else {
-				flag = 0;
-				Magold = Mag;
-				NPSold = NPS + 1;
-			}
+			//if (fabs(Magold - Mag) * 2 < errimage) {
+			//	flag++;
+			//}
+			//else {
+			//	flag = 0;
+			//	Magold = Mag;
+			//	NPSold = NPS + 1;
+			//}
 #else
 			currerr = 2 * errimage;
 			if (NPS == 2 * NPSold) {
