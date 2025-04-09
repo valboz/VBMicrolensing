@@ -343,6 +343,44 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 .
             )mydelimiter");
 
+    vbm.def("MultiImageContours",
+        [](VBMicrolensing& self, double y1, double y2, double rho)
+        {
+            _sols_for_skiplist_curve* cimages;
+            std::vector<std::vector<std::vector<double> > > images;
+            self.MultiMag(y1, y2, rho, self.Tol, &cimages);
+
+            for (_skiplist_curve* scurve = cimages->first; scurve; scurve = scurve->next) {
+                std::vector<std::vector<double> > newimage(2);
+                for (_point* scan = scurve->first; scan; scan = scan->next) {
+                    newimage[0].push_back(scan->x1);
+                    newimage[1].push_back(scan->x2);
+                }
+                images.push_back(newimage);
+            }
+
+            return images;
+        },
+        R"mydelimiter(
+            Image contours by a multiple lens. Remember to set the configuration by SetLensGeometry
+
+            Parameters
+            ----------
+            y1 : float 
+                x-position of the source in the source plane.
+            y2 : float 
+                y-position of the source in the source plane.
+            rho : float 
+                Source angular radius in units of the Einstein radius 
+                corresponding to the total mass.
+
+            Returns
+            -------
+            listofimages: list[list[list[float], list[float]]]
+                [images[list_of_x1,list_of_x2]]
+                .
+            )mydelimiter");
+
     vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*, char*)) & VBMicrolensing::SetObjectCoordinates,
         R"mydelimiter(
             Sets the astronomical coordinates of the microlensing target.            
