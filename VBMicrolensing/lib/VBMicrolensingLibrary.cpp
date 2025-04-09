@@ -786,16 +786,23 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v) 
 }
 
 double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v, double RS, _sols_for_skiplist_curve** images) {
-	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
+	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2, minerr, magbest, deltabest, cerr, starterr;
 	static int NPSsafe;
+	static bool weird;
 	Mag = BinaryMag(s, q, y1v, y2v, RS, Tol, images);
 	RSi = RS;
 	RSo = RS;
 	NPSsafe = NPS;
-	if (Mag < 0 || Mag * RS > 3 || therr > 10 * (Tol + RelTol * Mag)) {
+	weird = (Mag < 0 || Mag * RS > 3);
+	if (weird) therr = 1.e100;
+	starterr = therr;
+	if (therr > 10 * (Tol + RelTol * Mag)) {
 		mag1 = -1;
 		delta1 = 3.33333333e-6;
-		while ((mag1 < 0.1 || mag1 * RSi > 3 || therr > 10 * (Tol + RelTol * mag1)) && delta1 < 1) {
+		magbest = Mag;
+		minerr = therr;
+		deltabest = RS*1.e7;
+		do  {
 			delete* images;
 			delta1 *= 3.;
 			RSi = RS*(1 - delta1);
@@ -808,20 +815,43 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 				//					printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
 			}
 			NPSsafe += NPS;
-		}
+			cerr = therr + delta1 * delta1 / RS;
+			weird = (mag1 < 0.1 || mag1 * RSi > 3);
+			if (!weird && cerr < minerr) {
+				minerr = cerr;
+				deltabest = RSi/delta1;
+				magbest = mag1;
+			}
+		} while (( weird || cerr > 10 * (Tol + RelTol * mag1)) && delta1 < 1);
+
+		mag1 = magbest;
+		delta1 = deltabest;
 		if (mag1 < 0) mag1 = 1.0;
+
 		mag2 = -1;
 		delta2 = 3.33333333e-6;
-		while ((mag2 < 0.1 || mag2 * RSo > 3 || therr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4) {
+		magbest = Mag;
+		minerr = starterr;
+		deltabest = RS * 1.e7;
+		do {
 			delta2 *= 3.;
 			RSo = RS*(1 + delta2);
 			delete* images;
 			mag2 = BinaryMag(s, q, y1v, y2v, RSo, Tol, images);
 			//					printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
 			NPSsafe += NPS;
-		}
-		delta1 = RSi / delta1;
-		delta2 = RSo / delta2;
+			cerr = therr + delta2 * delta2 / RS;
+			weird = (mag2 < 0.1 || mag2 * RSi > 3);
+			if (!weird && cerr < minerr) {
+				minerr = cerr;
+				deltabest = RSo/delta2;
+				magbest = mag2;
+			}
+		} while((weird || cerr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4);
+		mag2 = magbest;
+		delta2 = deltabest;
+		if (mag2 < 0) mag2 = 1.0;
+
 		Mag = (mag1 * delta1 + mag2 * delta2) / (delta1 + delta2);
 	}
 	NPS = NPSsafe;
@@ -2858,20 +2888,27 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol) 
 }
 
 double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols_for_skiplist_curve** images) {
-	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2;
+	static double Mag, mag1, mag2, RSi, RSo, delta1, delta2, minerr, magbest, deltabest, cerr, starterr;
 	static int NPSsafe;
+	static bool weird;
 	Mag = MultiMag(y1s, y2s, RS, Tol, images);
 	RSi = RS;
 	RSo = RS;
 	NPSsafe = NPS;
-	if (Mag < 0 || Mag * RS > 3 || therr > 10 * (Tol + RelTol * Mag)) {
+	weird = (Mag < 0 || Mag * RS > 3);
+	if (weird) therr = 1.e100;
+	starterr = therr;
+	if (therr > 10 * (Tol + RelTol * Mag)) {
 		mag1 = -1;
 		delta1 = 3.33333333e-6;
-		while ((mag1 < 0.1 || mag1 * RSi > 3 || therr > 10 * (Tol + RelTol * mag1)) && delta1 < 1) {
+		magbest = Mag;
+		minerr = therr;
+		deltabest = RS * 1.e7;
+		do {
 			delete* images;
 			delta1 *= 3.;
 			RSi = RS * (1 - delta1);
-			if (RSi < 0) {				
+			if (RSi < 0) {
 				mag1 = MultiMag0(y1s, y2s, images);
 				RSi = 0;
 			}
@@ -2880,20 +2917,42 @@ double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols_for
 				//					printf("\n-safe1 %lf %lf %lf %d", RSi, mag1, therr, NPS);
 			}
 			NPSsafe += NPS;
-		}
+			cerr = therr + delta1 * delta1 / RS;
+			weird = (mag1 < 0.1 || mag1 * RSi > 3);
+			if (!weird && cerr < minerr) {
+				minerr = cerr;
+				deltabest = RSi / delta1;
+				magbest = mag1;
+			}
+		} while ((weird || cerr > 10 * (Tol + RelTol * mag1)) && delta1 < 1);
+
+		mag1 = magbest;
+		delta1 = deltabest;
 		if (mag1 < 0) mag1 = 1.0;
+
 		mag2 = -1;
 		delta2 = 3.33333333e-6;
-		while ((mag2 < 0.1 || mag2 * RSo > 3 || therr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4) {
+		magbest = Mag;
+		minerr = starterr;
+		deltabest = RS * 1.e7;
+		do {
 			delta2 *= 3.;
 			RSo = RS * (1 + delta2);
 			delete* images;
 			mag2 = MultiMag(y1s, y2s, RSo, Tol, images);
-			//					printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
 			NPSsafe += NPS;
-		}
-		delta1 = RSi / delta1;
-		delta2 = RSo / delta2;
+			cerr = therr + delta2 * delta2 / RS;
+			weird = (mag2 < 0.1 || mag2 * RSi > 3);
+			if (!weird && cerr < minerr) {
+				minerr = cerr;
+				deltabest = RSo / delta2;
+				magbest = mag2;
+			}
+		} while ((weird || cerr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4);
+		mag2 = magbest;
+		delta2 = deltabest;
+		if (mag2 < 0) mag2 = 1.0;
+
 		Mag = (mag1 * delta1 + mag2 * delta2) / (delta1 + delta2);
 	}
 	NPS = NPSsafe;
