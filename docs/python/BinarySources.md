@@ -29,7 +29,7 @@ magnifications, y1, y2 = VBM.BinSourceLightCurve(pr,t)      # Calculation of bin
 
 plt.plot(t,magnifications)
 ```
-<img src="BinarySource_lightcurve.png" width = 400>
+<img src="figures/BinarySource_lightcurve.png" width = 400>
 
 The output of BinSourceLightCurve is a magnification compared to the baseline flux. Therefore, it is the sum of two Paczynsky light curves weighted by 1/(1+FR) and FR/(1+FR) respectively.
 
@@ -100,10 +100,72 @@ magnifications, y11, y12, y21, y22 = VBM.BinSourceSingleLensXallarap(pr, t)
 
 plt.plot(t,magnifications)
 ```
-<img src="BinarySource_lightcurve_xallarap.png" width = 400>
+<img src="figures/BinarySource_lightcurve_xallarap.png" width = 400>
 
 In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
 Xallarap is also available for binary lenses through the `BinSourceBinaryLensXallarap` function. In this case, the parameters are 13 with the seven parameters for the [static binary lens](BinaryLenses.md) followed by the six parameters for the xallarap.
 
-[Go to **Advanced control**](AdvancedControl.md)
+## Alternative Xallarap parameterization (experimental)
+
+The conventional xallarap parameterization is not effective for fitting light curves, since the parameters are not immediately related to effects on the light curve. We are experimenting a new parameterization similar to that used for orbital motion.
+
+```
+import VBMicrolensing
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+VBM = VBMicrolensing.VBMicrolensing()
+VBM.SetObjectCoordinates("17:51:40.2082 -29:53:26.502");
+
+# Parameters
+tE = 37.3  # Einstein time
+FR = 0.4  # Flux ratio of the second source to the first
+u01 = 0.1  # Impact parameter for source 1
+u02 = 0.05  # Impact parameter for source 2
+t01 = 7550.4  # Time of closest approach to source 1
+t02 = 7555.8  # Time of closest approach to source 2
+rho = 0.004  # Radius of the first star
+paiN = 0.03     # North component of the parallax vector
+paiE = -0.02     # East component of the parallax vector
+w1 = 0.021   # Orbital motion component parallel to the primary source direction at time t01
+w2 = -0.02   # Orbital motion component othogonal to the primary source direction at time t01
+w3 = 0.03   # Orbital motion along the line of sight
+
+# Array of parameters. Note that tE and FR are in log-scale
+pr = [math.log(tE), math.log(FR), u01, u02, t01, t02, math.log(rho), paiN, paiE, w1, w2, w3]
+
+t = np.linspace(t01-tE, t01+tE, 300) # Array of times
+
+magnifications0, y01, y02 = VBM.BinSourceExtLightCurve(pr, t)
+plt.plot(t,magnifications0)
+
+magnifications, y11, y12, y21, y22 = VBM.BinSourceExtLightCurveXallarap(pr, t)
+plt.plot(t,magnifications,'y')
+```
+
+<img src="figures/BinarySource_lightcurve_xallarap_2.png" width = 400>
+
+The positions of the two sources can be also easily show
+
+```
+plt.plot(y11,y12,'r')
+plt.plot(y21,y22,'y')
+```
+
+<img src="figures/BinarySource__xallarap_sources.png" width = 400>
+
+This parameterization has the advantage of being a direct extension of the static binary source one. Note that this function includes the parallax components, although there is a well-known degeneracy between parallax and xallarap. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before.
+
+The coordinates of the second source at time $t_0$ are calculated as follows:
+
+$$ s_1 = (t_E^{-1} + w_1)(t0_1-t0_2)$$
+$$ s_2 = (u0_2-u0_1) + w_2(t0_1-t0_2)$$
+$$s_3= -(s_1 w_1+s_2 w_2)/w_3$$
+
+The 3d separation is then $s=\sqrt{s_1^2+s_2^2+s_3^2}$ in Einstein angle units.
+
+The orbital velocity is $w=\sqrt{w_1^2+w_2^2+w_3^2}$ in Einstein units per day.
+
+[Go to **Centroid Trajectories**](CentroidTrajectories.md)

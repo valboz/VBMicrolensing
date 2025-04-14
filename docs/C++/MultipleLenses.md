@@ -60,7 +60,7 @@ printf("Magnification of a point-source = %f", Mag); //Output should be 2.14....
 
 ## Multiple lensing with extended sources
 
-For extended sources, the function is `MultiMag`. This function also takes $\rho$ as an argument, the source radius in units of the Einstein angle:
+For extended sources, our recommended function is `MultiMag2`. This function also takes $\rho$ as an argument, the source radius in units of the Einstein angle:
 
 ```
 VBMicrolensing VBM;
@@ -80,7 +80,7 @@ double y1 = 0.; //Source position
 double y2 = -0.2;
 double rho = 0.01; //source radius
 
-double Mag = VBM.MultiMag(y1,y2, rho);
+double Mag = VBM.MultiMag2(y1,y2, rho);
 printf("Multiple Lens Magnification = %f", Mag); //Output should be 5.07...
 ```
 
@@ -99,7 +99,7 @@ The three different alternative methods are available as `Method::Singlepoly`, `
 
 `Method::Nopoly` uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is slower than Multipoly for 3 lenses but is faster with 4 or more lenses, where it proves to be the most reliable and accurate method. This is the default method if the user makes no choice.
 
-The full details of all algorithms will be described in the forthcoming paper [V. Bozza, v. Saggese, G. Covone, P. Rota & J. Zhang arXiv:2410.13660 (2024)](https://arxiv.org/abs/2410.13660).
+The full details of all algorithms are described in [V. Bozza, v. Saggese, G. Covone, P. Rota & J. Zhang, A&A 694 (2025) 219](https://ui.adsabs.harvard.edu/abs/2025A%26A...694A.219B/abstract).
 
 
 
@@ -107,8 +107,6 @@ The full details of all algorithms will be described in the forthcoming paper [V
 
 In the current version, some functionalities developed for single and binary lenses are not yet available. These include:
 
-- Limb darkening
-- A decision tree for finite-source calculation vs point-source calculation (the equivalent of `BinaryMag2`)
 - Astrometry
 - Orbital motion
 - Binary sources and xallarap

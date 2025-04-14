@@ -35,7 +35,7 @@ magnifications, y1, y2 = VBM.BinaryLightCurve(pr,t)      # Calculation of binary
 
 plt.plot(t,magnifications)
 ```
-<img src="BinaryLens_lightcurve.png" width = 400>
+<img src="figures/BinaryLens_lightcurve.png" width = 400>
 
 
 In this example we have declared an instance to the ```VBMicrolensing``` class, assigned values to some parameters and then we have called ```VBM.BinaryLightCurve``` to calculate the light curve with these parameters. 
@@ -63,5 +63,7 @@ In the following pages, we will describe all functionalities of VBMicrolensing i
 - [Orbital Motion](OrbitalMotion.md)
 
 - [Binary Sources](BinarySources.md)
+
+- [Centroid Trajectories](CentroidTrajectories.md)
 
 - [Advanced Control](AdvancedControl.md)

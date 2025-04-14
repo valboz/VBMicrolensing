@@ -1,4 +1,4 @@
-[Back to **Binary Sources**](BinarySources.md)
+[Back to **Centroid Trajectories**](CentroidTrajectories.md)
 
 # Advanced control
 

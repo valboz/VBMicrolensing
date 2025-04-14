@@ -59,7 +59,7 @@ plt.plot(t,magnificationspar,"m")
 plt.plot(t,magnificationsorb,"y")
 ```
 
-<img src="BinaryLens_lightcurve_orbital.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_orbital.png" width = 400>
 
 The light curve including orbital motion is in yellow in this plot. 
 
@@ -79,7 +79,7 @@ for i in range(0,3):
     plt.plot([y1orb[caustictimes[i]]],[y2orb[caustictimes[i]]],color=colors[i],marker="o")
 ```
 
-<img src="BinaryLens_lightcurve_orbital_caustics.png" width = 400>
+<img src="figures/BinaryLens_lightcurve_orbital_caustics.png" width = 400>
 
 ## From velocity components to orbital elements
 
