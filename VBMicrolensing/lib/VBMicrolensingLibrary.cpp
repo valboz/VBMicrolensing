@@ -41,6 +41,7 @@ char systemslash = '/';
 //#define _PRINT_ERRORS
 //#define _PRINT_ERRORS_DARK
 
+#pragma region skiplist/queue
 
 class _augmented_priority_queue {
 public:
@@ -249,6 +250,7 @@ public:
 	}
 };
 
+#pragma endregion
 
 char VBMicrolensing::ESPLtablefile[1024] = "fatto";
 
@@ -318,6 +320,7 @@ VBMicrolensing::VBMicrolensing() {
 	multidark = false;
 	astrometry = false;
 	mass_luminosity_exponent = 4.0;
+	lens_mass_luminosity_exponent = 4.0;
 	mass_radius_exponent = 0.9;
 	rootaccuracy = 9.e-22;
 	samplingfactor = 0.125;
