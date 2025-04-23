@@ -2616,12 +2616,12 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 	y = yi - *s_offset; // Source position relative to first (lowest) mass
 	rho = rho2 = 0;
 	(*Images) = new _sols_for_skiplist_curve;
-	corrquad = corrquad2 = 0; // to be implemented for v2.0
+	corrquad = corrquad2 = 0; 
 	safedist = 10;
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-		Mag = 0.;
+	Mag = 0.;
 	nim0 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
@@ -4762,7 +4762,7 @@ void VBMicrolensing::ESPLAstroLightCurve(double* pr, double* ts, double* mags, d
 }
 
 void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, int np) {
-	double tn, u, u1, FR, s = exp(pr[0]), q = exp(pr[1]);
+	double tn, u, FR, s = exp(pr[0]), q = exp(pr[1]);
 	u0 = pr[2];
 	t0 = pr[6];
 	tE_inv = exp(-pr[5]);
@@ -4796,7 +4796,7 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 
 
 void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, double* seps, int np) {
-	double tn, u, u1, FR, s = exp(pr[0]), q = exp(pr[1]), w1 = pr[9], w2 = pr[10], w3 = pr[11];
+	double tn, u, FR, s = exp(pr[0]), q = exp(pr[1]), w1 = pr[9], w2 = pr[10], w3 = pr[11];
 	u0 = pr[2];
 	t0 = pr[6];
 	tE_inv = exp(-pr[5]);
@@ -5618,7 +5618,7 @@ double VBMicrolensing::BinSourceExtLightCurve(double* pr, double t) {
 }
 
 double VBMicrolensing::BinSourceExtLightCurveXallarap(double* pr, double t) {
-	double mag, y1, y2, sep, y12, y22;
+	double mag, y1, y2, y12, y22;
 	BinSourceExtLightCurveXallarap(pr, &t, &mag, &y1, &y2, &y12, &y22, 1);
 	return mag;
 }
@@ -7131,7 +7131,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	static complex coef, prev, przr;
 
 
-	nl = sqrt(degree - 1);
+	nl = (int) round(sqrt(degree - 1));
 	for (l = 0; l < nl; l++) nrootsmp_mp[l] = 0;
 	for (l = 0; l < nl; l++) {
 		for (i = 0; i < degree; i++) {
