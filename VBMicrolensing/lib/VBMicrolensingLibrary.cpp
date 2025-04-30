@@ -5002,7 +5002,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	Y[2] = L[0] * Om[1] - L[1] * Om[0];
 
 	// Phase at time t0
-	phi0 = acos((s[0] * Om[0] + s[1] * Om[1]) / s3D);
+	phi0 = acos((s[0] * Om[0] + s[1] * Om[1]) / (s3D + 1.e-8));
 	if (s[2] < 0) phi0 = -phi0;
 
 	// Mass ratio
