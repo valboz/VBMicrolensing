@@ -810,11 +810,11 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 		delta1 = 3.33333333e-6;
 		magbest = Mag;
 		minerr = therr;
-		deltabest = RS*1.e7;
-		do  {
+		deltabest = RS * 1.e7;
+		do {
 			delete* images;
 			delta1 *= 3.;
-			RSi = RS*(1 - delta1);
+			RSi = RS * (1 - delta1);
 			if (RSi < 0) {
 				mag1 = BinaryMag0(s, q, y1v, y2v, images);
 				RSi = 0;
@@ -828,10 +828,10 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 			weird = (mag1 < 0.1 || mag1 * RSi > 3);
 			if (!weird && cerr < minerr) {
 				minerr = cerr;
-				deltabest = RSi/delta1;
+				deltabest = RSi / delta1;
 				magbest = mag1;
 			}
-		} while (( weird || cerr > 10 * (Tol + RelTol * mag1)) && delta1 < 1);
+		} while ((weird || cerr > 10 * (Tol + RelTol * mag1)) && delta1 < 1);
 
 		mag1 = magbest;
 		delta1 = deltabest;
@@ -844,7 +844,7 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 		deltabest = RS * 1.e7;
 		do {
 			delta2 *= 3.;
-			RSo = RS*(1 + delta2);
+			RSo = RS * (1 + delta2);
 			delete* images;
 			mag2 = BinaryMag(s, q, y1v, y2v, RSo, Tol, images);
 			//					printf("\n-safe2 %lf %lf %lf %d", RSo,mag2,therr,NPS);
@@ -853,10 +853,10 @@ double VBMicrolensing::BinaryMagSafe(double s, double q, double y1v, double y2v,
 			weird = (mag2 < 0.1 || mag2 * RSi > 3);
 			if (!weird && cerr < minerr) {
 				minerr = cerr;
-				deltabest = RSo/delta2;
+				deltabest = RSo / delta2;
 				magbest = mag2;
 			}
-		} while((weird || cerr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4);
+		} while ((weird || cerr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4);
 		mag2 = magbest;
 		delta2 = deltabest;
 		if (mag2 < 0) mag2 = 1.0;
@@ -1026,7 +1026,7 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 	// we can initialize Mag to 0. then 0. - 0. = 0.
 	currerr = 1.e100;
 	//currerr = 0. ;
-	astrox1 = 0.;		
+	astrox1 = 0.;
 	astrox2 = 0.;
 	do {
 		stheta = Thetas->insert_at_certain_position(itheta, th);
@@ -1102,7 +1102,7 @@ double VBMicrolensing::BinaryMag(double a1, double q1, double y1v, double y2v, d
 		}
 
 		if (flagbad == 0 || flagbad == flagbadmax) {
-			flagbad = 0;	
+			flagbad = 0;
 
 			itheta = APQ.apq_array[0].stheta;
 			currerr = APQ.sum_tree_array[0].sumerr;
@@ -2616,12 +2616,12 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 	y = yi - *s_offset; // Source position relative to first (lowest) mass
 	rho = rho2 = 0;
 	(*Images) = new _sols_for_skiplist_curve;
-	corrquad = corrquad2 = 0; 
+	corrquad = corrquad2 = 0;
 	safedist = 10;
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-	Mag = 0.;
+		Mag = 0.;
 	nim0 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
@@ -2782,7 +2782,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		Magold = -1.;
 		NPSold = NPS + 1;
 
-		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax)  && (flag < NPSold))) {
+		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && (flag < NPSold))) {
 			stheta = Thetas->insert_at_certain_position(itheta, th);
 			// this method can only be used when inserting an element in the middle of linked list
 			// i.e. *first's 'th' < current 'th' < *last's 'th'
@@ -4990,11 +4990,21 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	norm = sqrt(normOm + L[2] * L[2]);
 	normOm = sqrt(normOm);
 	// Node line
-	Om[0] = -L[1] / normOm;
-	Om[1] = L[0] / normOm;
-	Om[2] = 0;
+	if (normOm > 0) {
+		Om[0] = -L[1] / normOm;
+		Om[1] = L[0] / normOm;
+		Om[2] = 0;
+		for (int i = 0; i < 3; i++) L[i] /= norm;
+	}
+	else {
+		Om[0] = 1;
+		Om[1] = 0 / normOm;
+		Om[2] = 0;
+		L[0] = 0;
+		L[1] = -1;
+		L[2] = 0;
+	}
 
-	for (int i = 0; i < 3; i++) L[i] /= norm;
 
 	// Orthogonal axis
 	Y[0] = -L[2] * Om[1];
@@ -5002,7 +5012,10 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	Y[2] = L[0] * Om[1] - L[1] * Om[0];
 
 	// Phase at time t0
-	phi0 = acos((s[0] * Om[0] + s[1] * Om[1]) / (s3D + 1.e-8));
+	norm = (s[0] * Om[0] + s[1] * Om[1]) / s3D;
+	if (norm >= 1) norm = 0.99999999999999;
+	if (norm <= -1) norm = -0.99999999999999;
+	phi0 = acos(norm);
 	if (s[2] < 0) phi0 = -phi0;
 
 	// Mass ratio
@@ -5021,6 +5034,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	s1 = s2 * qs;
 
 	for (int i = 0; i < np; i++) {
+
 		ComputeParallax(ts[i], t0);
 		paitB = pai1 * Et[0] + pai2 * Et[1]; // Parallax correction referred to tB
 		paiuB = pai1 * Et[1] - pai2 * Et[0]; // Parallax correction referred to tB
@@ -7131,7 +7145,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	static complex coef, prev, przr;
 
 
-//	n = (int) round(sqrt(degree - 1));
+	//	n = (int) round(sqrt(degree - 1));
 	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
 	for (l = 0; l < n; l++) {
 		for (i = 0; i < degree; i++) {
