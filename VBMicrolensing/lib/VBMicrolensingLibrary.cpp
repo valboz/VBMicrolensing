@@ -1,4 +1,4 @@
-// VBMicrolensing v5.0 (2025)
+// VBMicrolensing v5.0.1 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -41,6 +41,7 @@ char systemslash = '/';
 //#define _PRINT_ERRORS
 //#define _PRINT_ERRORS_DARK
 
+#pragma region skiplist/queue
 
 class _augmented_priority_queue {
 public:
@@ -249,6 +250,7 @@ public:
 	}
 };
 
+#pragma endregion
 
 char VBMicrolensing::ESPLtablefile[1024] = "fatto";
 
@@ -318,6 +320,7 @@ VBMicrolensing::VBMicrolensing() {
 	multidark = false;
 	astrometry = false;
 	mass_luminosity_exponent = 4.0;
+	lens_mass_luminosity_exponent = 4.0;
 	mass_radius_exponent = 0.9;
 	rootaccuracy = 9.e-22;
 	samplingfactor = 0.125;
@@ -2613,12 +2616,12 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 	y = yi - *s_offset; // Source position relative to first (lowest) mass
 	rho = rho2 = 0;
 	(*Images) = new _sols_for_skiplist_curve;
-	corrquad = corrquad2 = 0; // to be implemented for v2.0
+	corrquad = corrquad2 = 0; 
 	safedist = 10;
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-		Mag = 0.;
+	Mag = 0.;
 	nim0 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
@@ -4759,7 +4762,7 @@ void VBMicrolensing::ESPLAstroLightCurve(double* pr, double* ts, double* mags, d
 }
 
 void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, int np) {
-	double tn, u, u1, FR, s = exp(pr[0]), q = exp(pr[1]);
+	double tn, u, FR, s = exp(pr[0]), q = exp(pr[1]);
 	u0 = pr[2];
 	t0 = pr[6];
 	tE_inv = exp(-pr[5]);
@@ -4793,7 +4796,7 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 
 
 void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, double* seps, int np) {
-	double tn, u, u1, FR, s = exp(pr[0]), q = exp(pr[1]), w1 = pr[9], w2 = pr[10], w3 = pr[11];
+	double tn, u, FR, s = exp(pr[0]), q = exp(pr[1]), w1 = pr[9], w2 = pr[10], w3 = pr[11];
 	u0 = pr[2];
 	t0 = pr[6];
 	tE_inv = exp(-pr[5]);
@@ -4999,7 +5002,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	Y[2] = L[0] * Om[1] - L[1] * Om[0];
 
 	// Phase at time t0
-	phi0 = acos((s[0] * Om[0] + s[1] * Om[1]) / s3D);
+	phi0 = acos((s[0] * Om[0] + s[1] * Om[1]) / (s3D + 1.e-8));
 	if (s[2] < 0) phi0 = -phi0;
 
 	// Mass ratio
@@ -5615,7 +5618,7 @@ double VBMicrolensing::BinSourceExtLightCurve(double* pr, double t) {
 }
 
 double VBMicrolensing::BinSourceExtLightCurveXallarap(double* pr, double t) {
-	double mag, y1, y2, sep, y12, y22;
+	double mag, y1, y2, y12, y22;
 	BinSourceExtLightCurveXallarap(pr, &t, &mag, &y1, &y2, &y12, &y22, 1);
 	return mag;
 }
@@ -7122,46 +7125,46 @@ void VBMicrolensing::cmplx_roots_gen(complex* roots, complex* poly, int degree, 
 void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int degree, bool polish_roots_after, bool use_roots_as_starting_points) {
 
 	static complex poly2[MAXM];
-	static int l, j, i, k, nl, ind, degreenew, croots, n;
+	static int l, j, i, k, ind, degreenew, croots, m;
 	static double dif0, br;
 	static bool success;
 	static complex coef, prev, przr;
 
 
-	nl = sqrt(degree - 1);
-	for (l = 0; l < nl; l++) nrootsmp_mp[l] = 0;
-	for (l = 0; l < nl; l++) {
+//	n = (int) round(sqrt(degree - 1));
+	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
+	for (l = 0; l < n; l++) {
 		for (i = 0; i < degree; i++) {
 			zr_mp[l][i] = complex(0., 0.);
 		}
 	}
 	//Cycle reference systems
-	for (l = 0; l < nl; l++) {
+	for (l = 0; l < n; l++) {
 
 		br = false;
 		//copy poly coefs
 		for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
 		//Don't do Lagierre's for small degree polybnomials
-		if (l != nl - 1) {
+		if (l != n - 1) {
 			if (degree <= 1) {
 				if (degree == 1) zr_mp[l][0] = -poly[l][0] / poly[l][1];
 				nrootsmp_mp[l] = 1;
 				break;
 			}
 			//Do Laguerre for degree >=3
-			for (n = degree; n >= 3; n--) {
-				cmplx_laguerre2newton(poly2, n, &zr_mp[l][n - 1], iter, success, 2);
+			for (m = degree; m >= 3; m--) {
+				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
 				if (!success) {
-					zr_mp[l][n - 1] = complex(0, 0);
-					cmplx_laguerre(poly2, n, &zr_mp[l][n - 1], iter, success);
+					zr_mp[l][m - 1] = complex(0, 0);
+					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
 				}
 				nrootsmp_mp[l]++;
 				//distance check
-				dif0 = abs2(zr_mp[l][n - 1]);
-				for (i = 1; i < nl; i++) {
-					if (abs2(zr_mp[l][n - 1] - a_mp[l][i]) < dif0) {
-						dist_mp[l] = abs2(zr_mp[l][n - 1] - a_mp[l][i]);
-						zr_mp[l][n - 1] = complex(0, 0);
+				dif0 = abs2(zr_mp[l][m - 1]);
+				for (i = 1; i < n; i++) {
+					if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0) {
+						dist_mp[l] = abs2(zr_mp[l][m - 1] - a_mp[l][i]);
+						zr_mp[l][m - 1] = complex(0, 0);
 						br = true;
 						nrootsmp_mp[l]--;
 						break;
@@ -7169,19 +7172,19 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 				if (br) break;
 				//Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
-				coef = poly2[n];
-				for (i = n - 1; i >= 0; i--) {
+				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
+				coef = poly2[m];
+				for (i = m - 1; i >= 0; i--) {
 					prev = poly2[i];
 					poly2[i] = coef;
-					coef = prev + zr_mp[l][n - 1] * coef;
+					coef = prev + zr_mp[l][m - 1] * coef;
 				}
 			}
 			if (br) continue;
 			//find the last 2 roots
 			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
 			nrootsmp_mp[l] += 2;
-			for (i = 1; i < nl; i++) {
+			for (i = 1; i < n; i++) {
 				if (abs2(zr_mp[l][1] - a_mp[l][i]) < abs2(zr_mp[l][1])) {
 					zr_mp[l][1] = zr_mp[l][0];
 					zr_mp[l][0] = complex(0, 0);
@@ -7191,7 +7194,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 			}
 			k = degree - nrootsmp_mp[l];
-			for (i = 1; i < nl; i++) {
+			for (i = 1; i < n; i++) {
 				if (abs2(zr_mp[l][k] - a_mp[l][i]) < abs2(zr_mp[l][k])) {
 					zr_mp[l][k] = complex(0, 0);
 					nrootsmp_mp[l]--;
@@ -7201,10 +7204,10 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 		}
 
 		//LAST lens
-		if (l == nl - 1) {
+		if (l == n - 1) {
 			//Set previous roots
 			ind = 0;
-			for (int ll = 0; ll < nl - 1; ll++) {
+			for (int ll = 0; ll < n - 1; ll++) {
 				for (int i = ind; i < ind + nrootsmp_mp[ll]; i++) {
 					zr_mp[l][degree - i - 1] = zr_mp[ll][degree - 1 - i + ind] + s_sort[ll] - s_sort[l];
 				}
@@ -7215,16 +7218,16 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 			//divide by previous roots
 
 			degreenew = degree;
-			for (int i = 0; i < nl - 1; i++) {
+			for (int i = 0; i < n - 1; i++) {
 				degreenew -= nrootsmp_mp[i];
 			}
 
-			for (int n = degree; n > degreenew; n--) {
-				coef = poly2[n];
-				for (i = n - 1; i >= 0; i--) {
+			for (int m = degree; m > degreenew; m--) {
+				coef = poly2[m];
+				for (i = m - 1; i >= 0; i--) {
 					prev = poly2[i];
 					poly2[i] = coef;
-					coef = prev + zr_mp[l][n - 1] * coef;
+					coef = prev + zr_mp[l][m - 1] * coef;
 				}
 			}
 
@@ -7235,21 +7238,21 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				break;
 			}
 
-			for (n = degreenew; n >= 3; n--) {
-				cmplx_laguerre2newton(poly2, n, &zr_mp[l][n - 1], iter, success, 2);
+			for (m = degreenew; m >= 3; m--) {
+				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
 				if (!success) {
-					zr_mp[l][n - 1] = complex(0, 0);
-					cmplx_laguerre(poly2, n, &zr_mp[l][n - 1], iter, success);
+					zr_mp[l][m - 1] = complex(0, 0);
+					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
 				}
 				nrootsmp_mp[l] += 1;
 
 				// Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][n - 1], iter, success);
-				coef = poly2[n];
-				for (i = n - 1; i >= 0; i--) {
+				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
+				coef = poly2[m];
+				for (i = m - 1; i >= 0; i--) {
 					prev = poly2[i];
 					poly2[i] = coef;
-					coef = prev + zr_mp[l][n - 1] * coef;
+					coef = prev + zr_mp[l][m - 1] * coef;
 				}
 			}
 			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
@@ -7259,14 +7262,14 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	}
 
 	ind = degree - 1;
-	for (l = 0; l < nl - 1; l++) {
+	for (l = 0; l < n - 1; l++) {
 		for (i = 0; i < nrootsmp_mp[l]; i++) {
 			roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
 			ind--;
 		}
 	}
-	for (i = 0; i < nrootsmp_mp[nl - 1]; i++) {
-		roots[ind] = zr_mp[nl - 1][i] + s_sort[nl - 1] - s_sort[0];
+	for (i = 0; i < nrootsmp_mp[n - 1]; i++) {
+		roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
 		ind--;
 	}
 
