@@ -381,7 +381,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 .
             )mydelimiter");
 
-    vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*, char*)) & VBMicrolensing::SetObjectCoordinates,
+    vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*)) & VBMicrolensing::SetObjectCoordinates,
         R"mydelimiter(
             Sets the astronomical coordinates of the microlensing target.            
             
@@ -391,7 +391,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 Format \"hr:mn:sc +deg:pr:sc\".
             )mydelimiter");
 
-    vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*)) & VBMicrolensing::SetObjectCoordinates,
+    vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*, char*)) & VBMicrolensing::SetObjectCoordinates,
         R"mydelimiter(
             Sets the astronomical coordinates of the microlensing target and 
             specifies the path where to look for the position tables 
@@ -399,8 +399,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             
             Parameters
             ----------
-            modelfile : string 
-                Output filename.
+            coordinatefile : string 
+                filename with astronomical coordinates.
             sattabledir : string 
                 Name of the directory containing the position tables of the satellites. 
             )mydelimiter");
