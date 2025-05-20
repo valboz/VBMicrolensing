@@ -282,7 +282,7 @@ VBMicrolensing::VBMicrolensing() {
 	nsat = 0;
 	ndatasat = 0;
 	satellite = 0;
-	parallaxsystem = 0;
+	parallaxsystem = 1;
 	t0_par_fixed = -1;
 	t0_par = 7000;
 	minannuli = 1;
