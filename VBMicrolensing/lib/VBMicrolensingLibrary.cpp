@@ -6007,7 +6007,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				while (!feof(f)) {
 					fscanf(f, "%s", teststring);
 					if (!feof(f)) {
-						fseek(f, 1, SEEK_CUR);
+						fgetc(f);
 						teststring[5] = 0;
 						if (strcmp(teststring, "$$SOE") == 0) {
 							flag2 = 1;
@@ -6022,7 +6022,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 					while (!feof(f)) {
 						fscanf(f, "%[^\n]s", teststring);
 						if (!feof(f)) {
-							fseek(f, 1, SEEK_CUR);
+							fgetc(f);
 							teststring[5] = 0;
 							if (strcmp(teststring, "$$EOE") == 0) {
 								flag2 = 1;
