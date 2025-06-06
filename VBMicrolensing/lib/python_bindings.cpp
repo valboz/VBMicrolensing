@@ -53,6 +53,10 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Exponent for the mass-radius relation: R = M^q; default value is q=0.89");
     vbm.def_readwrite("lens_mass_luminosity_exponent", &VBMicrolensing::lens_mass_luminosity_exponent,
         "Exponent for the mass-luminosity relation for the lens: L = M^q; default value is q=4.0");
+    vbm.def_readwrite("turn_off_secondary_source", &VBMicrolensing::turn_off_secondary_source,
+        "Flux of secondary source is set to zero.");
+    vbm.def_readwrite("turn_off_secondary_lens", &VBMicrolensing::turn_off_secondary_lens,
+        "Flux of secondary lens is set to zero.");
     vbm.def_readwrite("corrquad", &VBMicrolensing::corrquad,
         "Quadrupole test.");
     vbm.def_readwrite("corrquad2", &VBMicrolensing::corrquad2,
@@ -789,7 +793,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
             std::vector<double> mags(times.size());
-             std::vector<double> y1s1(times.size());
+            std::vector<double> y1s1(times.size());
             std::vector<double> y2s1(times.size());
             std::vector<double> y1s2(times.size());
             std::vector<double> y2s2(times.size());
