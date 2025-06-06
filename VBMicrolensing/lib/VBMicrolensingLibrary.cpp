@@ -4966,11 +4966,10 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 
 	tE_inv = exp(-pr[0]);
 	double w[3] = { pr[9] + 1.01e-15, pr[10] + 1.01e-15, pr[11] + 1.01e-15 };
-	double t01 = pr[4], t02 = pr[5] + w[0] * (pr[5] - pr[4]) / tE_inv, u1 = pr[2], u2 = pr[3] + w[1] * (pr[4] - pr[5]), FR, rho2, tn, u, utot, xt, xu;
+	double t01 = pr[4], t02 = pr[5] + w[0] * (pr[5] - pr[4]) / tE_inv, u1 = pr[2], u2 = pr[3] + w[1] * (pr[4] - pr[5]), FR = exp(pr[1]), rho2, tn, u, utot, xt, xu;
 	double s[3] = { (t01 - t02) * tE_inv,u2 - u1,0 };
 	double L[3], Om[3], Y[3], norm, normOm, s3D, wtot, qs;
 	double u0B, t0B, vuB, vt0B, s1, s2, uB, tnB, paitB, paiuB;
-	FR = (turn_off_secondary_source)? 0 : exp(pr[1]);
 	u0 = u1;
 	t0 = t01;
 	rho = exp(pr[6]);
@@ -5067,18 +5066,22 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 		tn = tnB + xt * s2;
 		u = uB + xu * s2;
 		utot = sqrt(tn * tn + u * u);
-		rho2 = rho * exp(pr[1] * mass_radius_exponent / mass_luminosity_exponent);
 		y1s2[i] = -tn;
 		y2s2[i] = -u;
-		// Combine magnifications
-		mags[i] += FR * ESPLMag2(utot, rho2);
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			rho2 = rho * exp(pr[1] * mass_radius_exponent / mass_luminosity_exponent);
+			// Combine magnifications
+			mags[i] += FR * ESPLMag2(utot, rho2);
+			mags[i] /= (1 + FR);
+		}
 
 		if (astrometry) {
-			c1s[i] += FR * astrox1 * y1s2[i] / utot;
-			c2s[i] += FR * astrox1 * y2s2[i] / utot;
-			c1s[i] /= (1 + FR);
-			c2s[i] /= (1 + FR);
+			if (!turn_off_secondary_source) {
+				c1s[i] += FR * astrox1 * y1s2[i] / utot;
+				c2s[i] += FR * astrox1 * y2s2[i] / utot;
+				c1s[i] /= (1 + FR);
+				c2s[i] /= (1 + FR);
+			}
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
 		}
 
@@ -5195,8 +5198,7 @@ void VBMicrolensing::BinaryLightCurveKepler(double* pr, double* ts, double* mags
 }
 
 void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR, tn, u;
-	FR = (turn_off_secondary_source) ? 0 : exp(pr[1]);
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR=exp(pr[1]), tn, u;
 
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - t01) * tE_inv;
@@ -5209,8 +5211,10 @@ void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, d
 		tn = (ts[i] - t02) * tE_inv;
 		u = tn * tn + u2 * u2;
 
-		mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
+			mags[i] /= (1 + FR);
+		}
 
 	}
 
@@ -5218,9 +5222,8 @@ void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, d
 
 
 void VBMicrolensing::BinSourceLightCurveParallax(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR, tn, u, u0, pai1 = pr[6], pai2 = pr[7], w1 = pr[8], w2 = pr[9], w3 = pr[10];
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), tn, u, u0, pai1 = pr[6], pai2 = pr[7], w1 = pr[8], w2 = pr[9], w3 = pr[10];
 	t0old = 0;
-	FR = (turn_off_secondary_source) ? 0 : exp(pr[1]);
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
@@ -5237,19 +5240,20 @@ void VBMicrolensing::BinSourceLightCurveParallax(double* pr, double* ts, double*
 		u0 = u2 + pai1 * Et[1] - pai2 * Et[0];
 		u = tn * tn + u0 * u0;
 
-		mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
+			mags[i] /= (1 + FR);
+		}
 	}
 }
 
 
 void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double* mags, double* y1s, double* y2s, double* seps, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR, tn, u, u0, pai1 = pr[6], pai2 = pr[7], q = pr[8], w1 = pr[9], w2 = pr[10], w3 = pr[11];
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), tn, u, u0, pai1 = pr[6], pai2 = pr[7], q = pr[8], w1 = pr[9], w2 = pr[10], w3 = pr[11];
 	double th, Cth, Sth;
 	double s, s_true, w, phi0, inc, phi, Cinc, Sinc, Cphi, Sphi, Cphi0, Sphi0, COm, SOm;
 	double w13, w123, den, den0, du0, dt0;
 	t0old = 0;
-	FR = (turn_off_secondary_source) ? 0 : exp(pr[1]);
 
 
 	s = sqrt((u1 - u2) * (u1 - u2) + (t01 - t02) * (t01 - t02) * (tE_inv * tE_inv));
@@ -5307,14 +5311,15 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 		u = -(u0 - du0 / q + pai1 * Et[1] - pai2 * Et[0]);
 		u = tn * tn + u * u;
 
-		mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
+			mags[i] /= (1 + FR);
+		}
 	}
 }
 
 void VBMicrolensing::BinSourceExtLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR, rho = exp(pr[6]), rho2, tn, u;
-	FR = (turn_off_secondary_source) ? 0 : exp(pr[1]);
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), rho = exp(pr[6]), rho2, tn, u;
 
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - t01) * tE_inv;
@@ -5326,10 +5331,11 @@ void VBMicrolensing::BinSourceExtLightCurve(double* pr, double* ts, double* mags
 
 		tn = (ts[i] - t02) * tE_inv;
 		u = tn * tn + u2 * u2;
-		rho2 = rho * pow(FR, mass_radius_exponent / mass_luminosity_exponent);
-		mags[i] += FR * ESPLMag2(sqrt(u), rho2);
-		mags[i] /= (1 + FR);
-
+		if (!turn_off_secondary_source) {
+			rho2 = rho * pow(FR, mass_radius_exponent / mass_luminosity_exponent);
+			mags[i] += FR * ESPLMag2(sqrt(u), rho2);
+			mags[i] /= (1 + FR);
+		}
 	}
 
 }
