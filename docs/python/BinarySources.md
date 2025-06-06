@@ -57,7 +57,7 @@ Therefore, in the function `BinSourceExtLightCurve`, if the flux ratio is `FR` a
 
 The user can customize the two exponents by changing `VBM.mass_luminosity_exponent` and `VBM.mass_radius_exponent` as appropriate for the sources in the specific microlensing event and for the observation band.
 
-## Turning off the secondary component
+## Dark secondary component
 
 The secondary component is assumed to be luminous with a flux ration `FR` to the primary. However, if we want to model a source orbiting a dark object, we need to turn off the flux from the secondary component. This can be done by setting
 
