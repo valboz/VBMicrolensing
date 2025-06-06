@@ -69,7 +69,7 @@ At this point, the flux ratio parameter can be easily converted to a mass ratio 
 
 ## Xallarap
 
-Binary sources can also orbit around a common center of mass. In this case, assuming a circular orbital motion, we have to add the three components of the relative velocity, similarly to what we do for binary lens orbital motion. We also include parallax componentes, although these are often degenerate with xallarap.
+Binary sources orbit around a common center of mass. In this case, assuming a circular orbital motion, we have to add the three components of the relative velocity, similarly to what we do for binary lens orbital motion. We also include parallax componentes, although these are often degenerate with xallarap.
 
 ```
 import VBMicrolensing
