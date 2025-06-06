@@ -57,6 +57,15 @@ Therefore, in the function `BinSourceExtLightCurve`, if the flux ratio is `FR` a
 
 The user can customize the two exponents by changing `VBM.mass_luminosity_exponent` and `VBM.mass_radius_exponent` as appropriate for the sources in the specific microlensing event and for the observation band.
 
+## Turning off the secondary component
+
+The secondary component is assumed to be luminous with a flux ration `FR` to the primary. However, if we want to model a source orbiting a dark object, we need to turn off the flux from the secondary component. This can be done by setting
+
+```
+VBM.turn_off_secondary_source = True
+```
+
+At this point, the flux ratio parameter can be easily converted to a mass ratio parameter by setting `VBM.mass_luminosity_exponent = 1`. Without a flux, the secondary component may only affect the microlensing event by the orbital motion of the primary around the common center of mass, which is described by the so-called xallarap effect.
 
 ## Xallarap
 
@@ -108,7 +117,7 @@ plt.plot(y21,y22,'y')
 
 <img src="figures/BinarySource__xallarap_sources.png" width = 400>
 
-This parameterization has the advantage of being a direct extension of the static binary source one. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before.
+This parameterization has the advantage of being a direct extension of the static binary source one. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before. If we have a dark secondary component, we must set `VBM.turn_off_secondary_source = True`, otherwise, both components will contribute to the total flux.
 
 The coordinates of the second source at time $t_0$ are calculated as follows:
 
