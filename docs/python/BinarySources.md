@@ -117,7 +117,7 @@ plt.plot(y21,y22,'y')
 
 <img src="figures/BinarySource__xallarap_sources.png" width = 400>
 
-This parameterization has the advantage of being a direct extension of the static binary source one. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before. If we have a dark secondary component, we must set `VBM.turn_off_secondary_source = True`, otherwise, both components will contribute to the total flux.
+This parameterization has the advantage of being a direct extension of the static binary source one. The mass ratio and the radius of the secondary sources are calculated using mass-radius-luminosity relations starting from the flux ratio, as explained before. If we set `VBM.turn_off_secondary_source = True` the secondary component will be dark, otherwise, both components will contribute to the total flux.
 
 The coordinates of the second source at time $t_0$ are calculated as follows:
 
