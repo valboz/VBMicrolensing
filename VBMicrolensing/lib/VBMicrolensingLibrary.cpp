@@ -4850,7 +4850,6 @@ void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double*
 	// Image centroid is finally composed with lens centroid
 	c1s[0] = c1 + c1l[0];
 	c2s[0] = c2 + c2l[0];
-
 }
 
 void VBMicrolensing::CombineCentroids(double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* c1tot, double* c2tot, double g, int np) {
@@ -4877,7 +4876,8 @@ void VBMicrolensing::PSPLAstroLightCurve(double* pr, double* ts, double* mags, d
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
 		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
-		u = u0 + pai1 * Et[1] - pai2 * Et[0];
+		u1 = u0 + pai1 * Et[1] - pai2 * Et[0];
+		u = sqrt(tn * tn + u1 * u1);
 
 		y1s[i] = -tn;
 		y2s[i] = -u1;
@@ -4930,7 +4930,6 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 	pai1 = pr[7];
 	pai2 = pr[8];
 	alpha = pr[3];
-
 	iastro = 9;
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 	dPosAng = 0;
@@ -5209,7 +5208,6 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 		xt = (Om[0] * cos(phi) + Y[0] * sin(phi));
 		xu = (Om[1] * cos(phi) + Y[1] * sin(phi));
 
-
 		// Position of source 1
 		tn = tnB - xt * s1;
 		u = uB - xu * s1;
@@ -5251,7 +5249,6 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 }
 
 
-
 #pragma endregion
 
 #pragma region lightcurves
@@ -5282,7 +5279,6 @@ void VBMicrolensing::PSPLLightCurveParallax(double* pr, double* ts, double* mags
 	astrometry = false;
 	PSPLAstroLightCurve(pr, ts, mags, NULL, NULL, NULL, NULL, y1s, y2s, np);
 }
-
 
 void VBMicrolensing::ESPLLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
 	double u0 = exp(pr[0]), t0 = pr[2], tE_inv = exp(-pr[1]), tn, u, rho = exp(pr[3]);
@@ -5417,6 +5413,7 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 	double s, s_true, w, phi0, inc, phi, Cinc, Sinc, Cphi, Sphi, Cphi0, Sphi0, COm, SOm;
 	double w13, w123, den, den0, du0, dt0;
 	t0old = 0;
+
 
 	s = sqrt((u1 - u2) * (u1 - u2) + (t01 - t02) * (t01 - t02) * (tE_inv * tE_inv));
 	th = atan2((u1 - u2), (tE_inv * (t01 - t02)));
@@ -5600,7 +5597,6 @@ void VBMicrolensing::BinSourceSingleLensXallarap(double* pr, double* ts, double*
 		mags[i] = (Mag + qs4 * Mag2) / (1 + qs4);
 	}
 }
-
 
 
 
