@@ -28,7 +28,7 @@ The first argument is the name of the file we have just prepared (these are the 
 
 ## Parallax system
 
-Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 0, corresponding to the parallel/orthogonal system.
+Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 1, corresponding to the North-East system.
 
 ## Reference time for parallax $t_{0,par}$
 
@@ -54,7 +54,6 @@ double pr[9]; // Array of parameters
 double s, q, u0, alpha, rho, tE, t0, paiN, paiE, t;
 
 VBM.SetObjectCoordinates("OB151212coords.txt", ".");  // Read target coordinates in file
-VBM.parallaxsystem = 1; // Here we use North-East components for parallax
 
 u0 = -0.01; // Impact parameter
 t0 = 7550.4; // Time of closest approach to the center of mass

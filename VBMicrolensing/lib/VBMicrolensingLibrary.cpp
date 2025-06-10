@@ -1,4 +1,4 @@
-// VBMicrolensing v5.0.1 (2025)
+// VBMicrolensing v5.1 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -282,7 +282,7 @@ VBMicrolensing::VBMicrolensing() {
 	nsat = 0;
 	ndatasat = 0;
 	satellite = 0;
-	parallaxsystem = 0;
+	parallaxsystem = 1;
 	t0_par_fixed = -1;
 	t0_par = 7000;
 	minannuli = 1;
@@ -327,6 +327,7 @@ VBMicrolensing::VBMicrolensing() {
 	squarecheck = false;
 	CumulativeFunction = &VBDefaultCumulativeFunction;
 	SelectedMethod = Method::Nopoly;
+	turn_off_secondary_source = turn_off_secondary_lens = false;
 	//	testnewcoefs = true;
 }
 
@@ -2681,7 +2682,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 	if (APQ.apq_array.capacity() > 2048)
 	{
 		APQ.apq_array.resize(2048);
-		APQ.sum_tree_array.resize(2048);  
+		APQ.sum_tree_array.resize(2048);
 
 		APQ.apq_array.shrink_to_fit();
 		APQ.sum_tree_array.shrink_to_fit();
@@ -2775,7 +2776,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		currerr = Mag = 0.;
 
-		astrox1 = 0.;
+    astrox1 = 0.;
 		astrox2 = 0.;
 
 		stheta = Thetas->first;
@@ -2791,7 +2792,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
 
-			stheta = stheta->next;
+      stheta = stheta->next;
 		}
 
 		itheta = APQ.apq_array[0].stheta;
@@ -2844,7 +2845,8 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 				astrox2 += stheta->prev->astrox2;
 				astrox2 += stheta->astrox2;
 			}
-			if ((stheta->th - stheta->prev->th) < 1.e-8) {
+
+      if ((stheta->th - stheta->prev->th) < 1.e-8) {
 				stheta->maxerr = 0;
 				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
 			}
@@ -4848,6 +4850,7 @@ void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double*
 	// Image centroid is finally composed with lens centroid
 	c1s[0] = c1 + c1l[0];
 	c2s[0] = c2 + c2l[0];
+
 }
 
 void VBMicrolensing::CombineCentroids(double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* c1tot, double* c2tot, double g, int np) {
@@ -4874,8 +4877,7 @@ void VBMicrolensing::PSPLAstroLightCurve(double* pr, double* ts, double* mags, d
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
 		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
-		u1 = u0 + pai1 * Et[1] - pai2 * Et[0];
-		u = sqrt(tn * tn + u1 * u1);
+		u = u0 + pai1 * Et[1] - pai2 * Et[0];
 
 		y1s[i] = -tn;
 		y2s[i] = -u1;
@@ -4928,6 +4930,7 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 	pai1 = pr[7];
 	pai2 = pr[8];
 	alpha = pr[3];
+
 	iastro = 9;
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 	dPosAng = 0;
@@ -4945,7 +4948,7 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			FR = pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
+			FR = (turn_off_secondary_lens) ? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
 			c1l[i] += (-q + FR) * s * thetaE / (1 + q) * cos(PosAng) / (1 + FR); // Flux center of the two lenses from barycenter
 			c2l[i] += (-q + FR) * s * thetaE / (1 + q) * sin(PosAng) / (1 + FR);
 		}
@@ -5011,7 +5014,7 @@ void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			FR = pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
+			FR = (turn_off_secondary_lens) ? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
 			c1l[i] += (-q + FR) * s * thetaE / (1 + q) * cos(PosAng) / (1 + FR); // Flux center of the two lenses from barycenter
 			c2l[i] += (-q + FR) * s * thetaE / (1 + q) * sin(PosAng) / (1 + FR);
 		}
@@ -5111,7 +5114,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			FR = pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
+			FR = (turn_off_secondary_lens)? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
 			c1l[i] += (-q + FR) * s * thetaE / (1 + q) * cos(PosAng) / (1 + FR); // Flux center of the two lenses from barycenter
 			c2l[i] += (-q + FR) * s * thetaE / (1 + q) * sin(PosAng) / (1 + FR);
 		}
@@ -5206,6 +5209,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 		xt = (Om[0] * cos(phi) + Y[0] * sin(phi));
 		xu = (Om[1] * cos(phi) + Y[1] * sin(phi));
 
+
 		// Position of source 1
 		tn = tnB - xt * s1;
 		u = uB - xu * s1;
@@ -5223,24 +5227,29 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 		tn = tnB + xt * s2;
 		u = uB + xu * s2;
 		utot = sqrt(tn * tn + u * u);
-		rho2 = rho * exp(pr[1] * mass_radius_exponent / mass_luminosity_exponent);
 		y1s2[i] = -tn;
 		y2s2[i] = -u;
-		// Combine magnifications
-		mags[i] += FR * ESPLMag2(utot, rho2);
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			rho2 = rho * exp(pr[1] * mass_radius_exponent / mass_luminosity_exponent);
+			// Combine magnifications
+			mags[i] += FR * ESPLMag2(utot, rho2);
+			mags[i] /= (1 + FR);
+		}
 
 		if (astrometry) {
-			c1s[i] += FR * astrox1 * y1s2[i] / utot;
-			c2s[i] += FR * astrox1 * y2s2[i] / utot;
-			c1s[i] /= (1 + FR);
-			c2s[i] /= (1 + FR);
+			if (!turn_off_secondary_source) {
+				c1s[i] += FR * astrox1 * y1s2[i] / utot;
+				c2s[i] += FR * astrox1 * y2s2[i] / utot;
+				c1s[i] /= (1 + FR);
+				c2s[i] /= (1 + FR);
+			}
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
 		}
 
 	}
 
 }
+
 
 
 #pragma endregion
@@ -5274,6 +5283,7 @@ void VBMicrolensing::PSPLLightCurveParallax(double* pr, double* ts, double* mags
 	PSPLAstroLightCurve(pr, ts, mags, NULL, NULL, NULL, NULL, y1s, y2s, np);
 }
 
+
 void VBMicrolensing::ESPLLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
 	double u0 = exp(pr[0]), t0 = pr[2], tE_inv = exp(-pr[1]), tn, u, rho = exp(pr[3]);
 
@@ -5299,6 +5309,7 @@ void VBMicrolensing::BinaryLightCurve(double* pr, double* ts, double* mags, doub
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 
 	//	_sols *Images; double Mag; // For debugging
+
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - pr[6]) * tE_inv;
 		y1s[i] = pr[2] * salpha - tn * calpha;
@@ -5350,7 +5361,7 @@ void VBMicrolensing::BinaryLightCurveKepler(double* pr, double* ts, double* mags
 }
 
 void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), tn, u;
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR=exp(pr[1]), tn, u;
 
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - t01) * tE_inv;
@@ -5363,8 +5374,10 @@ void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, d
 		tn = (ts[i] - t02) * tE_inv;
 		u = tn * tn + u2 * u2;
 
-		mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
+			mags[i] /= (1 + FR);
+		}
 
 	}
 
@@ -5390,8 +5403,10 @@ void VBMicrolensing::BinSourceLightCurveParallax(double* pr, double* ts, double*
 		u0 = u2 + pai1 * Et[1] - pai2 * Et[0];
 		u = tn * tn + u0 * u0;
 
-		mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
+			mags[i] /= (1 + FR);
+		}
 	}
 }
 
@@ -5458,8 +5473,10 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 		u = -(u0 - du0 / q + pai1 * Et[1] - pai2 * Et[0]);
 		u = tn * tn + u * u;
 
-		mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
-		mags[i] /= (1 + FR);
+		if (!turn_off_secondary_source) {
+			mags[i] += FR * (u + 2) / sqrt(u * (u + 4));
+			mags[i] /= (1 + FR);
+		}
 	}
 }
 
@@ -5476,10 +5493,11 @@ void VBMicrolensing::BinSourceExtLightCurve(double* pr, double* ts, double* mags
 
 		tn = (ts[i] - t02) * tE_inv;
 		u = tn * tn + u2 * u2;
-		rho2 = rho * pow(FR, mass_radius_exponent / mass_luminosity_exponent);
-		mags[i] += FR * ESPLMag2(sqrt(u), rho2);
-		mags[i] /= (1 + FR);
-
+		if (!turn_off_secondary_source) {
+			rho2 = rho * pow(FR, mass_radius_exponent / mass_luminosity_exponent);
+			mags[i] += FR * ESPLMag2(sqrt(u), rho2);
+			mags[i] /= (1 + FR);
+		}
 	}
 
 }
@@ -5582,6 +5600,7 @@ void VBMicrolensing::BinSourceSingleLensXallarap(double* pr, double* ts, double*
 		mags[i] = (Mag + qs4 * Mag2) / (1 + qs4);
 	}
 }
+
 
 
 
@@ -6164,7 +6183,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				while (!feof(f)) {
 					fscanf(f, "%s", teststring);
 					if (!feof(f)) {
-						fseek(f, 1, SEEK_CUR);
+						fgetc(f); //fseek(f, 1, SEEK_CUR);
 						teststring[5] = 0;
 						if (strcmp(teststring, "$$SOE") == 0) {
 							flag2 = 1;
@@ -6179,7 +6198,8 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 					while (!feof(f)) {
 						fscanf(f, "%[^\n]s", teststring);
 						if (!feof(f)) {
-							fseek(f, 1, SEEK_CUR);
+							//fseek(f, 1, SEEK_CUR);
+							fgetc(f);
 							teststring[5] = 0;
 							if (strcmp(teststring, "$$EOE") == 0) {
 								flag2 = 1;

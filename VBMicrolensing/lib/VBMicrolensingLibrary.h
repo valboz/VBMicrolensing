@@ -144,6 +144,8 @@ public:
 	double samplingfactor;
 	bool squarecheck;
 	bool astrometry;
+	bool turn_off_secondary_source;
+	bool turn_off_secondary_lens;
 
 	static char ESPLtablefile[1024];
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
