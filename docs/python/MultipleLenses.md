@@ -73,7 +73,7 @@ print(f"Multiple Lens Magnification = {Mag}\n") #Output should be 5.07...
 
 ```
 
-Astrometry for multiple lenses is available with the same notation as for [Binary Lenses](BinaryLenses.md).
+Astrometry for multiple lenses is available with the same notation as for [Binary Lenses](BinaryLenses.md). We just note that  ```VBM.astrox1``` and ```VBM.astrox2``` express the centroid position in the origin as defined by the ```SetLensGeometry``` function.
 
 
 ## Three different algorithms
