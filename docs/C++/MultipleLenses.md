@@ -84,6 +84,8 @@ double Mag = VBM.MultiMag2(y1,y2, rho);
 printf("Multiple Lens Magnification = %f", Mag); //Output should be 5.07...
 ```
 
+Astrometry for multiple lenses is available with the same notation as for [Binary Lenses](BinaryLenses.md).
+
 ## Three different algorithms
 
 VBMicrolensing offers three different algorithms for multiple lenses calculations. The preferred algorithm can be selected with the `SetMethod` function:
@@ -100,17 +102,5 @@ The three different alternative methods are available as `Method::Singlepoly`, `
 `Method::Nopoly` uses a Newton-Raphson method on the lens equation without any manipulations. Nopoly is slower than Multipoly for 3 lenses but is faster with 4 or more lenses, where it proves to be the most reliable and accurate method. This is the default method if the user makes no choice.
 
 The full details of all algorithms are described in [V. Bozza, v. Saggese, G. Covone, P. Rota & J. Zhang, A&A 694 (2025) 219](https://ui.adsabs.harvard.edu/abs/2025A%26A...694A.219B/abstract).
-
-
-
-## Work in progress
-
-In the current version, some functionalities developed for single and binary lenses are not yet available. These include:
-
-- Astrometry
-- Orbital motion
-- Binary sources and xallarap
-
-We are working to make these features available as soon as possible.
 
 [Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
