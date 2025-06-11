@@ -5247,7 +5247,60 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	}
 
 }
+void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, int np) {
+	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
+	double q[3] = { 1, exp(pr[1]),exp(pr[8]) };
+	double FR[3]; 
+	double FRtot;
+	complex s[3];
+	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
+	double Et[2];
+	iastro = 12;
+	dPosAng = 0;
 
+	s[0] = exp(pr[0]) / (q[0] + q[1]);
+	s[1] = s[0] * q[0];
+	s[0] = -q[1] * s[0];
+	s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
+	//	_sols *Images; double Mag; // For debugging
+	if (astrometry) {
+		FR[0] = 1;
+		FR[1] = (turn_off_secondary_lens) ? 0 : exp(pr[1] * mass_luminosity_exponent);
+		FR[2] = exp(pr[8] * mass_luminosity_exponent);
+		FRtot = FR[0] + FR[1] + FR[2];
+	}
+
+	SetLensGeometry(3, q, s);
+
+	for (int i = 0; i < np; i++) {
+		ComputeParallax(ts[i], t0);
+		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		u = u0 + pai1 * Et[1] - pai2 * Et[0];
+		y1s[i] = u * salpha - tn * calpha;
+		y2s[i] = -u * calpha - tn * salpha;
+		//mindi = 1.e100;
+		//for (int j = 0; j < n; j++) {
+		//	di = fabs(y1s[i] - s[j].re) + fabs(y2s[i] - s[j].im);
+		//	di /= sqrt(q[j]);
+		//	if (di < mindi) mindi = di;
+		//}
+		//if (mindi >= 10.) {
+
+		//	mags[i] = 1.;
+		//}
+		//else {
+			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
+		//}
+		if (astrometry) {
+			c1s[i] = astrox1;
+			c2s[i] = astrox2;
+			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
+			c1l[i] += (s[0].re * FR[0] + s[1].re * FR[1] + s[2].re * FR[2])*cos(PosAng)/FRtot; // Flux center of the three lenses from origin
+			c2l[i] += (s[0].im * FR[0] + s[1].im * FR[1] + s[2].im * FR[2]) * sin(PosAng) / FRtot;
+		}
+
+	}
+}
 
 #pragma endregion
 
@@ -5636,40 +5689,8 @@ void VBMicrolensing::TripleLightCurve(double* pr, double* ts, double* mags, doub
 }
 
 void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
-	double q[3] = { 1, exp(pr[1]),exp(pr[8]) };
-	complex s[3];
-	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
-	double Et[2];
-
-	s[0] = exp(pr[0]) / (q[0] + q[1]);
-	s[1] = s[0] * q[0];
-	s[0] = -q[1] * s[0];
-	s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
-	//	_sols *Images; double Mag; // For debugging
-
-	SetLensGeometry(3, q, s);
-
-	for (int i = 0; i < np; i++) {
-		ComputeParallax(ts[i], t0);
-		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
-		u = u0 + pai1 * Et[1] - pai2 * Et[0];
-		y1s[i] = u * salpha - tn * calpha;
-		y2s[i] = -u * calpha - tn * salpha;
-		mindi = 1.e100;
-		for (int j = 0; j < n; j++) {
-			di = fabs(y1s[i] - s[j].re) + fabs(y2s[i] - s[j].im);
-			di /= sqrt(q[j]);
-			if (di < mindi) mindi = di;
-		}
-		if (mindi >= 10.) {
-
-			mags[i] = 1.;
-		}
-		else {
-			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
-		}
-	}
+	astrometry = false;
+	TripleAstroLightCurve(pr, ts, mags, NULL, NULL, NULL, NULL, y1s, y2s, np);
 }
 
 void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np, int nl) {
