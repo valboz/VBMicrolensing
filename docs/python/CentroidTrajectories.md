@@ -36,6 +36,9 @@ returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid
 - **BinSourceAstroLightCurveXallarap(parameters, times)**, extending BinSourceExtLightCurveXallarap <br/>
 returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]`
 
+- **TripleAstroLightCurve(parameters, times)**, extending TripleLightCurveParallax <br/>
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
+
 Similarly to their corresponding original functions, these new functions take a parameters list and a list of observation times as arguments. The output contains a list of magnifications calculated at the epochs in `times`, centroid positions in (dec,ra) for source and lens, and source positions in the lens reference frame.
 
 Here is a full example with the `PSPLAstroLightCurve`. For the other functions we just have to change the standard parameters accordingly, as explained in the corresponding sections [Light Curves](LightCurves.md), [Parallax](Parallax.md), [Orbital Motion](OrbitalMotion.md), [Binary Sources](BinarySources.md).

@@ -212,7 +212,7 @@ VBM.PSPLLightCurve(pr, times, mags, y1s, y2s, np); // Calculates the whole light
 
 // Let's print the results
 for (int i = 0; i < np; i++) {
-  printf("\n%lf %lf %lf %lf", times[i], mags[i], y2a[i], y2s[i]);
+  printf("\n%lf %lf %lf %lf", times[i], mags[i], y1s[i], y2s[i]);
 }
 ```
 

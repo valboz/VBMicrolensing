@@ -1,4 +1,4 @@
-// VBMicrolensing v5.0 (2025)
+// VBMicrolensing v5.1 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -2604,7 +2604,7 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
     }
 
 double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curve** Images) {
-	static double Mag = -1.0;
+	static double Mag = -1.0, Ai;
 	complex yi;
 	_theta* stheta;
 	static _curve* Prov;
@@ -2622,20 +2622,33 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-		Mag = 0.;
+	Mag = 0.;
 	nim0 = 0;
+	astrox1 = 0;
+	astrox2 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
 		Prov2 = new _skiplist_curve(scan1, 0);						// create an object of class _curve with one member(_point class variable),
 		// input is pointer(scan1) that points to the member; 
 		// pointer to that object is assigned to static local variable 'Prov2'
 		(*Images)->append(Prov2);
-		Mag += fabs(1 / scan1->dJ);
+		Ai = fabs(1 / scan1->dJ);
+		Mag += Ai;
+		if (astrometry) {
+			astrox1 += scan1->x1 * Ai;
+			astrox2 += (scan1->x2) * Ai;
+		}
 		nim0++;
 	}
 	Prov->length = 0;
 	delete Prov;
 	delete stheta;
+	if (astrometry) {
+		astrox1 /= (Mag);
+		//astrox1 -= coefs[11].re; 
+		astrox2 /= (Mag);
+	}
+	NPS = 1;
 	return Mag;
 
 }
@@ -2726,6 +2739,8 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		stheta = Thetas->insert(2.0 * M_PI + thoff);
 		stheta->maxerr = 0.;
 		stheta->Mag = 0.;
+		stheta->astrox1 = 0.;
+		stheta->astrox2 = 0.;
 		stheta->errworst = Thetas->first->errworst;
 		for (scan1 = Prov->first; scan1; scan1 = scan2) {
 			scan2 = scan1->next;
@@ -2761,17 +2776,23 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		currerr = Mag = 0.;
 
+    astrox1 = 0.;
+		astrox2 = 0.;
+
 		stheta = Thetas->first;
 		while (stheta->next)
 		{
 			Mag += stheta->Mag;
-
+			if (astrometry) { 
+				astrox1 += stheta->astrox1; 
+				astrox2 += stheta->astrox2; 
+			}
 			if (stheta->next->th - stheta->th > 1.e-8)
 			{
 				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
 
-			stheta = stheta->next;
+      stheta = stheta->next;
 		}
 
 		itheta = APQ.apq_array[0].stheta;
@@ -2809,12 +2830,23 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			int lim = Prov->length;
 #endif
 			Mag -= stheta->prev->Mag;
+			if (astrometry) {
+				astrox1 -= stheta->prev->astrox1;
+				astrox2 -= stheta->prev->astrox2;
+			}
 			// Assign new images to correct curves
 			OrderMultipleImages((*Images), Prov);
 			Mag += stheta->prev->Mag;
 			Mag += stheta->Mag;
+			if (astrometry) {
+				astrox1 += stheta->prev->astrox1;
+				astrox1 += stheta->astrox1;
 
-			if ((stheta->th - stheta->prev->th) < 1.e-8) {
+				astrox2 += stheta->prev->astrox2;
+				astrox2 += stheta->astrox2;
+			}
+
+      if ((stheta->th - stheta->prev->th) < 1.e-8) {
 				stheta->maxerr = 0;
 				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
 			}
@@ -2854,6 +2886,10 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			printf("\nNPS= %d nim=%d Mag = %lf maxerr= %lg currerr =%lg th = %lf", NPS, lim, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), th);
 #endif
 
+		}
+		if (astrometry) {
+			astrox1 /= (Mag);
+			astrox2 /= (Mag);
 		}
 		Mag /= (M_PI * RSv * RSv);
 		therr = currerr / (M_PI * RSv * RSv);
@@ -3917,7 +3953,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 	static std::minstd_rand engine{ std::random_device{}() };
 
 	static _theta* theta;
-	static double th, mi, cmp, cmp2, cmp_2, er3, parab1, parab2;
+	static double th, mi, cmp, cmp2, cmp_2, er3, dx2, avgx2, avgx1, avg2x1, pref, d2x2, dx1, d2x1, avgwedgex1, avgwedgex2, parab1, parab2;
 	static int nprec, npres, npres2, nfoll, issoc[2], ij;
 
 	nprec = nfoll = 0;
@@ -3931,7 +3967,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 	theta = Newpts->first->theta;
 	th = theta->th;
 	theta->Mag = theta->prev->Mag = theta->maxerr = theta->prev->maxerr = 0;
-
+	theta->astrox1 = theta->prev->astrox1 = theta->astrox2 = theta->prev->astrox2 = 0;
 	// Calcolo dell'errore per le ghost images.
 	switch (SelectedMethod)
 	{
@@ -4037,7 +4073,16 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
-
+		if (astrometry) {
+			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
+			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			dx2 = scan->d.im + scan2->d.im;
+			d2x2 = dx2 * dx2;
+			dx1 = scan->d.re + scan2->d.re;
+			d2x1 = dx1 * dx1;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+		}
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds) * mi / 2, fabs(scan->parab) * (cmp2) / 10, fabs(scan->parab) * (1.5 * fabs(cmp2 / (cmp * cmp) - 1)));
 #endif
@@ -4050,9 +4095,18 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
 		scan->err = mi;
 		theta->prev->Mag += scan->Mag;
+		if (astrometry) {
+			dx2 = scan2->x2 - scan->x2;
+			avgx1 = scan->x1 + scan2->x1;
+			avg2x1 = avgx1 * avgx1;
+			avgx2 = scan->x2 + scan2->x2;
+			theta->prev->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
+			theta->prev->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
+		}
 		theta->prev->maxerr += scan->err;
 
 		Newpts->drop(isso[1]);
@@ -4139,6 +4193,17 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scurve->parabstart = 0.5 * (parab1 + parab2);
 
+		if (astrometry) {
+			avgwedgex1 = -(-scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
+			avgwedgex2 = -(-scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			dx2 = -(-scan->d.im + scan2->d.im);
+			d2x2 = dx2 * dx2;
+			dx1 = -(-scan->d.re + scan2->d.re);
+			d2x1 = dx1 * dx1;
+			scurve->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
+			scurve->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+		}
+
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scurve->parabstart, (scan->ds + scan2->ds) * mi / 2, fabs(scurve->parabstart) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp);
 #endif
@@ -4151,13 +4216,25 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			scurve->Magstart = -(((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scurve->parabstart));
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		scurve->Magstart = -(((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scurve->parabstart));
 		scurve->errstart = mi;
 		scurve2->parabstart = -scurve->parabstart;
 		scurve2->Magstart = 0;
 		scurve2->errstart = 0;
 		theta->prev->Mag += scurve->Magstart;
 		theta->prev->maxerr += scurve->errstart;
+
+		if (astrometry) {
+			dx2 = scan2->x2 - scan->x2;
+			avgx1 = scan->x1 + scan2->x1;
+			avg2x1 = avgx1 * avgx1;
+			avgx2 = scan->x2 + scan2->x2;
+			theta->prev->astrox1 += ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scurve->parabastrox1);
+			theta->prev->astrox2 -= ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scurve->parabastrox2);
+			scurve2->parabastrox2 = -scurve->parabastrox2;
+			scurve2->parabastrox1 = -scurve->parabastrox1;
+		}
 
 		// Aggiornamento matrice distanze
 
@@ -4258,7 +4335,17 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		parab1 = -(scan->ds - scan2->ds) * mi;
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
+		if (astrometry) {
+			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
+			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			dx2 = -(scan->d.im - scan2->d.im);
+			d2x2 = dx2 * dx2;
+			dx1 = -(scan->d.re - scan2->d.re);
+			d2x1 = dx1 * dx1;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
 
+		}
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds) * mi / 2, fabs(scan->parab) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2 * cmp * cmp2) * cmp);
 #endif
@@ -4271,14 +4358,26 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
 		scan->err = mi;
 		scan2->Mag = 0;
 		scan2->err = 0;
-		scan2->parab = -scan->parab;
 		theta->prev->Mag += scan->Mag;
+		if (astrometry) {
+			dx2 = scan2->x2 - scan->x2;
+			avgx1 = scan->x1 + scan2->x1;
+			avg2x1 = avgx1 * avgx1;
+			avgx2 = scan->x2 + scan2->x2;
+			theta->prev->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
+			theta->prev->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
+		}
 		theta->prev->maxerr += scan->err;
-
+		scan2->parab = -scan->parab;
+		if (astrometry) {
+			scan2->parabastrox2 = -scan->parabastrox2;
+			scan2->parabastrox1 = -scan->parabastrox1;
+		}
 		nprec -= 2;
 		// Aggiornamento matrice distanze
 		ij = 0;
@@ -4370,7 +4469,16 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
-
+		if (astrometry) {
+			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
+			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			dx2 = scan->d.im + scan2->d.im;
+			d2x2 = dx2 * dx2;
+			dx1 = scan->d.re + scan2->d.re;
+			d2x1 = dx1 * dx1;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+		}
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds) * mi / 2, fabs(scan->parab) * (cmp2) / 10, fabs(scan->parab) * (1.5 * fabs(cmp2 / (cmp * cmp) - 1)));
 #endif
@@ -4383,9 +4491,18 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
 		scan->err = mi;
 		theta->Mag += scan->Mag;
+		if (astrometry) {
+			dx2 = scan2->x2 - scan->x2;
+			avgx1 = scan->x1 + scan2->x1;
+			avg2x1 = avgx1 * avgx1;
+			avgx2 = scan->x2 + scan2->x2;
+			theta->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
+			theta->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
+		}
 		theta->maxerr += scan->err;
 
 		cpres[issoc[0]]->join(cfoll[issoc[1]]);
@@ -4452,7 +4569,16 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		parab1 = (scan->ds - scan2->ds) * mi;
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		cfoll[issoc[0]]->parabstart = 0.5 * (parab1 + parab2);
-
+		if (astrometry) {
+			avgwedgex1 = (scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
+			avgwedgex2 = (scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			dx2 = -(-scan->d.im + scan2->d.im);
+			d2x2 = dx2 * dx2;
+			dx1 = -(-scan->d.re + scan2->d.re);
+			d2x1 = dx1 * dx1;
+			cfoll[issoc[0]]->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
+			cfoll[issoc[0]]->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+		}
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, cfoll[issoc[0]]->parabstart, (scan->ds + scan2->ds) * mi / 2, fabs(cfoll[issoc[0]]->parabstart) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp);
 #endif
@@ -4464,14 +4590,26 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			cfoll[issoc[0]]->Magstart = -(((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + cfoll[issoc[0]]->parabstart));
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		cfoll[issoc[0]]->Magstart = -(((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + cfoll[issoc[0]]->parabstart));
 		cfoll[issoc[0]]->errstart = mi;
-		cfoll[issoc[1]]->parabstart = -cfoll[issoc[0]]->parabstart;
 		cfoll[issoc[1]]->Magstart = 0;
 		cfoll[issoc[1]]->errstart = 0;
 		theta->Mag += cfoll[issoc[0]]->Magstart;
+		if (astrometry) {
+			dx2 = scan2->x2 - scan->x2;
+			avgx1 = scan->x1 + scan2->x1;
+			avg2x1 = avgx1 * avgx1;
+			avgx2 = scan->x2 + scan2->x2;
+			theta->astrox1 += ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + cfoll[issoc[0]]->parabastrox1);
+			theta->astrox2 -= ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + cfoll[issoc[0]]->parabastrox2);
+		}
 		theta->maxerr += cfoll[issoc[0]]->errstart;
-
+		cfoll[issoc[1]]->parabstart = -cfoll[issoc[0]]->parabstart;
+		if (astrometry) {
+			cfoll[issoc[1]]->parabastrox2 = -cfoll[issoc[0]]->parabastrox2;
+			cfoll[issoc[1]]->parabastrox1 = -cfoll[issoc[0]]->parabastrox1;
+		}
 		Sols->append(cfoll[issoc[0]]);
 		Sols->append(cfoll[issoc[1]]);
 		nfoll -= 2;
@@ -4569,7 +4707,16 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		parab1 = -(scan->ds - scan2->ds) * mi;
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
-
+		if (astrometry) {
+			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
+			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			dx2 = -(scan->d.im - scan2->d.im);
+			d2x2 = dx2 * dx2;
+			dx1 = -(scan->d.re - scan2->d.re);
+			d2x1 = dx1 * dx1;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+		}
 #ifdef _PRINT_ERRORS
 		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds) * mi / 2, fabs(scan->parab) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2 * cmp * cmp2) * cmp);
 #endif
@@ -4582,14 +4729,26 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
 		scan->err = mi;
-		scan2->parab = -scan->parab;
 		scan2->Mag = 0;
 		scan2->err = 0;
 		theta->Mag += scan->Mag;
+		if (astrometry) {
+			dx2 = scan2->x2 - scan->x2;
+			avgx1 = scan->x1 + scan2->x1;
+			avg2x1 = avgx1 * avgx1;
+			avgx2 = scan->x2 + scan2->x2;
+			theta->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
+			theta->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
+		}
 		theta->maxerr += scan->err;
-
+		scan2->parab = -scan->parab;
+		if (astrometry) {
+			scan2->parabastrox2 = -scan->parabastrox2;
+			scan2->parabastrox1 = -scan->parabastrox1;
+		}
 		npres -= 2;
 		// Aggiornamento matrice distanze
 		ij = 0;
@@ -5088,7 +5247,60 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	}
 
 }
+void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, int np) {
+	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
+	double q[3] = { 1, exp(pr[1]),exp(pr[8]) };
+	double FR[3]; 
+	double FRtot;
+	complex s[3];
+	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
+	double Et[2];
+	iastro = 12;
+	dPosAng = 0;
 
+	s[0] = exp(pr[0]) / (q[0] + q[1]);
+	s[1] = s[0] * q[0];
+	s[0] = -q[1] * s[0];
+	s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
+	//	_sols *Images; double Mag; // For debugging
+	if (astrometry) {
+		FR[0] = 1;
+		FR[1] = (turn_off_secondary_lens) ? 0 : exp(pr[1] * mass_luminosity_exponent);
+		FR[2] = exp(pr[8] * mass_luminosity_exponent);
+		FRtot = FR[0] + FR[1] + FR[2];
+	}
+
+	SetLensGeometry(3, q, s);
+
+	for (int i = 0; i < np; i++) {
+		ComputeParallax(ts[i], t0);
+		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		u = u0 + pai1 * Et[1] - pai2 * Et[0];
+		y1s[i] = u * salpha - tn * calpha;
+		y2s[i] = -u * calpha - tn * salpha;
+		//mindi = 1.e100;
+		//for (int j = 0; j < n; j++) {
+		//	di = fabs(y1s[i] - s[j].re) + fabs(y2s[i] - s[j].im);
+		//	di /= sqrt(q[j]);
+		//	if (di < mindi) mindi = di;
+		//}
+		//if (mindi >= 10.) {
+
+		//	mags[i] = 1.;
+		//}
+		//else {
+			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
+		//}
+		if (astrometry) {
+			c1s[i] = astrox1;
+			c2s[i] = astrox2;
+			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
+			c1l[i] += (s[0].re * FR[0] + s[1].re * FR[1] + s[2].re * FR[2])*cos(PosAng)/FRtot; // Flux center of the three lenses from origin
+			c2l[i] += (s[0].im * FR[0] + s[1].im * FR[1] + s[2].im * FR[2]) * sin(PosAng) / FRtot;
+		}
+
+	}
+}
 
 #pragma endregion
 
@@ -5477,40 +5689,8 @@ void VBMicrolensing::TripleLightCurve(double* pr, double* ts, double* mags, doub
 }
 
 void VBMicrolensing::TripleLightCurveParallax(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
-	double q[3] = { 1, exp(pr[1]),exp(pr[8]) };
-	complex s[3];
-	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
-	double Et[2];
-
-	s[0] = exp(pr[0]) / (q[0] + q[1]);
-	s[1] = s[0] * q[0];
-	s[0] = -q[1] * s[0];
-	s[2] = exp(pr[7]) * complex(cbeta, sbeta) + s[0];
-	//	_sols *Images; double Mag; // For debugging
-
-	SetLensGeometry(3, q, s);
-
-	for (int i = 0; i < np; i++) {
-		ComputeParallax(ts[i], t0);
-		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
-		u = u0 + pai1 * Et[1] - pai2 * Et[0];
-		y1s[i] = u * salpha - tn * calpha;
-		y2s[i] = -u * calpha - tn * salpha;
-		mindi = 1.e100;
-		for (int j = 0; j < n; j++) {
-			di = fabs(y1s[i] - s[j].re) + fabs(y2s[i] - s[j].im);
-			di /= sqrt(q[j]);
-			if (di < mindi) mindi = di;
-		}
-		if (mindi >= 10.) {
-
-			mags[i] = 1.;
-		}
-		else {
-			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
-		}
-	}
+	astrometry = false;
+	TripleAstroLightCurve(pr, ts, mags, NULL, NULL, NULL, NULL, y1s, y2s, np);
 }
 
 void VBMicrolensing::LightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np, int nl) {
