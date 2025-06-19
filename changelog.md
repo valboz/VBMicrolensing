@@ -1,4 +1,4 @@
--  **v5.1.1** - 2025/06/?? - Corrected small bug in satellite parallax.
+-  **v5.1.1** - 2025/06/19 - Corrected small bug in satellite parallax.
 -  **v5.1** - 2025/06/11 - Astrometry for multiple lenses.
 -  **v5.0.2** - 2025/06/10 - Minor improvement in satellite table reading. Possibility to turn off secondary source or lens.
 -  **v5.0.1** - 2025/04/30 - Default value for lens_mass_luminosity_exponent = 4.0; Small bug corrected in BinSourceAstroLightCurveXallarap
