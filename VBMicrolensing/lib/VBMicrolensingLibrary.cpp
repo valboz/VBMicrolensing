@@ -4937,7 +4937,7 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
-		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] - t0_par) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
 
 		y1s[i] = u * salpha - tn * calpha;
@@ -5004,7 +5004,7 @@ void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double
 		seps[i] = s_true * den; // projected separation at time ts[i]
 
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
-		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] - t0_par) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		y1s[i] = (Cphi * (u * SOm - tn * COm) + Cinc * Sphi * (u * COm + tn * SOm)) / den;
 		y2s[i] = (-Cphi * (u * COm + tn * SOm) - Cinc * Sphi * (tn * COm - u * SOm)) / den;
 		mags[i] = BinaryMag2(seps[i], q, y1s[i], y2s[i], rho);
@@ -5102,7 +5102,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 		St = sqrt(x[0] * x[0] + x[1] * x[1]);
 		psi = atan2(x[1], x[0]);// +((ar > 1) ? 0 : M_PI);
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
-		tn = (ts[i] - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] - t0_par) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		y1s[i] = -tn * cos(alpha + psi) + u * sin(alpha + psi);
 		y2s[i] = -u * cos(alpha + psi) - tn * sin(alpha + psi);
 		seps[i] = St;
@@ -5256,7 +5256,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 	double ws[3] = { pr[15] + 1.01e-15, pr[16] + 1.01e-15, pr[17] + 1.01e-15 };
 	double t01 = pr[6], t02 = pr[13] + ws[0] * (pr[13] - pr[6]) / tE_inv, u1 = pr[2], u2 = pr[12] + ws[1] * (pr[6] - pr[13]), FR = exp(pr[14]), rho2, xt, xu;
 	double ss[3] = { (t01 - t02) * tE_inv,u2 - u1,0 };
-	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs;
+	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs,phis0;
 	double u0B, t0B, vuB, vt0B, s1, s2, uB, tnB, paitB, paiuB;
 
 	// Binary lens calculations
@@ -5335,11 +5335,11 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 	norm = (ss[0] * Om[0] + ss[1] * Om[1]) / s3D;
 	if (norm >= 1) norm = 0.99999999999999;
 	if (norm <= -1) norm = -0.99999999999999;
-	phi0 = acos(norm);
-	if (ss[2] < 0) phi0 = -phi0;
+	phis0 = acos(norm);
+	if (ss[2] < 0) phis0 = -phis0;
 
 	// Mass ratio
-	qs = exp(pr[1] / mass_luminosity_exponent);
+	qs = exp(pr[14] / mass_luminosity_exponent);
 	// Position of barycenter at t0
 	t0B = (t01 + t02 * qs) / (1 + qs);
 	u0B = (u1 + u2 * qs) / (1 + qs);
@@ -5358,7 +5358,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 		ComputeParallax(ts[i], t0);
 
 		// Binary lens calculation
-		phi = (ts[i] - t0_par) * w + phi0;
+		phi = (ts[i] - t0) * w + phi0;
 		Cphi = cos(phi);
 		Sphi = sin(phi);
 		den = sqrt(Cphi * Cphi + Cinc * Cinc * Sphi * Sphi);
@@ -5373,7 +5373,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 		uB = u0B + vuB * (ts[i] - t0) + paitB * sin(alpha) + paiuB * cos(alpha);
 
 		// Position of relative particle
-		phi = wstot * (ts[i] - t0) + phi0;
+		phi = wstot * (ts[i] - t0) + phis0;
 		xt = (Om[0] * cos(phi) + Y[0] * sin(phi));
 		xu = (Om[1] * cos(phi) + Y[1] * sin(phi));
 
@@ -5396,7 +5396,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 		u = uB + xu * s2;
 		//y1s2[i] = -tn;
 		//y2s2[i] = -u;
-		y2s2[i] = (Cphi * (u * SOm - tn * COm) + Cinc * Sphi * (u * COm + tn * SOm)) / den;
+		y1s2[i] = (Cphi * (u * SOm - tn * COm) + Cinc * Sphi * (u * COm + tn * SOm)) / den;
 		y2s2[i] = (-Cphi * (u * COm + tn * SOm) - Cinc * Sphi * (tn * COm - u * SOm)) / den;
 
 		if (!turn_off_secondary_source) {
