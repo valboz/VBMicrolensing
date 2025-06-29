@@ -226,11 +226,11 @@ plt.plot(t,magnificationsorb,"y")
 magnificationsbin, y1bin, y2bin, y21bin, y22bin, sbin = VBM.BinSourceBinLensLightCurve(pr,t)
 plt.plot(t,magnificationsbin,"g")
 ```
-<img src="figures/BinarySourceBinaryLens_lightcurve.png" width = 400>
+<img src="figures/BinarySourceBinaryLens_Lightcurve.png" width = 400>
 
 The yellow light curve is for a single source and the green light curve is for two sources. The caustics and the source trajectories (dashed is the secondary source) are shown in the following figure:
 
-<img src="figures/BinarySourceBinaryLens_lightcurve_caustics.png" width = 400>
+<img src="figures/BinarySourceBinaryLens_Lightcurve_caustics.png" width = 400>
 
 
 
