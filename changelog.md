@@ -1,3 +1,4 @@
+-  **v5.2** - 2025/06/29 - Functions for Binary Source - Binary Lens microlensing.
 -  **v5.1.1** - 2025/06/19 - Corrected small bug in satellite parallax.
 -  **v5.1** - 2025/06/11 - Astrometry for multiple lenses.
 -  **v5.0.2** - 2025/06/10 - Minor improvement in satellite table reading. Possibility to turn off secondary source or lens.

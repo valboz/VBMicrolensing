@@ -177,7 +177,63 @@ plt.plot(t,magnifications)
 
 In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
-Xallarap is also available for binary lenses through the `BinSourceBinaryLensXallarap` function. In this case, the parameters are 13 with the seven parameters for the [static binary lens](BinaryLenses.md) followed by the six parameters for the xallarap.
+## Binary sources and Binary lenses
+
+The general function for microlensing events with Binary sources + Binary lenses is `BinSourceBinLensLightCurve` and takes a total of 18 parameters:
+
+```
+import VBMicrolensing
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+VBM = VBMicrolensing.VBMicrolensing()
+
+
+s = 0.9       # Separation between the lenses
+q = 0.1       # Mass ratio
+u0 = 0.0       # Impact parameter with respect to center of mass
+alpha = 1.0       # Angle of the source trajectory
+rho = 0.01       # Source radius
+tE = 30.0      # Einstein time in days
+t0 = 7500      # Time of closest approach to center of mass
+paiN = 0.3     # North component of the parallax vector
+paiE = -0.2     # East component of the parallax vector
+gamma1 = 0.011   # Orbital motion component ds/dt/s
+gamma2 = -0.005   # Orbital motion component dalpha/dt
+gamma3 = 0.005   # Orbital motion component dsz/dt/s
+
+u02 = u0+ 0.2  # Impact parameter of the second source
+t02 = t0+0.0    # Closest approach time of the second source
+FR=1.0          # Flux ratio of the second source to the first
+ws1 = 0.01      # Orbital component of the second source along the direction of motion
+ws2 = 0.02      # Orbital component of the second source perpendicular to the direction of motion
+ws3 = -0.015    # Orbital component of the second source along the line of sight
+
+
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times
+VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
+
+# Array of parameters. Note that s, q, rho and tE are in log-scale
+pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, paiN, paiE, gamma1, gamma2, gamma3,
+     u02, t02, math.log(FR), ws1, ws2, ws3]
+
+# Let us first calculate the curve for a single source
+magnificationsorb, y1orb, y2orb, sorb = VBM.BinaryLightCurveOrbital(pr,t)
+plt.plot(t,magnificationsorb,"y")
+
+# And now let us calculate with the bianry source
+magnificationsbin, y1bin, y2bin, y21bin, y22bin, sbin = VBM.BinSourceBinLensLightCurve(pr,t)
+plt.plot(t,magnificationsbin,"g")
+```
+<img src="figures/BinarySourceBinaryLens_Lightcurve.png" width = 400>
+
+The yellow light curve is for a single source and the green light curve is for two sources. 
+
+The caustics and the corresponding source trajectories (dashed is the secondary source) are shown in the following figure:
+
+<img src="figures/BinarySourceBinaryLens_Lightcurve_caustics.png" width = 400>
+
 
 
 

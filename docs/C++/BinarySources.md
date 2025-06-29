@@ -180,6 +180,66 @@ printf("Binary Source Light Curve at time t: %lf", Mag); // Output should be 29.
 
 In this function we are assuming that all properties of the sources can be deduced by their mass ratio through the mass-radius-luminosity relations specified above and customizable by the user. Therefore, the flux ratio will be `FR = qs^q`, where `q` is given by `VBM.mass_luminosity_exponent` and the radius of the second source will be `rho * qs^p`, where `p` is given by `VBM.mass_radius_exponent`.
 
-Xallarap is also available for binary lenses through the `BinSourceBinaryLensXallarap` function. In this case, the parameters are 13 with the seven parameters for the [static binary lens](BinaryLenses.md) followed by the six parameters for the xallarap.
+## Binary sources and Binary lenses
+
+The general function for microlensing events with Binary sources + Binary lenses is `BinSourceBinLensLightCurve` and takes a total of 18 parameters:
+
+```
+VBMicrolensing VBM; // Declare instance to VBMicrolensing
+VBM.LoadESPLTable("ESPL.tbl");
+
+double pr[18]; // Array of parameters
+double u0, t0, tE, rho, s, q, alpha, paiN, paiE, gamma1, gamma2, gamma3, u02, t02, FR, ws1, ws2, ws3, Mag, t;
+
+
+s = 0.9;       // Separation between the lenses
+q = 0.1;      // Mass ratio
+u0 = 0.0;       // Impact parameter with respect to center of mass
+alpha = 1.0;       // Angle of the source trajectory
+rho = 0.01;       // Source radius
+tE = 30.0;      // Einstein time in days
+t0 = 7500;      // Time of closest approach to center of mass
+paiN = 0.3;     // North component of the parallax vector
+paiE = -0.2;     // East component of the parallax vector
+gamma1 = 0.011;   // Orbital motion component ds/dt/s
+gamma2 = -0.005;  // Orbital motion component dalpha/dt
+gamma3 = 0.005;   // Orbital motion component dsz/dt/s
+
+u02 = u0 + 0.2; // Impact parameter of the second source
+t02 = t0; // Closest approach time of the second source
+FR = 1.0;        // Flux ratio of the second source to the first
+ws1 = 0.01;     // Orbital component of the second source along the direction of motion
+ws2 = 0.02;     // Orbital component of the second source perpendicular to the direction of motion
+ws3 = -0.015;   // Orbital component of the second source along the line of sight
+
+
+t = 7502.0;
+VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2"); // Assign RA and Dec to our microlensing event
+
+// Array of parameters.Note that s, q, rho and tE are in log - scale
+
+pr[0] = log(s);
+pr[1] = log(q);
+pr[2] = u0;
+pr[3] = alpha;
+pr[4] = log(rho);
+pr[5] = log(tE);
+pr[6] = t0;
+pr[7] = paiN;
+pr[8] = paiE;
+pr[9] = gamma1;
+pr[10] = gamma2;
+pr[11] = gamma3;
+pr[12] = u02;
+pr[13] = t02;
+pr[14] = log(FR);
+pr[15] = ws1;
+pr[16] = ws2;
+pr[17] = ws3;
+
+Mag = VBM.BinSourceBinLensLightCurve(pr, t); // Calculates the Binary Source-BinaryLens magnification at time t with parameters in pr
+printf("Binary Source-Binary Lens Light Curve at time t: %lf", Mag); // Output should be 16.49...
+```
+
 
 [Go to **Centroid Trajectories**](CentroidTrajectories.md)

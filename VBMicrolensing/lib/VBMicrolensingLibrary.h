@@ -1,4 +1,4 @@
-// VBMicrolensing v5.0 (2025)
+// VBMicrolensing v5.2 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -229,6 +229,7 @@ public:
 	void BinSourceExtLightCurveXallarap(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, double* y1_array2, double* y2_array2, int np);
 	void BinSourceSingleLensXallarap(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, double* y1_array2, double* y2_array2, int np);
 	void BinSourceBinLensXallarap(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
+	void BinSourceBinLensLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, double* y1_array2, double* y2_array2, double* seps_array, int np);
 
 	void TripleLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void TripleLightCurveParallax(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
@@ -254,6 +255,8 @@ public:
 	double BinSourceBinLensXallarap(double* parameters, double t);
 	double BinSourceSingleLensXallarap(double* parameters, double t);
 	double BinSourceBinLensPOX(double* parameters, double t);
+	double BinSourceBinLensLightCurve(double* parameters, double t);
+
 
 	double TripleLightCurve(double* parameters, double t);
 	double TripleLightCurveParallax(double* parameters, double t);
@@ -266,6 +269,7 @@ public:
 	void BinaryAstroLightCurveOrbital(double* parameters, double* t_array, double* mag_array, double* centroid_s1_array, double* centroid_s2_array, double* centroid_l1_array, double* centroid_l2_array, double* y1_array, double* y2_array, double* seps_array, int np);
 	void BinaryAstroLightCurveKepler(double* parameters, double* t_array, double* mag_array, double* centroid_s1_array, double* centroid_s2_array, double* centroid_l1_array, double* centroid_l2_array, double* y1_array, double* y2_array, double* seps_array, int np);
 	void BinSourceAstroLightCurveXallarap(double* parameters, double* t_array, double* mag_array, double* centroid_s1_array, double* centroid_s2_array, double* centroid_l1_array, double* centroid_l2_array, double* y1_array, double* y2_array, double* y1_array2, double* y2_array2, int np);
+	void BinSourceBinLensAstroLightCurve(double* parameters, double* t_array, double* mag_array, double* centroid_s1_array, double* centroid_s2_array, double* centroid_l1_array, double* centroid_l2_array, double* y1_array, double* y2_array, double* y1_array2, double* y2_array2, double* seps_array, int np);
 	void TripleAstroLightCurve(double* parameters, double* t_array, double* mag_array, double* centroid_s1_array, double* centroid_s2_array, double* centroid_l1_array, double* centroid_l2_array, double* y1_array, double* y2_array, int np);
 
 	// Constructor and destructor

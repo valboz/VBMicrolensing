@@ -36,6 +36,9 @@ returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid
 - **BinSourceAstroLightCurveXallarap(parameters, times)**, extending BinSourceExtLightCurveXallarap <br/>
 returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list]`
 
+- **BinSourceBinLensAstroLightCurve(parameters, times)**, extending BinSourceBinLensLightCurve <br/>
+returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_s1_list, y2_s1_list, y1_s2_list, y2_s2_list, separations_list]`
+
 - **TripleAstroLightCurve(parameters, times)**, extending TripleLightCurveParallax <br/>
 returns `[magnifications, source_centroid_dec, source_centroid_ra, lens_centroid_dec, lens_centroid_ra, y1_list, y2_list]`
 

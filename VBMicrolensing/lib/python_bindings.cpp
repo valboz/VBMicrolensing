@@ -823,6 +823,48 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                     source2 position y1 array, source2 position y2 array]
             )mydelimiter");
 
+
+    vbm.def("BinSourceBinLensLightCurve",
+        [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
+        {
+            std::vector<double> mags(times.size());
+            std::vector<double> y1s1(times.size());
+            std::vector<double> y2s1(times.size());
+            std::vector<double> y1s2(times.size());
+            std::vector<double> y2s2(times.size());
+            std::vector<double> seps(times.size());
+            self.astrometry = true;
+            self.parallaxsystem = 1;
+            self.BinSourceBinLensLightCurve(params.data(), times.data(), mags.data(),
+                y1s1.data(), y2s1.data(), y1s2.data(), y2s2.data(), seps.data(), times.size());
+            std::vector< std::vector<double> > results{ mags, y1s1,y2s1,y1s2,y2s2,seps };
+            return results;
+        },
+        R"mydelimiter(
+            Binary source - Binary lens light curve including xallarap and orbital motion for a full array of observations.
+
+            Parameters
+            ----------
+            params : list[float]
+                List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0, 
+                                    paiN, paiE,     # components of the parallax vector
+                                    w1, w2, w3,     # relative angular orbital velocity components (Einstein angle/day)
+                                    u02, t02,       # impact parameter, time of closest approach of the seconf source
+                                    log_FR,         # log of flux ratio of the two sources
+                                    ws1, ws2, ws3,  # relative angular orbital velocity components of the sources (Einstein angle/day)
+                                    ] 
+            times : list[float] 
+                Array of times at which the magnification is calculated.
+ 
+            Returns
+            -------
+            results: list[list[float],list[float],list[float],list[float],list[float],list[float]] 
+                [Magnification array,
+                    source1 position y1 array, source1 position y2 array, 
+                    source2 position y1 array, source2 position y2 array,
+                    projected separations of the two lenses]
+            )mydelimiter");
+
     vbm.def("BinSourceBinLensXallarap",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
@@ -1256,6 +1298,57 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                     centroid of lens N array, centroid of lens E array,
                     source1 position y1 array, source1 position y2 array, 
                     source2 position y1 array, source2 position y2 array]
+            )mydelimiter");
+
+
+    vbm.def("BinSourceBinLensAstroLightCurve",
+        [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
+        {
+            std::vector<double> mags(times.size());
+            std::vector<double> c1s(times.size());
+            std::vector<double> c2s(times.size());
+            std::vector<double> c1l(times.size());
+            std::vector<double> c2l(times.size());
+            std::vector<double> y1s1(times.size());
+            std::vector<double> y2s1(times.size());
+            std::vector<double> y1s2(times.size());
+            std::vector<double> y2s2(times.size());
+            std::vector<double> seps(times.size());
+            self.astrometry = true;
+            self.parallaxsystem = 1;
+            self.BinSourceBinLensAstroLightCurve(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
+                y1s1.data(), y2s1.data(), y1s2.data(), y2s2.data(), seps.data(), times.size());
+            std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s1,y2s1,y1s2,y2s2,seps };
+            return results;
+        },
+        R"mydelimiter(
+            Binary source - Binary lens light curve  and astrometry including xallarap and orbital motion for a full array of observations.
+
+            Parameters
+            ----------
+            params : list[float]
+                List of parameters [log_s, log_q, u0, alpha, log_rho, log_tE, t0, 
+                                    paiN, paiE,     # components of the parallax vector
+                                    w1, w2, w3,     # relative angular orbital velocity components (Einstein angle/day)
+                                    u02, t02,       # impact parameter, time of closest approach of the seconf source
+                                    log_FR,         # log of flux ratio of the two sources
+                                    ws1, ws2, ws3,  # relative angular orbital velocity components of the sources (Einstein angle/day)
+                                    muS_N, muS_E,   # proper motion components of the source (mas/yr)
+                                    pai_S,          # parallax of the source (mas)
+                                    thetaE          # Einstein angle (mas) 
+                                    ] 
+            times : list[float] 
+                Array of times at which the magnification is calculated.
+ 
+            Returns
+            -------
+            results: list[list[float],list[float],list[float],list[float],list[float],list[float],list[float],list[float],list[float],list[float]] 
+                [Magnification array,
+                    centroid of images N array, centroid of images E array, 
+                    centroid of lens N array, centroid of lens E array,
+                    source1 position y1 array, source1 position y2 array, 
+                    source2 position y1 array, source2 position y2 array,
+                    projected separations of the two lenses]
             )mydelimiter");
 
 
