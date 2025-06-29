@@ -228,7 +228,9 @@ plt.plot(t,magnificationsbin,"g")
 ```
 <img src="figures/BinarySourceBinaryLens_Lightcurve.png" width = 400>
 
-The yellow light curve is for a single source and the green light curve is for two sources. The caustics and the source trajectories (dashed is the secondary source) are shown in the following figure:
+The yellow light curve is for a single source and the green light curve is for two sources. 
+
+The caustics and the corresponding source trajectories (dashed is the secondary source) are shown in the following figure:
 
 <img src="figures/BinarySourceBinaryLens_Lightcurve_caustics.png" width = 400>
 
