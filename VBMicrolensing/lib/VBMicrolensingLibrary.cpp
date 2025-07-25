@@ -1,4 +1,4 @@
-// VBMicrolensing v5.2 (2025)
+// VBMicrolensing v5.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -283,7 +283,8 @@ VBMicrolensing::VBMicrolensing() {
 	ndatasat = 0;
 	satellite = 0;
 	parallaxsystem = 1;
-	t0_par_fixed = -1;
+	t0_par_fixed = 0;
+	coordinates_set = false;
 	t0_par = 7000;
 	minannuli = 1;
 	maxannuli = 100;
@@ -2622,7 +2623,7 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-		Mag = 0.;
+	Mag = 0.;
 	nim0 = 0;
 	astrox1 = 0;
 	astrox2 = 0;
@@ -2776,23 +2777,23 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		currerr = Mag = 0.;
 
-		astrox1 = 0.;
+    astrox1 = 0.;
 		astrox2 = 0.;
 
 		stheta = Thetas->first;
 		while (stheta->next)
 		{
 			Mag += stheta->Mag;
-			if (astrometry) {
-				astrox1 += stheta->astrox1;
-				astrox2 += stheta->astrox2;
+			if (astrometry) { 
+				astrox1 += stheta->astrox1; 
+				astrox2 += stheta->astrox2; 
 			}
 			if (stheta->next->th - stheta->th > 1.e-8)
 			{
 				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
 
-			stheta = stheta->next;
+      stheta = stheta->next;
 		}
 
 		itheta = APQ.apq_array[0].stheta;
@@ -2846,7 +2847,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 				astrox2 += stheta->astrox2;
 			}
 
-			if ((stheta->th - stheta->prev->th) < 1.e-8) {
+      if ((stheta->th - stheta->prev->th) < 1.e-8) {
 				stheta->maxerr = 0;
 				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
 			}
@@ -5113,7 +5114,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			FR = (turn_off_secondary_lens) ? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
+			FR = (turn_off_secondary_lens)? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
 			c1l[i] += (-q + FR) * s * thetaE / (1 + q) * cos(PosAng) / (1 + FR); // Flux center of the two lenses from barycenter
 			c2l[i] += (-q + FR) * s * thetaE / (1 + q) * sin(PosAng) / (1 + FR);
 		}
@@ -5249,14 +5250,14 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 }
 
 
-void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, double* y1s2, double* y2s2, double* seps, int np) {
+void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, double* y1s2, double* y2s2, double *seps, int np) {
 	double tn, u, FRl, s = exp(pr[0]), q = exp(pr[1]), w1 = pr[9], w2 = pr[10], w3 = pr[11];
 	tE_inv = exp(-pr[5]);
 
 	double ws[3] = { pr[15] + 1.01e-15, pr[16] + 1.01e-15, pr[17] + 1.01e-15 };
 	double t01 = pr[6], t02 = pr[13] + ws[0] * (pr[13] - pr[6]) / tE_inv, u1 = pr[2], u2 = pr[12] + ws[1] * (pr[6] - pr[13]), FR = exp(pr[14]), rho2, xt, xu;
 	double ss[3] = { (t01 - t02) * tE_inv,u2 - u1,0 };
-	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs, phis0;
+	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs,phis0;
 	double u0B, t0B, vuB, vt0B, s1, s2, uB, tnB, paitB, paiuB, alphas;
 
 	// Binary lens calculations
@@ -5426,7 +5427,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, int np) {
 	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
 	double q[3] = { 1, exp(pr[1]),exp(pr[8]) };
-	double FR[3];
+	double FR[3]; 
 	double FRtot;
 	complex s[3];
 	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
@@ -5465,13 +5466,13 @@ void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags,
 		//	mags[i] = 1.;
 		//}
 		//else {
-		mags[i] = MultiMag2(y1s[i], y2s[i], rho);
+			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
 		//}
 		if (astrometry) {
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			c1l[i] += (s[0].re * FR[0] + s[1].re * FR[1] + s[2].re * FR[2]) * cos(PosAng) / FRtot; // Flux center of the three lenses from origin
+			c1l[i] += (s[0].re * FR[0] + s[1].re * FR[1] + s[2].re * FR[2])*cos(PosAng)/FRtot; // Flux center of the three lenses from origin
 			c2l[i] += (s[0].im * FR[0] + s[1].im * FR[1] + s[2].im * FR[2]) * sin(PosAng) / FRtot;
 		}
 
@@ -5586,7 +5587,7 @@ void VBMicrolensing::BinaryLightCurveKepler(double* pr, double* ts, double* mags
 }
 
 void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), tn, u;
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR=exp(pr[1]), tn, u;
 
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - t01) * tE_inv;
@@ -5828,7 +5829,7 @@ void VBMicrolensing::BinSourceSingleLensXallarap(double* pr, double* ts, double*
 }
 
 
-void VBMicrolensing::BinSourceBinLensLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, double* y1s2, double* y2s2, double* seps, int np) {
+void VBMicrolensing::BinSourceBinLensLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, double* y1s2, double* y2s2, double *seps, int np) {
 	astrometry = false;
 	BinSourceBinLensAstroLightCurve(pr, ts, mags, NULL, NULL, NULL, NULL, y1s, y2s, y1s2, y2s2, seps, np);
 }
@@ -6467,19 +6468,26 @@ void VBMicrolensing::SetObjectCoordinates(char* CoordinateString) {
 		free(possat);
 		free(ndatasat);
 	}
+	hr = mn = sc = deg = pr = ssc = -1.e100;
 	sscanf(CoordinateString, "%lf:%lf:%lf %lf:%lf:%lf", &hr, &mn, &sc, &deg, &pr, &ssc);
-	RA = (hr + mn / 60 + sc / 3600) * M_PI / 12,
+	if (hr >= 0 && hr < 24 && mn >= 0 && mn < 60 && sc >= 0 && sc < 60 && deg >= -90 && deg <= 90 && pr >= 0 && pr < 60 && ssc >= 0 && ssc < 60) {
+		RA = (hr + mn / 60 + sc / 3600) * M_PI / 12;
 		Dec = (fabs(deg) + pr / 60 + ssc / 3600) * M_PI / 180;
-	if (deg < 0) Dec = -Dec;
+		if (deg < 0) Dec = -Dec;
 
-	for (int i = 0; i < 3; i++) {
-		Obj[i] = (cos(RA) * cos(Dec) * Eq2000[i] + sin(RA) * cos(Dec) * Quad2000[i] + sin(Dec) * North2000[i]);
-		rad[i] = Eq2000[i];
-		tang[i] = North2000[i];
+		for (int i = 0; i < 3; i++) {
+			Obj[i] = (cos(RA) * cos(Dec) * Eq2000[i] + sin(RA) * cos(Dec) * Quad2000[i] + sin(Dec) * North2000[i]);
+			rad[i] = Eq2000[i];
+			tang[i] = North2000[i];
+		}
+
+		coordinates_set = true;
 	}
+	else coordinates_set = false;
+}
 
-	if (t0_par_fixed == -1) t0_par_fixed = 0;
-
+bool VBMicrolensing::AreCoordinatesSet() {
+	return coordinates_set;
 }
 
 void VBMicrolensing::ComputeParallax(double t, double t0) {
@@ -6494,77 +6502,19 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double r, sp, ty, Spit;
 	int c = 0, ic;
 
-	if (t0_par_fixed == 0) t0_par = t0;
-	if (t0_par_fixed == -1) {
+	if (!coordinates_set) {
 		printf("\nUse SetObjectCoordinates to input target coordinates");
+		return;
 	}
-	else {
+	if (satellite > nsat) {
+		printf("\nSatellite %d not available", satellite);
+		return;
+	}
 
-		if (t0_par != t0old) {
-			t0old = t0_par;
-			ty = (t0_par - 1545) / 36525.0;
-
-			a = a0 + adot * ty;
-			e = e0 + edot * ty;
-			inc = (inc0 + incdot * ty) * deg;
-			L = (L0 + Ldot * ty) * deg;
-			om = (om0 + omdot * ty) * deg;
-
-			M = L - om;
-			M -= floor((M + M_PI) / (2 * M_PI)) * 2 * M_PI;
-
-			EE = M + e * sin(M);
-			dE = 1;
-			while (fabs(dE) > 1.e-8) {
-				dM = M - (EE - e * sin(EE));
-				dE = dM / (1 - e * cos(EE));
-				EE += dE;
-			}
-			x1 = a * (cos(EE) - e);
-			y1 = a * sqrt(1 - e * e) * sin(EE);
-			//		r=a*(1-e*cos(EE));
-			vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
-			vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
-
-			Ear[0] = x1 * cos(om) - y1 * sin(om);
-			Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
-			Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
-			vEar[0] = vx * cos(om) - vy * sin(om);
-			vEar[1] = vx * sin(om) * cos(inc) + vy * cos(om) * cos(inc);
-			vEar[2] = vx * sin(om) * sin(inc) + vy * cos(om) * sin(inc);
-			// Ear is the Earth position in AU in ecliptic coordinates  at time t0_par
-			// vEar is the Earth velocity vector in AU/day in ecliptic coordinates at time t0_par
-
-			sp = 0;
-			switch (parallaxsystem) {
-			case 1:
-				for (int i = 0; i < 3; i++) sp += North2000[i] * Obj[i];
-				for (int i = 0; i < 3; i++) rad[i] = -North2000[i] + sp * Obj[i];
-				break;
-			default:
-				for (int i = 0; i < 3; i++) sp += Ear[i] * Obj[i];
-				for (int i = 0; i < 3; i++) rad[i] = Ear[i] - sp * Obj[i];
-				break;
-			}
-
-			r = sqrt(rad[0] * rad[0] + rad[1] * rad[1] + rad[2] * rad[2]); // Celestial South projected orthogonal to LOS
-			rad[0] /= r;
-			rad[1] /= r;
-			rad[2] /= r;
-			tang[0] = rad[1] * Obj[2] - rad[2] * Obj[1]; // Celestial West projected orthogonal to LOS
-			tang[1] = rad[2] * Obj[0] - rad[0] * Obj[2];
-			tang[2] = rad[0] * Obj[1] - rad[1] * Obj[0];
-
-			Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
-			for (int i = 0; i < 3; i++) {
-				Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
-				Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
-				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
-				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
-			}
-		}
-
-		ty = (t - 1545) / 36525.0;
+	if (t0_par_fixed == 0) t0_par = t0;
+	if (t0_par != t0old) {
+		t0old = t0_par;
+		ty = (t0_par - 1545) / 36525.0;
 
 		a = a0 + adot * ty;
 		e = e0 + edot * ty;
@@ -6577,61 +6527,122 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 
 		EE = M + e * sin(M);
 		dE = 1;
-		while (dE > 1.e-8) {
+		while (fabs(dE) > 1.e-8) {
 			dM = M - (EE - e * sin(EE));
 			dE = dM / (1 - e * cos(EE));
 			EE += dE;
 		}
 		x1 = a * (cos(EE) - e);
 		y1 = a * sqrt(1 - e * e) * sin(EE);
-		//	r=a*(1-e*cos(EE));
+		//		r=a*(1-e*cos(EE));
 		vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
 		vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
 
 		Ear[0] = x1 * cos(om) - y1 * sin(om);
 		Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
 		Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
-		// Ear is the Earth position in AU in ecliptic coordinates  at time t
+		vEar[0] = vx * cos(om) - vy * sin(om);
+		vEar[1] = vx * sin(om) * cos(inc) + vy * cos(om) * cos(inc);
+		vEar[2] = vx * sin(om) * sin(inc) + vy * cos(om) * sin(inc);
+		// Ear is the Earth position in AU in ecliptic coordinates  at time t0_par
+		// vEar is the Earth velocity vector in AU/day in ecliptic coordinates at time t0_par
 
-		Ehel[0] = Ehel[1] = 0;
-		for (int i = 0; i < 3; i++) {
-			Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
-			Ehel[1] += Ear[i] * tang[i];
+		sp = 0;
+		switch (parallaxsystem) {
+		case 1:
+			for (int i = 0; i < 3; i++) sp += North2000[i] * Obj[i];
+			for (int i = 0; i < 3; i++) rad[i] = -North2000[i] + sp * Obj[i];
+			break;
+		default:
+			for (int i = 0; i < 3; i++) sp += Ear[i] * Obj[i];
+			for (int i = 0; i < 3; i++) rad[i] = Ear[i] - sp * Obj[i];
+			break;
 		}
-		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t - t0_par); // Earth shift along South wrt extrapolation from t0_par
-		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t - t0_par); // Earth shift along West wrt extrapolation from t0_par
 
-		if (satellite > 0 && satellite <= nsat) {
-			if (ndatasat[satellite - 1] > 2) {
-				int left, right;
-				if (t < tsat[satellite - 1][0]) {
-					ic = 0;
+		r = sqrt(rad[0] * rad[0] + rad[1] * rad[1] + rad[2] * rad[2]); // Celestial South projected orthogonal to LOS
+		rad[0] /= r;
+		rad[1] /= r;
+		rad[2] /= r;
+		tang[0] = rad[1] * Obj[2] - rad[2] * Obj[1]; // Celestial West projected orthogonal to LOS
+		tang[1] = rad[2] * Obj[0] - rad[0] * Obj[2];
+		tang[2] = rad[0] * Obj[1] - rad[1] * Obj[0];
+
+		Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
+		for (int i = 0; i < 3; i++) {
+			Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
+			Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
+			vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
+			vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
+		}
+	}
+
+	ty = (t - 1545) / 36525.0;
+
+	a = a0 + adot * ty;
+	e = e0 + edot * ty;
+	inc = (inc0 + incdot * ty) * deg;
+	L = (L0 + Ldot * ty) * deg;
+	om = (om0 + omdot * ty) * deg;
+
+	M = L - om;
+	M -= floor((M + M_PI) / (2 * M_PI)) * 2 * M_PI;
+
+	EE = M + e * sin(M);
+	dE = 1;
+	while (dE > 1.e-8) {
+		dM = M - (EE - e * sin(EE));
+		dE = dM / (1 - e * cos(EE));
+		EE += dE;
+	}
+	x1 = a * (cos(EE) - e);
+	y1 = a * sqrt(1 - e * e) * sin(EE);
+	//	r=a*(1-e*cos(EE));
+	vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
+	vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
+
+	Ear[0] = x1 * cos(om) - y1 * sin(om);
+	Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
+	Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
+	// Ear is the Earth position in AU in ecliptic coordinates  at time t
+
+	Ehel[0] = Ehel[1] = 0;
+	for (int i = 0; i < 3; i++) {
+		Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
+		Ehel[1] += Ear[i] * tang[i];
+	}
+	Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t - t0_par); // Earth shift along South wrt extrapolation from t0_par
+	Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t - t0_par); // Earth shift along West wrt extrapolation from t0_par
+
+	if (satellite > 0 && satellite <= nsat) {
+		if (ndatasat[satellite - 1] > 2) {
+			int left, right;
+			if (t < tsat[satellite - 1][0]) {
+				ic = 0;
+			}
+			else {
+				if (t > tsat[satellite - 1][ndatasat[satellite - 1] - 1]) {
+					ic = ndatasat[satellite - 1] - 2;
 				}
 				else {
-					if (t > tsat[satellite - 1][ndatasat[satellite - 1] - 1]) {
-						ic = ndatasat[satellite - 1] - 2;
-					}
-					else {
-						left = 0;
-						right = ndatasat[satellite - 1] - 1;
-						while (right - left > 1) {
-							ic = (right + left) / 2;
-							if (tsat[satellite - 1][ic] > t) {
-								right = ic;
-							}
-							else {
-								left = ic;
-							}
+					left = 0;
+					right = ndatasat[satellite - 1] - 1;
+					while (right - left > 1) {
+						ic = (right + left) / 2;
+						if (tsat[satellite - 1][ic] > t) {
+							right = ic;
 						}
-						ic = left;
+						else {
+							left = ic;
+						}
 					}
+					ic = left;
 				}
-				ty = (t - tsat[satellite - 1][ic]) / (tsat[satellite - 1][ic + 1] - tsat[satellite - 1][ic]);
-				for (int i = 0; i < 3; i++) {
-					Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
-					Et[0] += Spit * rad[i];
-					Et[1] += Spit * tang[i];
-				}
+			}
+			ty = (t - tsat[satellite - 1][ic])/(tsat[satellite - 1][ic+1]- tsat[satellite - 1][ic]);
+			for (int i = 0; i < 3; i++) {
+				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
+				Et[0] += Spit * rad[i];
+				Et[1] += Spit * tang[i];
 			}
 		}
 	}

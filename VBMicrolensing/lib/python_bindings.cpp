@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include "VBMicrolensingLibrary.h"
 #include <string>
+#include <filesystem>
 #include <pybind11/functional.h>
 
 
@@ -41,6 +42,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def_readwrite("satellite", &VBMicrolensing::satellite,
         "Specifies the satellite number for the next calculation \
                 (0 for observations from the ground);.");
+    vbm.def_readwrite("nsat", &VBMicrolensing::nsat,
+        "Number of satellite tables found in satellite table directory.");
     vbm.def_readwrite("astrometry", &VBMicrolensing::astrometry,
         "Unlock astrometry centroid calculation.");
     vbm.def_readwrite("astrox1", &VBMicrolensing::astrox1,
@@ -385,7 +388,24 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 .
             )mydelimiter");
 
-    vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*)) & VBMicrolensing::SetObjectCoordinates,
+    //vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*)) & VBMicrolensing::SetObjectCoordinates,
+    //    R"mydelimiter(
+    //        Sets the astronomical coordinates of the microlensing target.            
+    //        
+    //        Parameters
+    //        ----------
+    //        CoordinateString : string 
+    //            Format \"hr:mn:sc +deg:pr:sc\".
+    //        )mydelimiter");
+
+    vbm.def("SetObjectCoordinates", 
+        [](VBMicrolensing& self, char* coordinatestring) 
+        {
+            self.SetObjectCoordinates(coordinatestring);
+            if (!self.AreCoordinatesSet()) {
+                py::print("! Invalid coordinates format !");
+            }
+        },
         R"mydelimiter(
             Sets the astronomical coordinates of the microlensing target.            
             
@@ -395,7 +415,19 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 Format \"hr:mn:sc +deg:pr:sc\".
             )mydelimiter");
 
-    vbm.def("SetObjectCoordinates", (void (VBMicrolensing::*)(char*, char*)) & VBMicrolensing::SetObjectCoordinates,
+    vbm.def("SetObjectCoordinates", 
+        [](VBMicrolensing& self, char* coordinatefile, char* sattabledir)
+        {
+            if (std::filesystem::exists(sattabledir)) {
+                self.SetObjectCoordinates(coordinatefile, sattabledir);
+                if (!self.AreCoordinatesSet()) {
+                    py::print("! Invalid coordinates format !");
+                }
+            }
+            else {
+                py::print("! Invalid satellite table directory !");
+            }
+        },
         R"mydelimiter(
             Sets the astronomical coordinates of the microlensing target and 
             specifies the path where to look for the position tables 
@@ -440,6 +472,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("PSPLLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -495,6 +537,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("ESPLLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -579,6 +631,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinaryLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -586,6 +648,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s };
             return results;
+
         },
         R"mydelimiter(
             Static binary lens light curve for a given set of parameters including parallax.
@@ -609,6 +672,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinaryLightCurveOrbital",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -642,6 +715,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinaryLightCurveKepler",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -703,6 +786,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinSourceLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -792,6 +885,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinSourceExtLightCurveXallarap",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s1(times.size());
             std::vector<double> y2s1(times.size());
@@ -827,6 +930,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinSourceBinLensLightCurve",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s1(times.size());
             std::vector<double> y2s1(times.size());
@@ -899,6 +1012,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinSourceLightCurveXallarap",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -965,6 +1088,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("TripleLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> y1s(times.size());
             std::vector<double> y2s(times.size());
@@ -1048,6 +1181,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("PSPLAstroLightCurve",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1087,6 +1230,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("ESPLAstroLightCurve",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1129,6 +1282,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinaryAstroLightCurve",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1170,6 +1333,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinaryAstroLightCurveOrbital",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1213,6 +1386,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinaryAstroLightCurveKepler",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1258,6 +1441,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinSourceAstroLightCurveXallarap",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1304,6 +1497,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("BinSourceBinLensAstroLightCurve",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());
@@ -1355,6 +1558,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
     vbm.def("TripleAstroLightCurve",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
+            if (!self.AreCoordinatesSet()) {
+                py::print("Use SetObjectCoordinates before any parallax calculation!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
+            if (self.satellite > self.nsat) {
+                py::print("! Ephemerides table not available for this satellite!");
+                std::vector< std::vector<double> > results{  };
+                return results;
+            }
             std::vector<double> mags(times.size());
             std::vector<double> c1s(times.size());
             std::vector<double> c2s(times.size());

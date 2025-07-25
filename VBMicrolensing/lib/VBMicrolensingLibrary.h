@@ -1,4 +1,4 @@
-// VBMicrolensing v5.2 (2025)
+// VBMicrolensing v5.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -97,6 +97,7 @@ class VBMicrolensing
 	double Eq2000[3], Quad2000[3], North2000[3];
 	double Et0[2], vt0[2], Et[2], Ehel[2];
 	double ESPLout[__rsize_ESPL][__zsize_ESPL], ESPLin[__rsize_ESPL][__zsize_ESPL], ESPLoutastro[__rsize_ESPL][__zsize_ESPL], ESPLinastro[__rsize_ESPL][__zsize_ESPL];
+	bool coordinates_set;
 	bool multidark;
 	double* LDtab, * rCLDtab, * CLDtab;
 	double scr2, sscr2;
@@ -164,6 +165,7 @@ public:
 	// Initialization for parallax calculation
 	void SetObjectCoordinates(char* Coordinates_file, char* Directory_for_satellite_tables);
 	void SetObjectCoordinates(char* CoordinateString);
+	bool AreCoordinatesSet();
 	// Skowron & Gould root calculation
 	void cmplx_roots_gen(complex*, complex*, int, bool, bool);
 	void cmplx_roots_multigen(complex*, complex**, int, bool, bool);
