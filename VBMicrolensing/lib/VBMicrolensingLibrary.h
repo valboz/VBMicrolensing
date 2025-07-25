@@ -97,7 +97,7 @@ class VBMicrolensing
 	double Eq2000[3], Quad2000[3], North2000[3];
 	double Et0[2], vt0[2], Et[2], Ehel[2];
 	double ESPLout[__rsize_ESPL][__zsize_ESPL], ESPLin[__rsize_ESPL][__zsize_ESPL], ESPLoutastro[__rsize_ESPL][__zsize_ESPL], ESPLinastro[__rsize_ESPL][__zsize_ESPL];
-	bool ESPLoff, multidark;
+	bool multidark;
 	double* LDtab, * rCLDtab, * CLDtab;
 	double scr2, sscr2;
 	int npLD;
@@ -146,6 +146,7 @@ public:
 	bool astrometry;
 	bool turn_off_secondary_source;
 	bool turn_off_secondary_lens;
+	bool ESPLoff;
 
 	static char ESPLtablefile[1024];
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
