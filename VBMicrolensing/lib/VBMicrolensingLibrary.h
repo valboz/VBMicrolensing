@@ -74,7 +74,9 @@ class VBMicrolensing
 		0.3 };
 
 	int* ndatasat;
-	double** tsat, *** possat;
+	double *** possat, * startsat, * stepsat;
+	double** posEar, startEar, stepEar;
+	int ndataEar;
 	double Mag0;
 	double* dist_mp, * q;
 	int nim0, n, n2, nnm1, nroots, nrootsmp, * nrootsmp_mp;
@@ -95,7 +97,7 @@ class VBMicrolensing
 	int iastro;
 	double Obj[3], rad[3], tang[3], t0old;
 	double Eq2000[3], Quad2000[3], North2000[3];
-	double Et0[2], vt0[2], Et[2], Ehel[2];
+	double Et0[2], vt0[2], Et[2], Ehel[2], lighttravel, lighttravel0;
 	double ESPLout[__rsize_ESPL][__zsize_ESPL], ESPLin[__rsize_ESPL][__zsize_ESPL], ESPLoutastro[__rsize_ESPL][__zsize_ESPL], ESPLinastro[__rsize_ESPL][__zsize_ESPL];
 	bool coordinates_set;
 	bool multidark;
@@ -147,10 +149,13 @@ public:
 	bool astrometry;
 	bool turn_off_secondary_source;
 	bool turn_off_secondary_lens;
-	bool ESPLoff;
+	bool ESPLoff, suntable;
+	bool t_in_HJD;
 
 	static char ESPLtablefile[1024];
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
+	static char Suntablefile[1024];
+	static void SetSuntablefile(char* instring) { strcpy(Suntablefile, instring); }
 	double Tol, RelTol, a1, a2, t0_par,corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
@@ -205,7 +210,7 @@ public:
 	void SetMethod(Method);
 
 	//ESPL functions
-	void LoadESPLTable(char* tablefilename);
+	void LoadESPLTable(const char* tablefilename);
 	double ESPLMag(double u, double rho);
 	double ESPLMag2(double u, double rho);
 	double ESPLMagDark(double u, double rho);
@@ -214,6 +219,7 @@ public:
 
 	// New (v2) light curve functions, operating on arrays
 
+	void LoadSunTable(char* tablefilename);
 	void PSPLLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void PSPLLightCurveParallax(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void ESPLLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
@@ -257,7 +263,6 @@ public:
 	double BinSourceExtLightCurveXallarap(double* parameters, double t);
 	double BinSourceBinLensXallarap(double* parameters, double t);
 	double BinSourceSingleLensXallarap(double* parameters, double t);
-	double BinSourceBinLensPOX(double* parameters, double t);
 	double BinSourceBinLensLightCurve(double* parameters, double t);
 
 
