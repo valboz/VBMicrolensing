@@ -60,6 +60,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Flux of secondary source is set to zero.");
     vbm.def_readwrite("turn_off_secondary_lens", &VBMicrolensing::turn_off_secondary_lens,
         "Flux of secondary lens is set to zero.");
+    vbm.def_readwrite("t_in_HJD", &VBMicrolensing::t_in_HJD,
+        "Set if t is given in HJD");
     vbm.def_readwrite("corrquad", &VBMicrolensing::corrquad,
         "Quadrupole test.");
     vbm.def_readwrite("corrquad2", &VBMicrolensing::corrquad2,
