@@ -134,7 +134,7 @@ The parallax effect is introduced as a deviation of the observer from a frame ce
 
 ## JD vs HJD
 
-When we include parallax, it is important to clarify whether the input time specifications are in JD or HJD. By default, VBMicrolensing assumes that times are given in HJD. However, if you want to calculate a light curve with JD on your horizontal axis, you should just set `VBM.t_in_HJD = False` before the execution of the light curve function. All conversions are made by VBMicrolensing internally.
+When we include parallax, it is important to clarify whether the input time specifications are in JD or HJD. By default, VBMicrolensing assumes that times are given in $HJD' = HJD - 2450000$. However, if you want to calculate a light curve with JD' on your horizontal axis, you should just set `VBM.t_in_HJD = False` before the execution of the light curve function. All conversions are made by VBMicrolensing internally.
 
 ## Implementation of parallax calculations
 
