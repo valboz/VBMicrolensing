@@ -33,7 +33,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Minimum number of annuli to calculate for limb darkening.");
     vbm.def_readwrite("NPcrit", &VBMicrolensing::NPcrit,
         "Number of points in critical curves.");
-    vbm.def_readwrite("eph_parallax", &VBMicrolensing::eph_parallax,
+    vbm.def_readwrite("parallaxephemeris", &VBMicrolensing::parallaxephemeris,
         "True for parallax calculation with ephemeris, False for parallax calculation with Kepler equation");
     vbm.def_readwrite("parallaxsystem", &VBMicrolensing::parallaxsystem,
         "0 for parallel-perpendicular, 1 for North-Eeast.");

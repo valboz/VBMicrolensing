@@ -279,7 +279,7 @@ VBMicrolensing::VBMicrolensing() {
 	Tol = 1.e-2;
 	RelTol = 0;
 	suntable = false;
-	eph_parallax = true;
+	parallaxephemeris = true;
 	possat = 0;
 	nsat = 0;
 	ndatasat = 0;
@@ -6425,7 +6425,6 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 			f = fopen(filename, "r");
 			if (f != 0) {
 				int flag2 = 0;
-				long startpos = 0;
 				char teststring[1000];
 				ndatasat[ic] = 1;
 
@@ -6444,7 +6443,6 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				// Finding end of data
 				if (flag2) {
 					flag2 = 0;
-					startpos = ftell(f);
 					while (!feof(f)) {
 						fscanf(f, "%[^\n]s", teststring);
 						if (!feof(f)) {
@@ -6461,6 +6459,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 						}
 					}
 				}
+				fclose(f);
 
 				// Allocating memory according to the length of the table
 				possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
@@ -6470,11 +6469,24 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				}
 				ndatasat[ic]--;
 
+				f = fopen(filename, "r");
+				// Finding start of data
+				while (!feof(f)) {
+					fscanf(f, "%s", teststring);
+					if (!feof(f)) {
+						fgetc(f); //fseek(f, 1, SEEK_CUR);
+						teststring[5] = 0;
+						if (strcmp(teststring, "$$SOE") == 0) {
+							flag2 = 1;
+							break;
+						}
+					}
+				}
+
 				// Reading data
 				if (f) {
 					double tcur;
 					startsat[ic] = stepsat[ic]= - 1;
-					fseek(f, startpos, SEEK_SET);
 					for (int id = 0; id < ndatasat[ic]; id++) {
 
 						if (fscanf(f, "%lf %lf %lf %lf %lf", &tcur, &RA, &Dec, &dis, &phiprec) == 5) {
@@ -6571,7 +6583,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 
 	if (t0_par_fixed == 0) t0_par = t0;
 
-	if (eph_parallax) {
+	if (parallaxephemeris) {
 		// Calculation with lookup ephemeris table 
 		if (!suntable) {
 			LoadSunTable(Suntablefile);

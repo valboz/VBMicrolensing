@@ -149,16 +149,17 @@ public:
 	bool astrometry;
 	bool turn_off_secondary_source;
 	bool turn_off_secondary_lens;
-	bool ESPLoff, suntable, eph_parallax;
+	bool ESPLoff;
 	bool t_in_HJD;
 
 	static char ESPLtablefile[1024];
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
 	static char Suntablefile[1024];
 	static void SetSuntablefile(char* instring) { strcpy(Suntablefile, instring); }
-	double Tol, RelTol, a1, a2, t0_par,corrquad, corrquad2, safedist;
+	double Tol, RelTol, a1, a2,corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
-	int satellite, parallaxsystem, t0_par_fixed, nsat;
+	int satellite, parallaxsystem, t0_par, t0_par_fixed, nsat;
+	bool suntable, parallaxephemeris;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;
 	int newtonstep;
 	double y_1, y_2, av, therr, astrox1, astrox2;
