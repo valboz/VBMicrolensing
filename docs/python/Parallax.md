@@ -51,7 +51,7 @@ paiE = -0.2     # East component of the parallax vector
 # Array of parameters. Note that s, q, rho and tE are in log-scale
 pr = [math.log(s), math.log(q), u0, alpha, math.log(rho), math.log(tE), t0, paiN, paiE]
 
-t = np.linspace(t0-tE, t0+tE, 300) # Array of times
+t = np.linspace(t0-tE, t0+tE, 300) # Array of times in HJD
 
 VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our microlensing event
 
@@ -81,7 +81,7 @@ In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ h
 
 ## Satellite Parallax
 
-VBMicrolensing can calculate the magnification as seen from a spacecraft. In order to do that, it is necessary to have the ephemeris of the satellite in the format given by the [NASA Horizons system](http://ssd.jpl.nasa.gov/horizons.cgi).
+VBMicrolensing can calculate the magnification as seen from a spacecraft. In order to do that, it is necessary to have the ephemeris of the satellite in the format given by the [NASA Horizons system](https://ssd.jpl.nasa.gov/horizons/app.html).
 
 In particular, we assume five columns:
 - JD
@@ -131,5 +131,13 @@ By default, the parallax components are expressed in the North-East system $(\pi
 ## Reference time for parallax $t_{0,par}$
 
 The parallax effect is introduced as a deviation of the observer from a frame centered on the Earth at a specific reference time $t_{0,par}$, in such a way that the position and the velocity of the source at time $t=t_{0,par}$ remains fixed as seen from the observer. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBM.t0_par_fixed = 1;` and choose your reference time via `VBM.t0_par`.
+
+## JD vs HJD
+
+When we include parallax, it is important to clarify whether the input time specifications are in JD or HJD. By default, VBMicrolensing assumes that times are given in HJD. However, if you want to calculate a light curve with JD on your horizontal axis, you should just set `VBM.t_in_HJD = False` before the execution of the light curve function. All conversions are made by VBMicrolensing internally.
+
+## Implementation of parallax calculations
+
+In order to calculate the parallax effect, we need to track the Earth position around the Sun. We have two possibilities: using an ephemeris table from [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html).
 
 [Go to **Orbital motion**](OrbitalMotion.md)
