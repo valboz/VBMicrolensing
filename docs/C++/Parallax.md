@@ -156,5 +156,18 @@ VBM.parallaxephemeris = false;
 
 The resolution of Kepler equation is slower and retrieves the Earth-Moon barycenter rather than the Earth center. So, it is also less accurate, but provides an alternative reference to check for consistency of parallax calculations. 
 
+## Terrestrial parallax
+
+Different observers on the Earth surface see slightly different microlensing light curves due to the difference in the observation points. In order to keep this difference into account, you should generate different ephemeris tables for each observers. This is possible in [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html) by changing the observer location. Then, you should separately load the right table before each light curve calculation:
+
+```
+VBM.LoadSunTable("SunEphemerisfromAfrica.txt");
+magAfr = VBM.BinaryLightCurveParallax(pr,t);      // Calculation of light curve with parallax seen from Africa
+VBM.LoadSunTable("SunEphemerisfromChile.txt");
+magChi = VBM.BinaryLightCurveParallax(pr,t);      // Calculation of light curve with parallax seen from Chile
+```
+
+In order to appreciate the differences, you also need to choose very dense sampling in the table generation.
+
 
 [Go to **Orbital motion**](OrbitalMotion.md)
