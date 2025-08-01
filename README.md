@@ -10,12 +10,12 @@ In particular, VBMicrolensing is designed for the following calculations:
 
 `VBMicrolensing` is written as a C++ library and wrapped as a Python package, the user can call the code from either C++ or Python. This new code encompasses the well-known [VBBinaryLensing](https://github.com/valboz/VBBinaryLensing) code, which is at the basis of several platforms for microlensing modeling. `VBBinaryLensing` will still be available as a legacy software, but will no longer be maintained. 
 
-`VBMicrolensing` has been developed by **Valerio Bozza**, University of Salerno, with a substantial contribution by **Vito Saggese**, University of Naples and **Jiyuan Zhang**, Tisnghua University. We also acknowledge a long list of collaborators who contributed to testing and development of particular aspects over the years: Etienne Bachelet, Fran Bartolic, Sebastiano Calchi Novati, Giovanni Covone, Giuseppe D'Ago, Tyler Heintz, Ava Hoag, Markus Hundertmark, Elahe Khalouei, Radek Poleski, Haibin Ren, Paolo Rota, Sedighe Sajadian, Rachel Street, Keto Zhang, Weicheng Zhang, Wei Zhu.
+`VBMicrolensing` has been developed by **Valerio Bozza**, University of Salerno, with a substantial contribution by **Vito Saggese**, University of Naples and **Jiyuan Zhang**, Tisnghua University. We also acknowledge a long list of collaborators who contributed to testing and development of particular aspects over the years: Natasha Abrams, Etienne Bachelet, Fran Bartolic, Dex Bhadra, Sebastiano Calchi Novati, Giovanni Covone, Giuseppe D'Ago, Tyler Heintz, Ava Hoag, Markus Hundertmark, Elahe Khalouei, Jessica Lu, Matthew Penny, Radek Poleski, Haibin Ren, Paolo Rota, Sedighe Sajadian, Rachel Street, Keto Zhang, Weicheng Zhang, Wei Zhu.
 
 ## Attribution
 Any use of this code for scientific publications should be acknowledged by a citation to the works relevant to your study:
 - [V. Bozza, MNRAS 408 (2010) 2188](https://ui.adsabs.harvard.edu/abs/2010MNRAS.408.2188B/abstract): general algorithm for binary lensing;
-- [V. Bozza et al., MNRAS 479 (2018) 5157](https://ui.adsabs.harvard.edu/abs/2018MNRAS.479.5157B/abstract): BinaryMag2 function, Extended-Source-Point-Lens methods; 
+- [V. Bozza, E. Bachelet, F. Bartolic, T. Heintz, A. Hoag, M. Hundertmark, MNRAS 479 (2018) 5157](https://ui.adsabs.harvard.edu/abs/2018MNRAS.479.5157B/abstract): BinaryMag2 function, Extended-Source-Point-Lens methods; 
 - [V. Bozza, E. Khalouei and E. Bachelet, MNRAS 505 (2021) 126](https://ui.adsabs.harvard.edu/abs/2021MNRAS.505..126B/abstract): astrometry, generalized limb darkening, Keplerian orbital motion; 
 - [V. Bozza, v. Saggese, G. Covone, P. Rota & J. Zhang, A&A 694 (2025) 219](https://ui.adsabs.harvard.edu/abs/2025A%26A...694A.219B/abstract): multiple lenses.
 
