@@ -1,4 +1,4 @@
--  **v5.3** - 2025/07/?? - Sanity checks for event coordinates and satellite ephemerides tables before parallax calculations. Input times can be given in JD or HJD. Correction of parallax calculation including light travel time. Optimizations in satellite lookup table.
+-  **v5.3** - 2025/07/?? - Sanity checks for event coordinates and satellite ephemerides tables before parallax calculations. Input times can be given in JD or HJD. Correction of parallax calculation including light travel time. Optimizations in satellite lookup table. Parallax calculation by an ephemeris table becomes default, but old Kepler calculation still possible.
 -  **v5.2** - 2025/06/29 - Functions for Binary Source - Binary Lens microlensing.
 -  **v5.1.1** - 2025/06/19 - Corrected small bug in satellite parallax.
 -  **v5.1** - 2025/06/11 - Astrometry for multiple lenses.
