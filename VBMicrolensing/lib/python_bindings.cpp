@@ -74,6 +74,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
     vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
         """Loads a pre calculated binary table for extended source calculation.""");
+    vbm.def("LoadSunTable", &VBMicrolensing::LoadSunTable,
+        """Loads a Sun ephemeris table for parallax calculation.""");
     vbm.def("SetESPLtablefile", [](char* s) {
         VBMicrolensing::SetESPLtablefile(s);
         },
