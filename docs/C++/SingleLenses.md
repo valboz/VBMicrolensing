@@ -28,7 +28,7 @@ printf("PSPL Magnification = %lf", Mag); // Output should be 10.037...
 
 ## Extended-Source-Point-Lens
 
-For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicrolensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file should be loaded before any calculations involving Extended-Source-Point-Lenses (ESPL).
+For extended sources, the magnification depends on $\rho$, the **source radius** normalized to the Einstein angle, and can be calculated through elliptic integrals. In order to make VBMicrolensing as fast as possible, we provide **pre-calculated tables** in the file "ESPL.tbl". This file is included in the [/VBMicrolensing/data](/VBMicrolensing/data) folder of this distribution and should be loaded before any calculations involving Extended-Source-Point-Lenses (ESPL).
 
 ```
 VBMicrolensing VBM;
