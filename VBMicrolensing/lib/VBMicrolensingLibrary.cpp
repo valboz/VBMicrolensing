@@ -252,7 +252,8 @@ public:
 
 #pragma endregion
 
-char VBMicrolensing::ESPLtablefile[1024] = "fatto";
+char VBMicrolensing::ESPLtablefile[1024] = "placeholder";
+char VBMicrolensing::Suntablefile[1024] = "placeholder";
 
 #pragma region Constructor/destructor
 
@@ -277,6 +278,8 @@ VBMicrolensing::VBMicrolensing() {
 	t0old = 0.;
 	Tol = 1.e-2;
 	RelTol = 0;
+	suntable = false;
+	eph_parallax = true;
 	possat = 0;
 	nsat = 0;
 	ndatasat = 0;
@@ -319,7 +322,6 @@ VBMicrolensing::VBMicrolensing() {
 	Mag0 = 0;
 	NPcrit = 200;
 	ESPLoff = true;
-	suntable = false;
 	multidark = false;
 	astrometry = false;
 	mass_luminosity_exponent = 4.0;
@@ -345,6 +347,10 @@ VBMicrolensing::~VBMicrolensing() {
 		free(ndatasat);
 		free(startsat);
 		free(stepsat);
+	}
+	if (suntable) {
+		for (int j = 0; j < ndataEar; j++) free(posEar[j]);
+		free(posEar);
 	}
 
 	if (m) {
@@ -6267,9 +6273,15 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 	double RA, Dec, dis, phiprec;
 
 	if ((f = fopen(filename, "r")) != 0) {
-		// Reading satellite table files
+		if (suntable) {
+			// Removing existing table if any
+			for (int j = 0; j < ndataEar; j++) free(posEar[j]);
+			free(posEar);
+			suntable = false;
+		}
+		// Reading Sun table files
 		int flag2 = 0;
-		long startpos = 0;
+//		long startpos = 0;
 		char teststring[1000];
 		ndataEar = 1;
 
@@ -6288,7 +6300,7 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 		// Finding end of data
 		if (flag2) {
 			flag2 = 0;
-			startpos = ftell(f);
+//			startpos = ftell(f);
 			while (!feof(f)) {
 				fscanf(f, "%[^\n]s", teststring);
 				if (!feof(f)) {
@@ -6313,13 +6325,27 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 			posEar[j] = (double*)malloc(sizeof(double) * 3);
 		}
 		ndataEar--;
+		fclose(f);
 
 		// Reading data
+		f = fopen(filename, "r");
 		double tcur;
 		startEar = stepEar = -1;
-		fseek(f, startpos, SEEK_SET);
+//		fseek(f, startpos, SEEK_SET);
+		
+		// Finding start of data
+		while (!feof(f)) {
+			fscanf(f, "%s", teststring);
+			if (!feof(f)) {
+				fgetc(f); //fseek(f, 1, SEEK_CUR);
+				teststring[5] = 0;
+				if (strcmp(teststring, "$$SOE") == 0) {
+					flag2 = 1;
+					break;
+				}
+			}
+		}
 		for (int id = 0; id < ndataEar; id++) {
-
 			if (fscanf(f, "%lf %lf %lf %lf %lf", &tcur, &RA, &Dec, &dis, &phiprec) == 5) {
 				if (stepEar < 0) {
 					if (startEar < 0) {
@@ -6362,7 +6388,18 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 		fscanf(f, "%[^\n]s", CoordinateString);
 		fclose(f);
 		SetObjectCoordinates(CoordinateString);
-
+		
+		// Removing any preiovusly loaded satellite table files
+		if (nsat) {
+			for (int i = 0; i < nsat; i++) {
+				for (int j = 0; j < ndatasat[i]; j++) free(possat[i][j]);
+				free(possat[i]);
+			}
+			free(possat);
+			free(ndatasat);
+			free(startsat);
+			free(stepsat);
+		}
 		// Looking for satellite table files in the specified directory
 		sprintf(filename, "%s%csatellite*.txt", sateltabledir, systemslash);
 		nsat = 0;
@@ -6476,16 +6513,6 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 void VBMicrolensing::SetObjectCoordinates(char* CoordinateString) {
 	double RA, Dec, hr, mn, sc, deg, pr, ssc, sp, r;
 
-	if (nsat) {
-		for (int i = 0; i < nsat; i++) {
-			for (int j = 0; j < ndatasat[i]; j++) free(possat[i][j]);
-			free(possat[i]);
-		}
-		free(possat);
-		free(ndatasat);
-		free(startsat);
-		free(stepsat);
-	}
 	hr = mn = sc = deg = pr = ssc = -1.e100;
 	sscanf(CoordinateString, "%lf:%lf:%lf %lf:%lf:%lf", &hr, &mn, &sc, &deg, &pr, &ssc);
 	if (hr >= 0 && hr < 24 && mn >= 0 && mn < 60 && sc >= 0 && sc < 60 && deg >= -90 && deg <= 90 && pr >= 0 && pr < 60 && ssc >= 0 && ssc < 60) {
@@ -6543,9 +6570,177 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	}
 
 	if (t0_par_fixed == 0) t0_par = t0;
-	if (t0_par != t0old) {
-		t0old = t0_par;
-		ty = (t0_par - 1545) / 36525.0;
+
+	if (eph_parallax) {
+		// Calculation with lookup ephemeris table 
+		if (!suntable) {
+			LoadSunTable(Suntablefile);
+		}
+		if (t0_par != t0old) {
+			t0old = t0_par;
+			ty = (t0_par - startEar) / stepEar;
+			ic = (int)floor(ty);
+			ty -= ic;
+			for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+			if (t_in_HJD) {
+				double told = t, tnew;
+				lighttravel0 = 0;
+				for (int i = 0; i < 3; i++) lighttravel0 += Ear[i] * Obj[i];
+				lighttravel0 *= au_c;
+				tnew = t0_par - lighttravel0;
+				while (fabs(told - tnew) > 1.e-8) {
+					told = tnew;
+					ty = (told - startEar) / stepEar;
+					ic = (int)floor(ty);
+					ty -= ic;
+					for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+					lighttravel0 = 0;
+					for (int i = 0; i < 3; i++) lighttravel0 += Ear[i] * Obj[i];
+					lighttravel0 *= au_c;
+					tnew = t0_par - lighttravel0;
+				}
+			}
+			for (int i = 0; i < 3; i++) {
+				if (ty > 0.5) {
+					vEar[i] = ((posEar[ic+2][i]- posEar[ic+1][i]) * (ty-0.5) + (posEar[ic+1][i] - posEar[ic][i]) * (1.5-ty)) / stepEar;
+				}
+				else {
+					vEar[i] = ((posEar[ic][i] - posEar[ic-1][i]) * (0.5 - ty) + (posEar[ic+1][i] - posEar[ic][i]) * (ty+0.5)) / stepEar;
+				}
+			}
+			if (parallaxsystem != 1) {
+				sp = 0;
+				for (int i = 0; i < 3; i++) sp += Ear[i] * Obj[i];
+				for (int i = 0; i < 3; i++) rad[i] = Ear[i] - sp * Obj[i];
+				r = sqrt(rad[0] * rad[0] + rad[1] * rad[1] + rad[2] * rad[2]); // Celestial South projected orthogonal to LOS
+				rad[0] /= r;
+				rad[1] /= r;
+				rad[2] /= r;
+				tang[0] = rad[1] * Obj[2] - rad[2] * Obj[1]; // Celestial West projected orthogonal to LOS
+				tang[1] = rad[2] * Obj[0] - rad[0] * Obj[2];
+				tang[2] = rad[0] * Obj[1] - rad[1] * Obj[0];
+			}
+
+
+			Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
+			lighttravel0 = 0;
+			for (int i = 0; i < 3; i++) {
+				Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
+				Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
+				lighttravel0 += Ear[i] * Obj[i];
+				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
+				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
+			}
+			lighttravel0 *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+		}
+		ty = (t - startEar) / stepEar;
+		ic = (int)floor(ty);
+		ty -= ic;
+		for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+		lighttravel = 0;
+		for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
+		lighttravel *= au_c;
+		if (t_in_HJD) {
+			double told = t, tnew;
+			tnew = t - lighttravel;
+			while (fabs(told - tnew) > 1.e-8) {
+				told = tnew;
+				ty = (told - startEar) / stepEar;
+				ic = (int)floor(ty);
+				ty -= ic;
+				for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+				lighttravel = 0;
+				for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
+				lighttravel *= au_c;
+				tnew = t - lighttravel;
+			}
+			lighttravel = 0;
+		}
+		Ehel[0] = Ehel[1] = 0;
+		for (int i = 0; i < 3; i++) {
+			Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
+			Ehel[1] += Ear[i] * tang[i];
+		}
+		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t+lighttravel - t0_par-lighttravel0); // Earth shift along South wrt extrapolation from t0_par
+		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t+lighttravel - t0_par-lighttravel0); // Earth shift along West wrt extrapolation from t0_par
+
+	}
+	else {
+		// Calculation with Kepler equation
+		if (t0_par != t0old) {
+			t0old = t0_par;
+			ty = (t0_par - 1545) / 36525.0;
+
+			a = a0 + adot * ty;
+			e = e0 + edot * ty;
+			inc = (inc0 + incdot * ty) * deg;
+			L = (L0 + Ldot * ty) * deg;
+			om = (om0 + omdot * ty) * deg;
+
+			M = L - om;
+			M -= floor((M + M_PI) / (2 * M_PI)) * 2 * M_PI;
+
+			EE = M + e * sin(M);
+			dE = 1;
+			dLtof = 0;
+			while (fabs(dE) > 1.e-8) {
+				if (t_in_HJD) {
+					// Correction to calculate Earth position at JD not HJD
+					x1 = a * (cos(EE) - e);
+					y1 = a * sqrt(1 - e * e) * sin(EE);
+					Ear[0] = x1 * cos(om) - y1 * sin(om);
+					Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
+					Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
+					dLtof = 0;
+					for (int i = 0; i < 3; i++) dLtof -= Ear[i] * Obj[i];
+					dLtof *= dtflight;
+				}
+				dM = M + dLtof - (EE - e * sin(EE));
+				dE = dM / (1 - e * cos(EE));
+				EE += dE;
+			}
+			x1 = a * (cos(EE) - e);
+			y1 = a * sqrt(1 - e * e) * sin(EE);
+			//		r=a*(1-e*cos(EE));
+			vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
+			vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
+
+			Ear[0] = x1 * cos(om) - y1 * sin(om);
+			Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
+			Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
+			vEar[0] = vx * cos(om) - vy * sin(om);
+			vEar[1] = vx * sin(om) * cos(inc) + vy * cos(om) * cos(inc);
+			vEar[2] = vx * sin(om) * sin(inc) + vy * cos(om) * sin(inc);
+			// Ear is the Earth position in AU in ecliptic coordinates  at time t0_par
+			// vEar is the Earth velocity vector in AU/day in ecliptic coordinates at time t0_par
+
+			if (parallaxsystem != 1) {
+				sp = 0;
+				for (int i = 0; i < 3; i++) sp += Ear[i] * Obj[i];
+				for (int i = 0; i < 3; i++) rad[i] = Ear[i] - sp * Obj[i];
+				r = sqrt(rad[0] * rad[0] + rad[1] * rad[1] + rad[2] * rad[2]); // Celestial South projected orthogonal to LOS
+				rad[0] /= r;
+				rad[1] /= r;
+				rad[2] /= r;
+				tang[0] = rad[1] * Obj[2] - rad[2] * Obj[1]; // Celestial West projected orthogonal to LOS
+				tang[1] = rad[2] * Obj[0] - rad[0] * Obj[2];
+				tang[2] = rad[0] * Obj[1] - rad[1] * Obj[0];
+			}
+
+
+			Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
+			lighttravel0 = 0;
+			for (int i = 0; i < 3; i++) {
+				Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
+				Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
+				lighttravel0 += Ear[i] * Obj[i];
+				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
+				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
+			}
+			lighttravel0 *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+		}
+
+		ty = (t - 1545) / 36525.0;
 
 		a = a0 + adot * ty;
 		e = e0 + edot * ty;
@@ -6571,117 +6766,51 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				for (int i = 0; i < 3; i++) dLtof -= Ear[i] * Obj[i];
 				dLtof *= dtflight;
 			}
+
 			dM = M + dLtof - (EE - e * sin(EE));
 			dE = dM / (1 - e * cos(EE));
 			EE += dE;
 		}
 		x1 = a * (cos(EE) - e);
 		y1 = a * sqrt(1 - e * e) * sin(EE);
-		//		r=a*(1-e*cos(EE));
+		//	r=a*(1-e*cos(EE));
 		vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
 		vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
 
 		Ear[0] = x1 * cos(om) - y1 * sin(om);
 		Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
 		Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
-		vEar[0] = vx * cos(om) - vy * sin(om);
-		vEar[1] = vx * sin(om) * cos(inc) + vy * cos(om) * cos(inc);
-		vEar[2] = vx * sin(om) * sin(inc) + vy * cos(om) * sin(inc);
-		// Ear is the Earth position in AU in ecliptic coordinates  at time t0_par
-		// vEar is the Earth velocity vector in AU/day in ecliptic coordinates at time t0_par
+		// Ear is the Earth position in AU in ecliptic coordinates  at time t
 
-		if(parallaxsystem!=1) {
-			sp = 0;
-			for (int i = 0; i < 3; i++) sp += Ear[i] * Obj[i];
-			for (int i = 0; i < 3; i++) rad[i] = Ear[i] - sp * Obj[i];
-			r = sqrt(rad[0] * rad[0] + rad[1] * rad[1] + rad[2] * rad[2]); // Celestial South projected orthogonal to LOS
-			rad[0] /= r;
-			rad[1] /= r;
-			rad[2] /= r;
-			tang[0] = rad[1] * Obj[2] - rad[2] * Obj[1]; // Celestial West projected orthogonal to LOS
-			tang[1] = rad[2] * Obj[0] - rad[0] * Obj[2];
-			tang[2] = rad[0] * Obj[1] - rad[1] * Obj[0];
-		}
-
-
-		Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
+		Ehel[0] = Ehel[1] = lighttravel = 0;
 		for (int i = 0; i < 3; i++) {
-			Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
-			Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
-			lighttravel0 = Ear[i] * Obj[i];	
-			vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
-			vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
+			Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
+			Ehel[1] += Ear[i] * tang[i];
+			lighttravel += Ear[i] * Obj[i];
 		}
-		lighttravel0 *= (t_in_HJD)? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+		lighttravel *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0); // Earth shift along South wrt extrapolation from t0_par
+		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t + lighttravel - t0_par - lighttravel0); // Earth shift along West wrt extrapolation from t0_par
+
 	}
 
-	ty = (t - 1545) / 36525.0;
 
-	a = a0 + adot * ty;
-	e = e0 + edot * ty;
-	inc = (inc0 + incdot * ty) * deg;
-	L = (L0 + Ldot * ty) * deg;
-	om = (om0 + omdot * ty) * deg;
+	//// For debugging: writes Sun coordinates from Earth to file for comparison with exact ephemerides.
+	//{
+	//	FILE* f = fopen("C:\\Users\\valboz\\Personali\\MicroModels\\test-dev\\ephemeris_test\\outapp.txt", "a");
+	//	double RA, Dec, ran,x,y,z;
+	//	ran = a * (1 - e * cos(EE));
+	//	z = x = y = 0;
+	//	for (int i = 0; i < 3; i++) z += Ear[i] * North2000[i];
+	//	for (int i = 0; i < 3; i++) x += Ear[i] * Eq2000[i];
+	//	for (int i = 0; i < 3; i++) y += Ear[i] * Quad2000[i];
+	//	Dec = -asin(z / ran)/deg;
+	//	RA = 180 + atan2(y, x)/deg;
+	//	if (RA < 0) RA += 360;
+	//	fprintf(f,"%lf %lf %lf %lf\n", t, RA, Dec, ran);
+	//	fclose(f);
+	//}
 
-	M = L - om;
-	M -= floor((M + M_PI) / (2 * M_PI)) * 2 * M_PI;
-
-	EE = M + e * sin(M);
-	dE = 1;
-	dLtof = 0;
-	while (fabs(dE) > 1.e-8) {
-		if (t_in_HJD) {
-			// Correction to calculate Earth position at JD not HJD
-			x1 = a * (cos(EE) - e);
-			y1 = a * sqrt(1 - e * e) * sin(EE);
-			Ear[0] = x1 * cos(om) - y1 * sin(om);
-			Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
-			Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
-			dLtof = 0;
-			for (int i = 0; i < 3; i++) dLtof -= Ear[i] * Obj[i];
-			dLtof *= dtflight;
-		}
-
-		dM = M + dLtof - (EE - e * sin(EE));
-		dE = dM / (1 - e * cos(EE));
-		EE += dE;
-	}
-	x1 = a * (cos(EE) - e);
-	y1 = a * sqrt(1 - e * e) * sin(EE);
-	//	r=a*(1-e*cos(EE));
-	vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
-	vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
-
-	Ear[0] = x1 * cos(om) - y1 * sin(om);
-	Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
-	Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
-	// Ear is the Earth position in AU in ecliptic coordinates  at time t
-
-	// For debugging: writes Sun coordinates from Earth to file for comparison with exact ephemerides.
-	{
-		FILE* f = fopen("C:\\Users\\valboz\\Personali\\MicroModels\\test-dev\\ephemeris_test\\outapp.txt", "a");
-		double RA, Dec, ran,x,y,z;
-		ran = a * (1 - e * cos(EE));
-		z = x = y = 0;
-		for (int i = 0; i < 3; i++) z += Ear[i] * North2000[i];
-		for (int i = 0; i < 3; i++) x += Ear[i] * Eq2000[i];
-		for (int i = 0; i < 3; i++) y += Ear[i] * Quad2000[i];
-		Dec = -asin(z / ran)/deg;
-		RA = 180 + atan2(y, x)/deg;
-		if (RA < 0) RA += 360;
-		fprintf(f,"%lf %lf %lf %lf\n", t, RA, Dec, ran);
-		fclose(f);
-	}
-
-	Ehel[0] = Ehel[1] = lighttravel = 0;
-	for (int i = 0; i < 3; i++) {
-		Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
-		Ehel[1] += Ear[i] * tang[i];
-		lighttravel = Ear[i] * Obj[i];
-	}
-	lighttravel *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
-	Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t - t0_par); // Earth shift along South wrt extrapolation from t0_par
-	Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t - t0_par); // Earth shift along West wrt extrapolation from t0_par
 
 	if (satellite > 0 && satellite <= nsat) {
 		if (ndatasat[satellite - 1] > 2) {

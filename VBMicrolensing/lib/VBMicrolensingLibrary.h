@@ -149,7 +149,7 @@ public:
 	bool astrometry;
 	bool turn_off_secondary_source;
 	bool turn_off_secondary_lens;
-	bool ESPLoff, suntable;
+	bool ESPLoff, suntable, eph_parallax;
 	bool t_in_HJD;
 
 	static char ESPLtablefile[1024];

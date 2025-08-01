@@ -33,6 +33,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Minimum number of annuli to calculate for limb darkening.");
     vbm.def_readwrite("NPcrit", &VBMicrolensing::NPcrit,
         "Number of points in critical curves.");
+    vbm.def_readwrite("eph_parallax", &VBMicrolensing::eph_parallax,
+        "True for parallax calculation with ephemeris, False for parallax calculation with Kepler equation");
     vbm.def_readwrite("parallaxsystem", &VBMicrolensing::parallaxsystem,
         "0 for parallel-perpendicular, 1 for North-Eeast.");
     vbm.def_readwrite("t0_par_fixed", &VBMicrolensing::t0_par_fixed,
@@ -76,6 +78,10 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         VBMicrolensing::SetESPLtablefile(s);
         },
         """Sets the path to a pre calculated binary table for extended source calculation.""");
+    vbm.def("SetSuntablefile", [](char* s) {
+        VBMicrolensing::SetSuntablefile(s);
+        },
+        """Sets the path to a pre calculated Sun ephemeris table to be used in parallax calculations.""");
     // Maginfication calculations
     vbm.def("PSPLMag", &VBMicrolensing::PSPLMag,
         py::return_value_policy::reference,
