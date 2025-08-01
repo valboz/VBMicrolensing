@@ -17,14 +17,6 @@ VBM.SetObjectCoordinates("17:59:02.3 -29:04:15.2") # Assign RA and Dec to our mi
 ```
 The string given as argument here obviously contains Right Ascension and Declination in standard notations.
 
-## Parallax system
-
-Then we should decide in which coordinates we want to express the parallax vector $\vec \pi_E$. In the literature, there are two popular choices: North-East system $(\pi_{E_,N},\pi_{E,E})$ and parallel/orthogonal to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 1, corresponding to the North-East system.
-
-## Reference time for parallax $t_{0,par}$
-
-Finally, we have to decide the reference time for the parallax effect $t_{0,par}$. Whatever the values of the parallax components, the source position at $t=t_{0,par}$ remains fixed. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBM.t0_par_fixed = 1;` and choose your reference time via `VBM.t0_par`.
-
 ## Light curve functions with parallax
 
 All light curve functions defined in the [Light Curves](LightCurves.md) section have their corresponding counterpart including the parallax effect:
@@ -89,7 +81,7 @@ In this example we have not set `VBM.t0_par`, which means that $t_{0,par}=t_0$ h
 
 ## Satellite Parallax
 
-VBMicrolensing can calculate the magnification as seen from a spacecraft. In order to do that, it is necessary to have the ephemerides of the satellite in the format given by the [NASA Horizons system](http://ssd.jpl.nasa.gov/horizons.cgi).
+VBMicrolensing can calculate the magnification as seen from a spacecraft. In order to do that, it is necessary to have the ephemeris of the satellite in the format given by the [NASA Horizons system](http://ssd.jpl.nasa.gov/horizons.cgi).
 
 In particular, we assume five columns:
 - JD
@@ -98,7 +90,7 @@ In particular, we assume five columns:
 - Distance from Earth (AU)
 - Distance rate change (not really needed but included by default in Horizons).
 
-Examples of valid satellite ephemerid tables are in [https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data](https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data).
+Examples of valid satellite ephemeris tables are in [https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data](https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data).
 
 The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character) and placed in a single directory. In order to inform VBMicrolensing of these tables, there is an alternative version of the `VBM.SetObjectCoordinates` function:
 ```
@@ -131,5 +123,13 @@ plt.plot(y1sat,y2sat,"r")
 <img src="figures/BinaryLens_lightcurve_satellite_caustics.png" width = 400>
 
 If you want to return to the ground do not forget to set VBM.satellite back to 0!
+
+## Parallax system
+
+By default, the parallax components are expressed in the North-East system $(\pi_{E_,N},\pi_{E,E})$. An alternative possibility is to express the parallax vector in the parallel/orthogonal components to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 1, corresponding to the North-East system.
+
+## Reference time for parallax $t_{0,par}$
+
+The parallax effect is introduced as a deviation of the observer from a frame centered on the Earth at a specific reference time $t_{0,par}$, in such a way that the position and the velocity of the source at time $t=t_{0,par}$ remains fixed as seen from the observer. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBM.t0_par_fixed = 1;` and choose your reference time via `VBM.t0_par`.
 
 [Go to **Orbital motion**](OrbitalMotion.md)
