@@ -90,7 +90,7 @@ In particular, we assume five columns:
 - Distance from Earth (AU)
 - Distance rate change (not really needed but included by default in Horizons).
 
-Examples of valid satellite ephemeris tables are in [https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data](https://github.com/valboz/VBMicrolensing/tree/master/VBMicrolensing/data).
+Examples of valid satellite ephemeris tables are in [/VBMicrolensing/data](/VBMicrolensing/data).
 
 The satellite table(s) should be named "satellite*.txt" (with * replaced by a single character) and placed in a single directory. In order to inform VBMicrolensing of these tables, there is an alternative version of the `VBM.SetObjectCoordinates` function:
 ```
