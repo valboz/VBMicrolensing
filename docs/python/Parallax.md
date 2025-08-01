@@ -138,6 +138,27 @@ When we include parallax, it is important to clarify whether the input time spec
 
 ## Implementation of parallax calculations
 
-In order to calculate the parallax effect, we need to track the Earth position around the Sun. We have two possibilities: using an ephemeris table from [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html).
+In order to calculate the parallax effect, we need to track the Earth position around the Sun. We have two possibilities in VBMicrolensing: using an ephemeris table from [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html), or calculate the Earth position solving the Kepler equation from [orbital elements and their secular changes](https://ssd.jpl.nasa.gov/planets/approx_pos.html).
+
+### Ephemeris table
+
+By default, VBMicrolensing uses an ephemeris table that is loaded on the first parallax computation. This lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. If the user needs a different time window and smaller steps, it is possible to change the ephemeris table to a different file by
+
+```
+VBM.LoadSunTable("mySunEphemeris.txt")
+```
+
+The file "mySunEphemeris.txt" should be the output of the [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html) system for a geocentric ephemeris of the Sun. The output columns should be JD, RA, Dec, range, rangedot. The [default table file](/VBMicrolensing/data/SunEphemeris.txt) can be taken as reference.
+
+### Kepler's equation calculation
+
+In alternative, VBMicrolensing can calculate ephemeris dynamically for any time. To choose this alternative you should set
+
+```
+VBM.parallaxephemeris = False
+```
+
+The resolution of Kepler equation is slower and retrieves the Earth-Moon barycenter rather than the Earth center. So, it is also less accurate, but provides an alternative reference to check for consistency of parallax calculations.
+
 
 [Go to **Orbital motion**](OrbitalMotion.md)
