@@ -42,6 +42,7 @@ If you just want to use the C++ library, clone this repository, all cpp files an
 
 The package also contains the following files:
 - `VBMicrolensing/data/ESPL.tbl`  - Pre-calculated table for Extended-source-point-lens
+- `VBMicrolensing/data/SunEphemeris.txt`  - Sun ephemeris for parallax calculation
 - `VBMicrolensing/data/OB151212coords.txt` - Sample file with event coordinates
 - `VBMicrolensing/data/satellite1.txt` - Sample table for satellite position (Spitzer)
 - `VBMicrolensing/data/satellite2.txt` - Sample table for satellite position (Kepler)
