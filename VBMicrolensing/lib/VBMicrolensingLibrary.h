@@ -160,6 +160,7 @@ public:
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par, t0_par_fixed, nsat;
 	bool suntable, parallaxephemeris;
+	int parallaxextrapolation;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;
 	int newtonstep;
 	double y_1, y_2, av, therr, astrox1, astrox2;

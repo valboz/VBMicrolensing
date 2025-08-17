@@ -334,6 +334,7 @@ VBMicrolensing::VBMicrolensing() {
 	SelectedMethod = Method::Nopoly;
 	turn_off_secondary_source = turn_off_secondary_lens = false;
 	t_in_HJD = true;
+	parallaxextrapolation = 0;
 	//	testnewcoefs = true;
 }
 
@@ -4882,6 +4883,7 @@ void VBMicrolensing::PSPLAstroLightCurve(double* pr, double* ts, double* mags, d
 	iastro = 5;
 	dPosAng = 0;
 	t0old = 1.e200;
+	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
@@ -4913,6 +4915,7 @@ void VBMicrolensing::ESPLAstroLightCurve(double* pr, double* ts, double* mags, d
 	iastro = 6;
 	dPosAng = 0;
 	t0old = 1.e200;
+	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
@@ -4944,6 +4947,7 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 	dPosAng = 0;
 	t0old = 1.e200;
+	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
@@ -4979,6 +4983,7 @@ void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double
 	double w, phi0, inc, phi, Cinc, Sinc, Cphi, Sphi, Cphi0, Sphi0, pphi0, COm, SOm, s_true;
 	double w13, w123, den, den0;
 	t0old = 1.e200;
+	parallaxextrapolation = 0;
 
 	w13 = w1 * w1 + w3 * w3;
 	w123 = sqrt(w13 + w2 * w2);
@@ -5047,6 +5052,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 	double arm1, arm2;
 	double X[3], Y[3], Z[3], r[2], x[2];
 	t0old = 1.e200;
+	parallaxextrapolation = 0;
 
 	smix = 1 + szs * szs;
 	sqsmix = sqrt(smix);
@@ -5147,6 +5153,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	iastro = 12;
 	dPosAng = 0;
 	t0old = 1.e200;
+	parallaxextrapolation = 0;
 
 	s[2] = -(s[0] * w[0] + s[1] * w[1]) / w[2]; // Impose velocity orthogonal to position
 	s3D = sqrt(s[0] * s[0] + s[1] * s[1] + s[2] * s[2]);
@@ -5268,6 +5275,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 	double ss[3] = { (t01 - t02) * tE_inv,u2 - u1,0 };
 	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs,phis0;
 	double u0B, t0B, vuB, vt0B, s1, s2, uB, tnB, paitB, paiuB, alphas;
+	parallaxextrapolation = 0;
 
 	// Binary lens calculations
 	u0 = pr[2];
@@ -5443,6 +5451,7 @@ void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags,
 	double Et[2];
 	iastro = 12;
 	dPosAng = 0;
+	parallaxextrapolation = 0;
 
 	s[0] = exp(pr[0]) / (q[0] + q[1]);
 	s[1] = s[0] * q[0];
@@ -5622,6 +5631,7 @@ void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, d
 void VBMicrolensing::BinSourceLightCurveParallax(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
 	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), tn, u, u0, pai1 = pr[6], pai2 = pr[7], w1 = pr[8], w2 = pr[9], w3 = pr[10];
 	t0old = 0;
+	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
@@ -5652,6 +5662,7 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 	double s, s_true, w, phi0, inc, phi, Cinc, Sinc, Cphi, Sphi, Cphi0, Sphi0, COm, SOm;
 	double w13, w123, den, den0, du0, dt0;
 	t0old = 0;
+	parallaxextrapolation = 0;
 
 
 	s = sqrt((u1 - u2) * (u1 - u2) + (t01 - t02) * (t01 - t02) * (tE_inv * tE_inv));
@@ -6571,7 +6582,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double x1, y1, vx, vy, Ear[3], vEar[3];
 	static double r, sp, ty, Spit, dLtof;
 	int c = 0, ic;
-
+	
 	if (!coordinates_set) {
 		printf("\nUse SetObjectCoordinates to input target coordinates");
 		return;
@@ -6648,6 +6659,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		ty = (t - startEar) / stepEar;
 		ic = (int)floor(ty);
 		ty -= ic;
+		if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
+		if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 		for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
 		lighttravel = 0;
 		for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
@@ -6660,6 +6673,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				ty = (told - startEar) / stepEar;
 				ic = (int)floor(ty);
 				ty -= ic;
+				if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
+				if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 				for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
 				lighttravel = 0;
 				for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
@@ -6829,6 +6844,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			ty = (t - startsat[satellite - 1]) / stepsat[satellite - 1];
 			ic = (int) floor(ty);
 			ty -= ic;
+			if (ic < 0) { parallaxextrapolation = 2; ic = 0; ty = 0; }
+			if (ic >= ndatasat[satellite - 1]) { parallaxextrapolation = 1; ic = ndatasat[satellite - 1] - 1; ty = 1; }
 			for (int i = 0; i < 3; i++) {
 				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
 				Et[0] += Spit * rad[i];

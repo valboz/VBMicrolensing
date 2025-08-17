@@ -35,6 +35,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Number of points in critical curves.");
     vbm.def_readwrite("parallaxephemeris", &VBMicrolensing::parallaxephemeris,
         "True for parallax calculation with ephemeris, False for parallax calculation with Kepler equation");
+    vbm.def_readwrite("parallaxextrapolation", &VBMicrolensing::parallaxextrapolation,
+        "If non-zero, extrapolation has been used because the input time is outside the lookup tables");
     vbm.def_readwrite("parallaxsystem", &VBMicrolensing::parallaxsystem,
         "0 for parallel-perpendicular, 1 for North-Eeast.");
     vbm.def_readwrite("t0_par_fixed", &VBMicrolensing::t0_par_fixed,
@@ -498,6 +500,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.PSPLLightCurveParallax(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -544,6 +547,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             results: list[list[float],list[float],list[float]] 
                 [Magnification array, source position y1 array, source position y2 array]
             )mydelimiter");
+
     vbm.def("ESPLLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
@@ -563,6 +567,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.ESPLLightCurveParallax(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -638,6 +643,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             results: list[list[float],list[float],list[float]] 
                 [Magnification array, source position y1 array, source position y2 array]
             )mydelimiter");
+
     vbm.def("BinaryLightCurveParallax",
         [](VBMicrolensing& self, std::vector<double> params, std::vector<double> times)
         {
@@ -657,6 +663,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinaryLightCurveParallax(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
 
         },
@@ -699,6 +706,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinaryLightCurveOrbital(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), separations.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s, separations };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -742,6 +750,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinaryLightCurveKepler(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), separations.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s, separations };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -812,6 +821,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinSourceLightCurveParallax(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -913,6 +923,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinSourceExtLightCurveXallarap(params.data(), times.data(), mags.data(),
                 y1s1.data(), y2s1.data(), y1s2.data(), y2s2.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s1,y2s1,y1s2,y2s2 };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1039,6 +1050,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinSourceLightCurveXallarap(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), separations.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s, separations };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1114,6 +1126,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.TripleLightCurveParallax(params.data(), times.data(), mags.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1212,6 +1225,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.PSPLAstroLightCurve(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1262,6 +1276,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.ESPLAstroLightCurve(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1314,6 +1329,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinaryAstroLightCurve(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1366,6 +1382,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinaryAstroLightCurveOrbital(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), seps.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s, seps };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1419,6 +1436,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinaryAstroLightCurveKepler(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), seps.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s, seps };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1475,6 +1493,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinSourceAstroLightCurveXallarap(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s1.data(), y2s1.data(), y1s2.data(), y2s2.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s1,y2s1,y1s2,y2s2 };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1532,6 +1551,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.BinSourceBinLensAstroLightCurve(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s1.data(), y2s1.data(), y1s2.data(), y2s2.data(), seps.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s1,y2s1,y1s2,y2s2,seps };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
@@ -1590,6 +1610,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.TripleAstroLightCurve(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), times.size());
             std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s };
+            if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
         R"mydelimiter(
