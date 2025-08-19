@@ -1,3 +1,4 @@
+-  **v5.3.1** - 2025/08/19 - Warning issued if time is outside the range of lookup tables for parallax or for satellites. Satellite lookup algorithm restored for unequal steps.
 -  **v5.3** - 2025/08/01 - Parallax calculation by an ephemeris table becomes default, but old Kepler calculation still available. Extension to terrestrial parallax. Input times can be given in JD or HJD. Correction of parallax calculation including light travel time. Optimizations in satellite lookup table. Sanity checks for event coordinates and satellite ephemerides tables before parallax calculations.
 -  **v5.2** - 2025/06/29 - Functions for Binary Source - Binary Lens microlensing.
 -  **v5.1.1** - 2025/06/19 - Corrected small bug in satellite parallax.

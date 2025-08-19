@@ -124,6 +124,8 @@ plt.plot(y1sat,y2sat,"r")
 
 If you want to return to the ground do not forget to set VBM.satellite back to 0!
 
+Note that a warning message is printed if the input times lie outside the range of the satellite ephemeris table.
+
 ## Parallax system
 
 By default, the parallax components are expressed in the North-East system $(\pi_{E_,N},\pi_{E,E})$. An alternative possibility is to express the parallax vector in the parallel/orthogonal components to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 1, corresponding to the North-East system.
@@ -142,7 +144,8 @@ In order to calculate the parallax effect, we need to track the Earth position a
 
 ### Ephemeris table
 
-By default, VBMicrolensing uses an ephemeris table that is loaded on the first parallax computation. This lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. If the user needs a different time window and smaller steps, it is possible to change the ephemeris table to a different file by
+By default, VBMicrolensing uses an ephemeris table that is loaded on the first parallax computation. This lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. A warning message is printed if the input times lie outside the range of the Sun ephemeris table.
+If the user needs a different time window and smaller steps, it is possible to change the ephemeris table to a different file by
 
 ```
 VBM.LoadSunTable("mySunEphemeris.txt")
