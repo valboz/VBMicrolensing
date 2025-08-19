@@ -144,7 +144,7 @@ In order to calculate the parallax effect, we need to track the Earth position a
 
 ### Ephemeris table
 
-By default, VBMicrolensing uses an ephemeris table that is loaded on the first parallax computation. This lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. A warning message is printed if the input times lie outside the range of the satellite ephemeris table.
+By default, VBMicrolensing uses an ephemeris table that is loaded on the first parallax computation. This lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. A warning message is printed if the input times lie outside the range of the Sun ephemeris table.
 If the user needs a different time window and smaller steps, it is possible to change the ephemeris table to a different file by
 
 ```
