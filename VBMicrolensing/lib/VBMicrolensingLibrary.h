@@ -158,7 +158,8 @@ public:
 	static void SetSuntablefile(char* instring) { strcpy(Suntablefile, instring); }
 	double Tol, RelTol, a1, a2,corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
-	int satellite, parallaxsystem, t0_par, t0_par_fixed, nsat;
+	int satellite, parallaxsystem, t0_par_fixed, nsat;
+	double t0_par;
 	bool suntable, parallaxephemeris;
 	int parallaxextrapolation;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;
@@ -608,3 +609,4 @@ inline double _point::operator-(_point p2) {
 
 
 #endif
+
