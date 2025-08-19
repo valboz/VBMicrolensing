@@ -74,7 +74,7 @@ class VBMicrolensing
 		0.3 };
 
 	int* ndatasat;
-	double *** possat, * startsat, * stepsat;
+	double** tsat, *** possat;
 	double** posEar, startEar, stepEar;
 	int ndataEar;
 	double Mag0;

@@ -280,11 +280,10 @@ VBMicrolensing::VBMicrolensing() {
 	RelTol = 0;
 	suntable = false;
 	parallaxephemeris = true;
+	tsat = 0;
 	possat = 0;
 	nsat = 0;
 	ndatasat = 0;
-	startsat = 0;
-	stepsat = 0;
 	satellite = 0;
 	parallaxsystem = 1;
 	t0_par_fixed = 0;
@@ -342,12 +341,12 @@ VBMicrolensing::~VBMicrolensing() {
 	if (nsat) {
 		for (int i = 0; i < nsat; i++) {
 			for (int j = 0; j < ndatasat[i]; j++) free(possat[i][j]);
+			free(tsat[i]);
 			free(possat[i]);
 		}
+		free(tsat);
 		free(possat);
 		free(ndatasat);
-		free(startsat);
-		free(stepsat);
 	}
 	if (suntable) {
 		for (int j = 0; j < ndataEar; j++) free(posEar[j]);
@@ -6404,12 +6403,12 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 		if (nsat) {
 			for (int i = 0; i < nsat; i++) {
 				for (int j = 0; j < ndatasat[i]; j++) free(possat[i][j]);
+				free(tsat[i]);
 				free(possat[i]);
 			}
+			free(tsat);
 			free(possat);
 			free(ndatasat);
-			free(startsat);
-			free(stepsat);
 		}
 		// Looking for satellite table files in the specified directory
 		sprintf(filename, "%s%csatellite*.txt", sateltabledir, systemslash);
@@ -6424,10 +6423,9 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 		}
 
 
+		tsat = (double**)malloc(sizeof(double*) * nsat);
 		possat = (double***)malloc(sizeof(double**) * nsat);
 		ndatasat = (int*)malloc(sizeof(int) * nsat);
-		startsat = (double*)malloc(sizeof(double) * nsat);
-		stepsat = (double*)malloc(sizeof(double) * nsat);
 
 		// Reading satellite table files
 		ic = 0;
@@ -6473,6 +6471,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				fclose(f);
 
 				// Allocating memory according to the length of the table
+				tsat[ic] = (double*)malloc(sizeof(double) * ndatasat[ic]);
 				possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
 				
 				for (int j = 0; j < ndatasat[ic]; j++) {
@@ -6497,19 +6496,10 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				// Reading data
 				if (f) {
 					double tcur;
-					startsat[ic] = stepsat[ic]= - 1;
 					for (int id = 0; id < ndatasat[ic]; id++) {
 
-						if (fscanf(f, "%lf %lf %lf %lf %lf", &tcur, &RA, &Dec, &dis, &phiprec) == 5) {
-							if (stepsat[ic] < 0) {
-								if (startsat[ic] < 0) {
-									startsat[ic] = tcur;
-								}
-								else {
-									stepsat[ic] = tcur - startsat[ic];
-									startsat[ic] -= 2450000.0;
-								}
-							}
+						if (fscanf(f, "%lf %lf %lf %lf %lf", &(tsat[ic][id]), &RA, &Dec, &dis, &phiprec) == 5) {
+							tsat[ic][id] -= 2450000;
 							RA *= M_PI / 180;
 							Dec *= M_PI / 180;
 							for (int i = 0; i < 3; i++) {
@@ -6841,11 +6831,32 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 
 	if (satellite > 0 && satellite <= nsat) {
 		if (ndatasat[satellite - 1] > 2) {
-			ty = (t - startsat[satellite - 1]) / stepsat[satellite - 1];
-			ic = (int) floor(ty);
-			ty -= ic;
-			if (ic < 0) { parallaxextrapolation = 2; ic = 0; ty = 0; }
-			if (ic >= ndatasat[satellite - 1]) { parallaxextrapolation = 1; ic = ndatasat[satellite - 1] - 1; ty = 1; }
+			int left, right;
+			if (t < tsat[satellite - 1][0]) {
+				ic = 0;
+				parallaxextrapolation = 2;
+			}
+			else {
+				if (t > tsat[satellite - 1][ndatasat[satellite - 1] - 1]) {
+					ic = ndatasat[satellite - 1] - 2;
+					parallaxextrapolation = 2;
+				}
+				else {
+					left = 0;
+					right = ndatasat[satellite - 1] - 1;
+					while (right - left > 1) {
+						ic = (right + left) / 2;
+						if (tsat[satellite - 1][ic] > t) {
+							right = ic;
+						}
+						else {
+							left = ic;
+						}
+					}
+					ic = left;
+				}
+			}
+			ty = t - tsat[satellite - 1][ic];
 			for (int i = 0; i < 3; i++) {
 				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
 				Et[0] += Spit * rad[i];
