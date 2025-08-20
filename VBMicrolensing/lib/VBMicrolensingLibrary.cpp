@@ -1,4 +1,4 @@
-// VBMicrolensing v5.3 (2025)
+// VBMicrolensing v5.3.3 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -6856,7 +6856,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 					ic = left;
 				}
 			}
-			ty = t - tsat[satellite - 1][ic];
+			ty = (t - tsat[satellite - 1][ic])/(tsat[satellite - 1][ic+1]- tsat[satellite - 1][ic]);
 			for (int i = 0; i < 3; i++) {
 				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
 				Et[0] += Spit * rad[i];
