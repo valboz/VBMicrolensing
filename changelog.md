@@ -1,3 +1,4 @@
+-  **v5.3.4** - ??? - Deleted a wrong line in TripleAstroLightCurve.
 -  **v5.3.3** - 2025/08/20 - Patch for a bug in parallax.
 -  **v5.3.1** - 2025/08/19 - Warning issued if time is outside the range of lookup tables for parallax or for satellites. Satellite lookup algorithm restored for unequal steps.
 -  **v5.3** - 2025/08/01 - Parallax calculation by an ephemeris table becomes default, but old Kepler calculation still available. Extension to terrestrial parallax. Input times can be given in JD or HJD. Correction of parallax calculation including light travel time. Optimizations in satellite lookup table. Sanity checks for event coordinates and satellite ephemerides tables before parallax calculations.
