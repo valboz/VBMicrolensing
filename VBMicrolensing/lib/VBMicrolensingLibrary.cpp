@@ -5447,7 +5447,6 @@ void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags,
 	double FRtot;
 	complex s[3];
 	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
-	double Et[2];
 	iastro = 12;
 	dPosAng = 0;
 	parallaxextrapolation = 0;
@@ -9417,3 +9416,4 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
+
