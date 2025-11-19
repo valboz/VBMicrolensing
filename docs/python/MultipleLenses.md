@@ -93,4 +93,6 @@ The three different alternative methods are available as `Method.Singlepoly`, `M
 
 The full details of all algorithms are described in [V. Bozza, v. Saggese, G. Covone, P. Rota & J. Zhang, A&A 694 (2025) 219](https://ui.adsabs.harvard.edu/abs/2025A%26A...694A.219B/abstract).
 
+We also note that a separate function is also provided for [Polynomial solving](PolynomialRoots.md).
+
 [Go to **Critical curves and caustics**](CriticalCurvesAndCaustics.md)
