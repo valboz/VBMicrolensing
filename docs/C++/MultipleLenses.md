@@ -93,7 +93,7 @@ VBMicrolensing offers three different algorithms for multiple lenses calculation
 VBM.SetMethod(VBMicrolensing::Method::Nopoly); //Choose the method: Nopoly, Multipoly, Singlepoly
 ```
 
-The three different alternative methods are available as `Method::Singlepoly`, `Method::Multipoly` and `Method::Nopoly`.
+The three different alternative methods are available as `Method::Singlepoly`, `Method::Multipoly` and `Method::Nopoly`. The `SetMethod` function must be called before `SetLensGeometry`.
 
 `Method::Singlepoly` solves the lens equation with the classical associated complex polynomial. It suffers from numerical errors, making it inaccurate even with configurations involving three lenses when two lenses are small. It is offered here just as a reference, but it is not intended to be used in any scientific calculations.
 
