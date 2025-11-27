@@ -8616,7 +8616,19 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 	}/// end of infinite loop
 }
 
-double VBBinaryLensing_shear::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi, _sols **Images) {
+#define _Jacobians1_shear \
+        z=conj(zr[i]);\
+        dza=z-coefs[20];\
+        za2 = dza*dza;\
+        zb2=z*z;\
+        J1= coefs[21]/za2+coefs[22]/zb2 - coefs[27];\
+        J1c=conj(J1);\ 
+        dJ=(1-coefs[26])*(1-coefs[26])-J1*J1c;\
+        J2=-2.*(coefs[21]/(za2*dza)+coefs[22]/(zb2*z));
+
+#define _LL_shear (y-(1.0-coefs[26])*z)+coefs[27]*zc+coefs[21]/(zc-coefs[20])+coefs[22]/zc //Lens equation test
+
+double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi, _sols **Images) {
 	// by Lawrence Pierson (https://github.com/alpv95)
 	static complex a, q, m1, m2, y, yc, mdiff, mtot, K, G;
 	static double av = -1.0, qv = -1.0, Kv = -1.0, Gv = -1.0, Giv = -1.0, cq;
@@ -8691,7 +8703,7 @@ double VBBinaryLensing_shear::BinaryMag0_shear(double a1, double q1, double y1v,
 
 }
 
-double VBBinaryLensing_shear::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi) {
+double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi) {
 	_sols *images;
 	double mag;
 	mag = BinaryMag0_shear(a1, q1, y1v, y2v, K1, G1, Gi, &images);
@@ -8699,7 +8711,7 @@ double VBBinaryLensing_shear::BinaryMag0_shear(double a1, double q1, double y1v,
 	return mag;
 }
 
-_curve *VBBinaryLensing_shear::NewImages_shear(complex yi, complex  *coefs, _theta *theta) {
+_curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *theta) {
     // by Lawrence Pierson (https://github.com/alpv95)
 	static complex  y, yc, z, zc, Gc, J1, J1c, dy, dz, dJ,J2,J3,dza,za2,zb2,zaltc,Jalt,Jaltc,JJalt2;
 	static complex zr[9] = { 0.,0.,0.,0.,0.,0.,0.,0.,0.};
