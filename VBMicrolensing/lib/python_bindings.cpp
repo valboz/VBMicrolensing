@@ -1931,6 +1931,37 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             The magnification.
         )pbdoc");
 
+    vbm.def("BinaryMag0_shear",
+        (double (VBMicrolensing::*)(double, double, double, double, double, double, double))
+        & VBMicrolensing::BinaryMag0_shear,
+        py::return_value_policy::reference,
+        R"mydelimiter(
+            Magnification of a point-source by a binary lens.
+
+            Parameters
+            ----------
+            s : float 
+                The projected separation of the binary lens in units of the 
+                Einstein radius corresponding to the total mass.
+            q : float 
+                Binary lens mass fraction q = m1/m2 s.t. m1<m2 
+            y1 : float 
+                x-position of the source in the source plane.
+            y2 : float 
+                y-position of the source in the source plane.
+            convergence_K : float
+                External mass sheet convergence.
+            shear_G_re : float
+                External mass sheat shear - real part.
+            shear_G_im : float
+                External mass sheat shear - imaginary part.
+
+            Returns
+            -------
+            float
+                Magnification.
+            )mydelimiter");
+
     vbm.def("SetMethod",
         &VBMicrolensing::SetMethod,
         "User choice of Method");

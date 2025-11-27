@@ -203,6 +203,9 @@ public:
 	double MultiMag2(double y1, double y2, double rho);
 	double MultiMagDark(double y1, double y2, double rho, double accuracy);
 
+	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi, _sols **Images);
+	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi);
+
 	// Limb Darkening control
 	enum LDprofiles { LDlinear, LDquadratic, LDsquareroot, LDlog, LDuser };
 	void SetLDprofile(double(*UserLDprofile)(double), int tablesampling);
