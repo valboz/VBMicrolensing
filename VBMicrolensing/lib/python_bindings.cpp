@@ -1952,9 +1952,9 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             convergence_K : float
                 External mass sheet convergence.
             shear_G_re : float
-                External mass sheat shear - real part.
+                External mass sheet shear - real part.
             shear_G_im : float
-                External mass sheat shear - imaginary part.
+                External mass sheet shear - imaginary part.
 
             Returns
             -------
