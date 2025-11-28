@@ -123,6 +123,7 @@ class VBMicrolensing
 	_curve* NewImages(_theta*);
 	_curve* NewImagespoly(_theta*);
 	_curve* NewImagesmultipoly(_theta*);
+	_curve* NewImages_shear(complex, complex*, _theta *);
 	double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols_for_skiplist_curve** images);
 	double MultiMagSafe(double y1, double y2, double rho, _sols_for_skiplist_curve** images);
 	void OrderImages(_sols_for_skiplist_curve*, _curve*);
