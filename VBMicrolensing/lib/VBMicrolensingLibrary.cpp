@@ -8622,7 +8622,7 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
         za2 = dza*dza;\
         zb2=z*z;\
         J1= coefs[21]/za2+coefs[22]/zb2 - coefs[27];\
-        J1c=conj(J1);\ 
+        J1c=conj(J1);\
         dJ=(1-coefs[26])*(1-coefs[26])-J1*J1c;\
         J2=-2.*(coefs[21]/(za2*dza)+coefs[22]/(zb2*z));
 
