@@ -27,7 +27,6 @@ You may check that in the limit of zero shear and zero convergence, the magnific
 ```python
 Mag_1 = VBM.BinaryMag0_shear(s, q, y1, y2, 0., 0., 0.)
 Mag_2 = VBM.BinaryMag0(s, q, y1, y2)
-Test: 18.185448359973932 - 18.185448359975222 = -1.2896350654045818e-12
 print(f"Test: {Mag_1} - {Mag_2} = {Mag_1 - Mag_2}\n") # Output should be 18.18... - 18.18... = -1.2...e-12
 ```
 
