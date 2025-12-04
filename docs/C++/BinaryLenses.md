@@ -38,6 +38,8 @@ printf("Magnification of a point-source = %lf\n", Mag);  // Output should be 18.
 
 The resolution of the lens equation is obtained by recasting the lens equation as a fifth order complex polynomial, whose roots are found by the [Skowron & Gould algorithm](http://www.astrouw.edu.pl/~jskowron/cmplx_roots_sg/), as discussed in the introduction.
 
+It is now also possible to calculate images by [binary lenses in the presence of external shear and convergence fields](BinaryLensesWithShear.md).
+
 ## Binary lensing with extended sources
 
 For extended sources, our recommended general purpose function is `BinaryMag2`, as shown in the quick start section. This function also depends on $\rho$, the source radius in units of the total Einstein angle:
