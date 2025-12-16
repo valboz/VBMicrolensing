@@ -1,3 +1,4 @@
+-  **v5.3.5** - 2025/12/04 - Binary lenses with shear, thanks to Radek Poleski and Lawrence Peirson.
 -  **v5.3.4** - 2025/11/19 - Deleted a wrong line in TripleAstroLightCurve. Function cmplx_roots_gen() for polynomial root calculation now available in Python.
 -  **v5.3.3** - 2025/08/20 - Patch for a bug in parallax.
 -  **v5.3.1** - 2025/08/19 - Warning issued if time is outside the range of lookup tables for parallax or for satellites. Satellite lookup algorithm restored for unequal steps.

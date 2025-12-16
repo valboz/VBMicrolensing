@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "VBMicrolensing"
 description = "VBMicrolensing is a tool for efficient computation in gravitational microlensing events using the advanced contour integration method, supporting single, binary and multiple lenses."
-version = "5.3.4"
+version = "5.3.5"
 keywords = ['Microlensing magnification and astrometry']
 authors = [
     { name = "Valerio Bozza", email = "valboz@sa.infn.it" },

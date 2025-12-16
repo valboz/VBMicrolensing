@@ -123,6 +123,7 @@ class VBMicrolensing
 	_curve* NewImages(_theta*);
 	_curve* NewImagespoly(_theta*);
 	_curve* NewImagesmultipoly(_theta*);
+	_curve* NewImages_shear(complex, complex*, _theta *);
 	double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols_for_skiplist_curve** images);
 	double MultiMagSafe(double y1, double y2, double rho, _sols_for_skiplist_curve** images);
 	void OrderImages(_sols_for_skiplist_curve*, _curve*);
@@ -202,6 +203,9 @@ public:
 	double MultiMag(double y1, double y2, double rho);
 	double MultiMag2(double y1, double y2, double rho);
 	double MultiMagDark(double y1, double y2, double rho, double accuracy);
+
+	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi, _sols **Images);
+	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi);
 
 	// Limb Darkening control
 	enum LDprofiles { LDlinear, LDquadratic, LDsquareroot, LDlog, LDuser };
