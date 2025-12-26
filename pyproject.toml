@@ -36,6 +36,9 @@ minimum-version = "build-system.requires"
 [tool.cibuildwheel]
 build-verbosity = "3"
 
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+
 [tool.setuptools.package-data]
 "VBMicrolensing.data" = ["data/*"]
 
