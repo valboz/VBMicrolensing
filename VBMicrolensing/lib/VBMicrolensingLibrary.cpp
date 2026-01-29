@@ -1,4 +1,4 @@
-// VBMicrolensing v5.3.3 (2025)
+// VBMicrolensing v5.3.6 (2025)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -2630,7 +2630,7 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-	Mag = 0.;
+		Mag = 0.;
 	nim0 = 0;
 	astrox1 = 0;
 	astrox2 = 0;
@@ -2784,23 +2784,23 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		currerr = Mag = 0.;
 
-    astrox1 = 0.;
+		astrox1 = 0.;
 		astrox2 = 0.;
 
 		stheta = Thetas->first;
 		while (stheta->next)
 		{
 			Mag += stheta->Mag;
-			if (astrometry) { 
-				astrox1 += stheta->astrox1; 
-				astrox2 += stheta->astrox2; 
+			if (astrometry) {
+				astrox1 += stheta->astrox1;
+				astrox2 += stheta->astrox2;
 			}
 			if (stheta->next->th - stheta->th > 1.e-8)
 			{
 				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
 
-      stheta = stheta->next;
+			stheta = stheta->next;
 		}
 
 		itheta = APQ.apq_array[0].stheta;
@@ -2854,7 +2854,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 				astrox2 += stheta->astrox2;
 			}
 
-      if ((stheta->th - stheta->prev->th) < 1.e-8) {
+			if ((stheta->th - stheta->prev->th) < 1.e-8) {
 				stheta->maxerr = 0;
 				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
 			}
@@ -4853,8 +4853,8 @@ void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double*
 	c1 = c1prov;            // Now centroid coordinates are in North-East system, but still relative to lens
 
 	// Lens centroid in the sky
-	c1l[0] = muL1 * (t +lighttravel - t0_par - lighttravel0) + paiL * (Ehel[0] - Et0[0]); // Note that Ehel is in South-West system
-	c2l[0] = muL2 * (t +lighttravel - t0_par - lighttravel0) + paiL * (Ehel[1] - Et0[1]);
+	c1l[0] = muL1 * (t + lighttravel - t0_par - lighttravel0par) + paiL * (Ehel[0] - Et0[0]); // Note that Ehel is in South-West system
+	c2l[0] = muL2 * (t + lighttravel - t0_par - lighttravel0par) + paiL * (Ehel[1] - Et0[1]);
 	// Image centroid is finally composed with lens centroid
 	c1s[0] = c1 + c1l[0];
 	c2s[0] = c2 + c2l[0];
@@ -4879,12 +4879,12 @@ void VBMicrolensing::PSPLAstroLightCurve(double* pr, double* ts, double* mags, d
 	alpha = 0;
 	iastro = 5;
 	dPosAng = 0;
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
-		tn = (ts[i] + lighttravel - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		u1 = u0 + pai1 * Et[1] - pai2 * Et[0];
 		u = sqrt(tn * tn + u1 * u1);
 
@@ -4911,12 +4911,12 @@ void VBMicrolensing::ESPLAstroLightCurve(double* pr, double* ts, double* mags, d
 	alpha = 0;
 	iastro = 6;
 	dPosAng = 0;
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
-		tn = (ts[i] +lighttravel - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		u1 = u0 + pai1 * Et[1] - pai2 * Et[0];
 		u = sqrt(tn * tn + u1 * u1);
 
@@ -4943,12 +4943,12 @@ void VBMicrolensing::BinaryAstroLightCurve(double* pr, double* ts, double* mags,
 	iastro = 9;
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 	dPosAng = 0;
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
-		tn = (ts[i] + lighttravel - t0_par) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
 
 		y1s[i] = u * salpha - tn * calpha;
@@ -4979,7 +4979,7 @@ void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 	double w, phi0, inc, phi, Cinc, Sinc, Cphi, Sphi, Cphi0, Sphi0, pphi0, COm, SOm, s_true;
 	double w13, w123, den, den0;
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
 	w13 = w1 * w1 + w3 * w3;
@@ -5009,14 +5009,14 @@ void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
 
-		phi = (ts[i] + lighttravel - t0_par - lighttravel0) * w + phi0;
+		phi = (ts[i] + lighttravel - t0 - lighttravel0) * w + phi0;
 		Cphi = cos(phi);
 		Sphi = sin(phi);
 		den = sqrt(Cphi * Cphi + Cinc * Cinc * Sphi * Sphi);
 		seps[i] = s_true * den; // projected separation at time ts[i]
 
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
-		tn = (ts[i] + lighttravel - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		y1s[i] = (Cphi * (u * SOm - tn * COm) + Cinc * Sphi * (u * COm + tn * SOm)) / den;
 		y2s[i] = (-Cphi * (u * COm + tn * SOm) - Cinc * Sphi * (tn * COm - u * SOm)) / den;
 		mags[i] = BinaryMag2(seps[i], q, y1s[i], y2s[i], rho);
@@ -5048,7 +5048,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 	double wt2, smix, sqsmix, e, h, snu, co1EE0, co2EE0, cosE, sinE, co1tperi, tperi, EE0, M, a, St, psi, dM, conu, n;
 	double arm1, arm2;
 	double X[3], Y[3], Z[3], r[2], x[2];
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
 	smix = 1 + szs * szs;
@@ -5090,7 +5090,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 	EE0 *= (snu > 0) ? 1 : -1;
 	sinE = sqrt(1 - cosE * cosE) * ((snu > 0) ? 1 : -1);
 	co1tperi = e * sinE;
-	tperi = t0_par - (EE0 - co1tperi) / n;
+	tperi = t0 - (EE0 - co1tperi) / n;
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
@@ -5115,7 +5115,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 		St = sqrt(x[0] * x[0] + x[1] * x[1]);
 		psi = atan2(x[1], x[0]);// +((ar > 1) ? 0 : M_PI);
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
-		tn = (ts[i] + lighttravel - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		y1s[i] = -tn * cos(alpha + psi) + u * sin(alpha + psi);
 		y2s[i] = -u * cos(alpha + psi) - tn * sin(alpha + psi);
 		seps[i] = St;
@@ -5126,7 +5126,7 @@ void VBMicrolensing::BinaryAstroLightCurveKepler(double* pr, double* ts, double*
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			FR = (turn_off_secondary_lens)? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
+			FR = (turn_off_secondary_lens) ? 0 : pow(q, lens_mass_luminosity_exponent); // Flux ratio between the two lenses
 			c1l[i] += (-q + FR) * s * thetaE / (1 + q) * cos(PosAng) / (1 + FR); // Flux center of the two lenses from barycenter
 			c2l[i] += (-q + FR) * s * thetaE / (1 + q) * sin(PosAng) / (1 + FR);
 		}
@@ -5149,7 +5149,7 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 	pai2 = pr[8];
 	iastro = 12;
 	dPosAng = 0;
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
 	s[2] = -(s[0] * w[0] + s[1] * w[1]) / w[2]; // Impose velocity orthogonal to position
@@ -5214,11 +5214,11 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 		paiuB = pai1 * Et[1] - pai2 * Et[0]; // Parallax correction referred to tB
 
 		// Position of barycenter
-		tnB = (ts[i] + lighttravel - t0) * vt0B - t0B + paitB * cos(alpha) - paiuB * sin(alpha);
-		uB = u0B + vuB * (ts[i]+ lighttravel - t0) + paitB * sin(alpha) + paiuB * cos(alpha);
+		tnB = (ts[i] + lighttravel - t0 - lighttravel0) * vt0B - t0B + paitB * cos(alpha) - paiuB * sin(alpha);
+		uB = u0B + vuB * (ts[i] + lighttravel - t0 - lighttravel0) + paitB * sin(alpha) + paiuB * cos(alpha);
 
 		// Position of relative particle
-		phi = wtot * (ts[i] + lighttravel - t0) + phi0;
+		phi = wtot * (ts[i] + lighttravel - t0 - lighttravel0) + phi0;
 		xt = (Om[0] * cos(phi) + Y[0] * sin(phi));
 		xu = (Om[1] * cos(phi) + Y[1] * sin(phi));
 
@@ -5263,14 +5263,14 @@ void VBMicrolensing::BinSourceAstroLightCurveXallarap(double* pr, double* ts, do
 }
 
 
-void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, double* y1s2, double* y2s2, double *seps, int np) {
+void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, double* y1s2, double* y2s2, double* seps, int np) {
 	double tn, u, FRl, s = exp(pr[0]), q = exp(pr[1]), w1 = pr[9], w2 = pr[10], w3 = pr[11];
 	tE_inv = exp(-pr[5]);
 
 	double ws[3] = { pr[15] + 1.01e-15, pr[16] + 1.01e-15, pr[17] + 1.01e-15 };
 	double t01 = pr[6], t02 = pr[13] + ws[0] * (pr[13] - pr[6]) / tE_inv, u1 = pr[2], u2 = pr[12] + ws[1] * (pr[6] - pr[13]), FR = exp(pr[14]), rho2, xt, xu;
 	double ss[3] = { (t01 - t02) * tE_inv,u2 - u1,0 };
-	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs,phis0;
+	double L[3], Om[3], Y[3], norm, normOm, s3D, wstot, qs, phis0;
 	double u0B, t0B, vuB, vt0B, s1, s2, uB, tnB, paitB, paiuB, alphas;
 	parallaxextrapolation = 0;
 
@@ -5285,7 +5285,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 	double salpha = sin(pr[3]), calpha = cos(pr[3]);
 	double w, phi0, inc, phi, Cinc, Sinc, Cphi, Sphi, Cphi0, Sphi0, pphi0, COm, SOm, s_true;
 	double w13, w123, den, den0;
-	t0old = 1.e200;
+	t0old = t0parold = 1.e200;
 
 	w13 = w1 * w1 + w3 * w3;
 	w123 = sqrt(w13 + w2 * w2);
@@ -5374,7 +5374,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 		ComputeParallax(ts[i], t0);
 
 		// Binary lens calculation
-		phi = (ts[i] + lighttravel - t0) * w + phi0;
+		phi = (ts[i] + lighttravel - t0 - lighttravel0) * w + phi0;
 		Cphi = cos(phi);
 		Sphi = sin(phi);
 		den = sqrt(Cphi * Cphi + Cinc * Cinc * Sphi * Sphi);
@@ -5385,11 +5385,11 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 		paiuB = pai1 * Et[1] - pai2 * Et[0]; // Parallax correction referred to tB
 
 		// Position of barycenter
-		tnB = (ts[i] + lighttravel - t0) * vt0B - t0B + paitB * cos(alphas) - paiuB * sin(alphas);
-		uB = u0B + vuB * (ts[i] + lighttravel - t0) + paitB * sin(alphas) + paiuB * cos(alphas);
+		tnB = (ts[i] + lighttravel - t0 - lighttravel0) * vt0B - t0B + paitB * cos(alphas) - paiuB * sin(alphas);
+		uB = u0B + vuB * (ts[i] + lighttravel - t0 - lighttravel0) + paitB * sin(alphas) + paiuB * cos(alphas);
 
 		// Position of relative particle
-		phi = wstot * (ts[i]+lighttravel - t0) + phis0;
+		phi = wstot * (ts[i] + lighttravel - t0 - lighttravel0) + phis0;
 		xt = (Om[0] * cos(phi) + Y[0] * sin(phi));
 		xu = (Om[1] * cos(phi) + Y[1] * sin(phi));
 
@@ -5441,7 +5441,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags, double* c1s, double* c2s, double* c1l, double* c2l, double* y1s, double* y2s, int np) {
 	double rho = exp(pr[4]), tn, tE_inv = exp(-pr[5]), di, mindi, u, u0 = pr[2], t0 = pr[6], pai1 = pr[10], pai2 = pr[11];
 	double q[3] = { 1, exp(pr[1]),exp(pr[8]) };
-	double FR[3]; 
+	double FR[3];
 	double FRtot;
 	complex s[3];
 	double salpha = sin(pr[3]), calpha = cos(pr[3]), sbeta = sin(pr[9]), cbeta = cos(pr[9]);
@@ -5465,7 +5465,7 @@ void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags,
 
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
-		tn = (ts[i] +lighttravel - t0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+		tn = (ts[i] + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
 		u = u0 + pai1 * Et[1] - pai2 * Et[0];
 		y1s[i] = u * salpha - tn * calpha;
 		y2s[i] = -u * calpha - tn * salpha;
@@ -5480,13 +5480,13 @@ void VBMicrolensing::TripleAstroLightCurve(double* pr, double* ts, double* mags,
 		//	mags[i] = 1.;
 		//}
 		//else {
-			mags[i] = MultiMag2(y1s[i], y2s[i], rho);
+		mags[i] = MultiMag2(y1s[i], y2s[i], rho);
 		//}
 		if (astrometry) {
 			c1s[i] = astrox1;
 			c2s[i] = astrox2;
 			ComputeCentroids(pr, ts[i], &c1s[i], &c2s[i], &c1l[i], &c2l[i]);
-			c1l[i] += (s[0].re * FR[0] + s[1].re * FR[1] + s[2].re * FR[2])*cos(PosAng)/FRtot; // Flux center of the three lenses from origin
+			c1l[i] += (s[0].re * FR[0] + s[1].re * FR[1] + s[2].re * FR[2]) * cos(PosAng) / FRtot; // Flux center of the three lenses from origin
 			c2l[i] += (s[0].im * FR[0] + s[1].im * FR[1] + s[2].im * FR[2]) * sin(PosAng) / FRtot;
 		}
 
@@ -5601,7 +5601,7 @@ void VBMicrolensing::BinaryLightCurveKepler(double* pr, double* ts, double* mags
 }
 
 void VBMicrolensing::BinSourceLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, int np) {
-	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR=exp(pr[1]), tn, u;
+	double u1 = pr[2], u2 = pr[3], t01 = pr[4], t02 = pr[5], tE_inv = exp(-pr[0]), FR = exp(pr[1]), tn, u;
 
 	for (int i = 0; i < np; i++) {
 		tn = (ts[i] - t01) * tE_inv;
@@ -5695,7 +5695,7 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 	for (int i = 0; i < np; i++) {
 		ComputeParallax(ts[i], t0);
 
-		phi = (ts[i] + lighttravel - t0_par-lighttravel0) * w + phi0;
+		phi = (ts[i] + lighttravel - t0_par - lighttravel0) * w + phi0;
 		Cphi = cos(phi);
 		Sphi = sin(phi);
 		den = sqrt(Cphi * Cphi + Cinc * Cinc * Sphi * Sphi);
@@ -5704,7 +5704,7 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 		dt0 = s_true * (COm * Cphi - Cinc * SOm * Sphi) / (1 + q) * q;  //Position of the primary component with respect to center of mass
 		du0 = s_true * (SOm * Cphi + Cinc * COm * Sphi) / (1 + q) * q;
 
-		tn = -((ts[i] + lighttravel - t0_par- lighttravel0) * tE_inv + dt0 + pai1 * Et[0] + pai2 * Et[1]);
+		tn = -((ts[i] + lighttravel - t0_par - lighttravel0) * tE_inv + dt0 + pai1 * Et[0] + pai2 * Et[1]);
 		u = -(u0 + du0 + pai1 * Et[1] - pai2 * Et[0]);
 		y1s[i] = tn;
 		y2s[i] = u;
@@ -5712,7 +5712,7 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 
 		mags[i] = (u + 2) / sqrt(u * (u + 4));
 
-		tn = -((ts[i] + lighttravel - t0_par- lighttravel0) * tE_inv - dt0 / q + pai1 * Et[0] + pai2 * Et[1]); // Position of the secondary component
+		tn = -((ts[i] + lighttravel - t0_par - lighttravel0) * tE_inv - dt0 / q + pai1 * Et[0] + pai2 * Et[1]); // Position of the secondary component
 		u = -(u0 - du0 / q + pai1 * Et[1] - pai2 * Et[0]);
 		u = tn * tn + u * u;
 
@@ -5845,7 +5845,7 @@ void VBMicrolensing::BinSourceSingleLensXallarap(double* pr, double* ts, double*
 }
 
 
-void VBMicrolensing::BinSourceBinLensLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, double* y1s2, double* y2s2, double *seps, int np) {
+void VBMicrolensing::BinSourceBinLensLightCurve(double* pr, double* ts, double* mags, double* y1s, double* y2s, double* y1s2, double* y2s2, double* seps, int np) {
 	astrometry = false;
 	BinSourceBinLensAstroLightCurve(pr, ts, mags, NULL, NULL, NULL, NULL, y1s, y2s, y1s2, y2s2, seps, np);
 }
@@ -6288,7 +6288,7 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 		}
 		// Reading Sun table files
 		int flag2 = 0;
-//		long startpos = 0;
+		//		long startpos = 0;
 		char teststring[1000];
 		ndataEar = 1;
 
@@ -6307,7 +6307,7 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 		// Finding end of data
 		if (flag2) {
 			flag2 = 0;
-//			startpos = ftell(f);
+			//			startpos = ftell(f);
 			while (!feof(f)) {
 				fscanf(f, "%[^\n]s", teststring);
 				if (!feof(f)) {
@@ -6338,9 +6338,9 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 		f = fopen(filename, "r");
 		double tcur;
 		startEar = stepEar = -1;
-//		fseek(f, startpos, SEEK_SET);
-		
-		// Finding start of data
+		//		fseek(f, startpos, SEEK_SET);
+
+				// Finding start of data
 		while (!feof(f)) {
 			fscanf(f, "%s", teststring);
 			if (!feof(f)) {
@@ -6395,7 +6395,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 		fscanf(f, "%[^\n]s", CoordinateString);
 		fclose(f);
 		SetObjectCoordinates(CoordinateString);
-		
+
 		// Removing any preiovusly loaded satellite table files
 		if (nsat) {
 			for (int i = 0; i < nsat; i++) {
@@ -6470,7 +6470,7 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 				// Allocating memory according to the length of the table
 				tsat[ic] = (double*)malloc(sizeof(double) * ndatasat[ic]);
 				possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
-				
+
 				for (int j = 0; j < ndatasat[ic]; j++) {
 					possat[ic][j] = (double*)malloc(sizeof(double) * 3);
 				}
@@ -6569,7 +6569,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double x1, y1, vx, vy, Ear[3], vEar[3];
 	static double r, sp, ty, Spit, dLtof;
 	int c = 0, ic;
-	
+
 	if (!coordinates_set) {
 		printf("\nUse SetObjectCoordinates to input target coordinates");
 		return;
@@ -6586,36 +6586,36 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		if (!suntable) {
 			LoadSunTable(Suntablefile);
 		}
-		if (t0_par != t0old) {
-			t0old = t0_par;
+		if (t0_par != t0parold) {
+			t0parold = t0_par;
 			ty = (t0_par - startEar) / stepEar;
 			ic = (int)floor(ty);
 			ty -= ic;
 			for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
 			if (t_in_HJD) {
-				double told = t, tnew;
-				lighttravel0 = 0;
-				for (int i = 0; i < 3; i++) lighttravel0 += Ear[i] * Obj[i];
-				lighttravel0 *= au_c;
-				tnew = t0_par - lighttravel0;
+				double told = t0_par, tnew;
+				lighttravel0par = 0;
+				for (int i = 0; i < 3; i++) lighttravel0par += Ear[i] * Obj[i];
+				lighttravel0par *= au_c;
+				tnew = t0_par - lighttravel0par;
 				while (fabs(told - tnew) > 1.e-8) {
 					told = tnew;
 					ty = (told - startEar) / stepEar;
 					ic = (int)floor(ty);
 					ty -= ic;
 					for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
-					lighttravel0 = 0;
-					for (int i = 0; i < 3; i++) lighttravel0 += Ear[i] * Obj[i];
-					lighttravel0 *= au_c;
-					tnew = t0_par - lighttravel0;
+					lighttravel0par = 0;
+					for (int i = 0; i < 3; i++) lighttravel0par += Ear[i] * Obj[i];
+					lighttravel0par *= au_c;
+					tnew = t0_par - lighttravel0par;
 				}
 			}
 			for (int i = 0; i < 3; i++) {
 				if (ty > 0.5) {
-					vEar[i] = ((posEar[ic+2][i]- posEar[ic+1][i]) * (ty-0.5) + (posEar[ic+1][i] - posEar[ic][i]) * (1.5-ty)) / stepEar;
+					vEar[i] = ((posEar[ic + 2][i] - posEar[ic + 1][i]) * (ty - 0.5) + (posEar[ic + 1][i] - posEar[ic][i]) * (1.5 - ty)) / stepEar;
 				}
 				else {
-					vEar[i] = ((posEar[ic][i] - posEar[ic-1][i]) * (0.5 - ty) + (posEar[ic+1][i] - posEar[ic][i]) * (ty+0.5)) / stepEar;
+					vEar[i] = ((posEar[ic][i] - posEar[ic - 1][i]) * (0.5 - ty) + (posEar[ic + 1][i] - posEar[ic][i]) * (ty + 0.5)) / stepEar;
 				}
 			}
 			if (parallaxsystem != 1) {
@@ -6633,16 +6633,39 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 
 
 			Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
-			lighttravel0 = 0;
+			lighttravel0par = 0;
 			for (int i = 0; i < 3; i++) {
 				Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
 				Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
-				lighttravel0 += Ear[i] * Obj[i];
+				lighttravel0par += Ear[i] * Obj[i];
 				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
 				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
 			}
-			lighttravel0 *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			lighttravel0par *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
 		}
+
+		// Let's also update traveltime for t0 
+		if (t0_par_fixed == 0) {
+			lighttravel0 = lighttravel0par;
+		}
+		else {
+			lighttravel0 = 0; //Only non-zero for t in JD
+			if (!t_in_HJD && t0 != t0old) {
+				t0old = t0;
+				ty = (t0 - startEar) / stepEar;
+				ic = (int)floor(ty);
+				ty -= ic;
+				for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+				for (int i = 0; i < 3; i++) {
+					lighttravel0 += Ear[i] * Obj[i];
+				}
+				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			}
+
+		}
+
+
+
 		ty = (t - startEar) / stepEar;
 		ic = (int)floor(ty);
 		ty -= ic;
@@ -6675,14 +6698,14 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
 			Ehel[1] += Ear[i] * tang[i];
 		}
-		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t+lighttravel - t0_par-lighttravel0); // Earth shift along South wrt extrapolation from t0_par
-		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t+lighttravel - t0_par-lighttravel0); // Earth shift along West wrt extrapolation from t0_par
+		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
+		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along West wrt extrapolation from t0_par
 
 	}
 	else {
 		// Calculation with Kepler equation
-		if (t0_par != t0old) {
-			t0old = t0_par;
+		if (t0_par != t0parold) {
+			t0parold = t0_par;
 			ty = (t0_par - 1545) / 36525.0;
 
 			a = a0 + adot * ty;
@@ -6743,16 +6766,74 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 
 
 			Et0[0] = Et0[1] = vt0[0] = vt0[1] = 0;
-			lighttravel0 = 0;
+			lighttravel0par = 0;
 			for (int i = 0; i < 3; i++) {
 				Et0[0] += Ear[i] * rad[i];           // Earth position projected along South at time t0_par
 				Et0[1] += Ear[i] * tang[i];          // Earth position projected along West at time t0_par
-				lighttravel0 += Ear[i] * Obj[i];
+				lighttravel0par += Ear[i] * Obj[i];
 				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
 				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
 			}
-			lighttravel0 *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			lighttravel0par *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
 		}
+
+		// Let's also update traveltime for t0 
+		if (t0_par_fixed == 0) {
+			lighttravel0 = lighttravel0par;
+		}
+		else {
+			lighttravel0 = 0; //Only non-zero for t in JD
+			if (!t_in_HJD && t0 != t0old) {
+				t0old = t0;
+				ty = (t0 - 1545) / 36525.0;
+
+				a = a0 + adot * ty;
+				e = e0 + edot * ty;
+				inc = (inc0 + incdot * ty) * deg;
+				L = (L0 + Ldot * ty) * deg;
+				om = (om0 + omdot * ty) * deg;
+
+				M = L - om;
+				M -= floor((M + M_PI) / (2 * M_PI)) * 2 * M_PI;
+
+				EE = M + e * sin(M);
+				dE = 1;
+				dLtof = 0;
+				while (fabs(dE) > 1.e-8) {
+					if (t_in_HJD) {
+						// Correction to calculate Earth position at JD not HJD
+						x1 = a * (cos(EE) - e);
+						y1 = a * sqrt(1 - e * e) * sin(EE);
+						Ear[0] = x1 * cos(om) - y1 * sin(om);
+						Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
+						Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
+						dLtof = 0;
+						for (int i = 0; i < 3; i++) dLtof -= Ear[i] * Obj[i];
+						dLtof *= dtflight;
+					}
+					dM = M + dLtof - (EE - e * sin(EE));
+					dE = dM / (1 - e * cos(EE));
+					EE += dE;
+				}
+				x1 = a * (cos(EE) - e);
+				y1 = a * sqrt(1 - e * e) * sin(EE);
+				//		r=a*(1-e*cos(EE));
+				vx = -a / (1 - e * cos(EE)) * sin(EE) * Ldot * deg / 36525;
+				vy = a / (1 - e * cos(EE)) * cos(EE) * sqrt(1 - e * e) * Ldot * deg / 36525;
+
+				Ear[0] = x1 * cos(om) - y1 * sin(om);
+				Ear[1] = x1 * sin(om) * cos(inc) + y1 * cos(om) * cos(inc);
+				Ear[2] = x1 * sin(om) * sin(inc) + y1 * cos(om) * sin(inc);
+
+				lighttravel0 = 0;
+				for (int i = 0; i < 3; i++) {
+					lighttravel0 += Ear[i] * Obj[i];
+				}
+				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			}
+
+		}
+
 
 		ty = (t - 1545) / 36525.0;
 
@@ -6803,8 +6884,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			lighttravel += Ear[i] * Obj[i];
 		}
 		lighttravel *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
-		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0); // Earth shift along South wrt extrapolation from t0_par
-		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t + lighttravel - t0_par - lighttravel0); // Earth shift along West wrt extrapolation from t0_par
+		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
+		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along West wrt extrapolation from t0_par
 
 	}
 
@@ -6853,7 +6934,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 					ic = left;
 				}
 			}
-			ty = (t - tsat[satellite - 1][ic])/(tsat[satellite - 1][ic+1]- tsat[satellite - 1][ic]);
+			ty = (t - tsat[satellite - 1][ic]) / (tsat[satellite - 1][ic + 1] - tsat[satellite - 1][ic]);
 			for (int i = 0; i < 3; i++) {
 				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
 				Et[0] += Spit * rad[i];
@@ -8647,15 +8728,15 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 
 #define _LL_shear (y-(1.0-coefs[26])*z)+coefs[27]*zc+coefs[21]/(zc-coefs[20])+coefs[22]/zc //Lens equation test
 
-double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi, _sols **Images) {
+double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi, _sols** Images) {
 	// by Lawrence Pierson (https://github.com/alpv95)
 	static complex a, q, m1, m2, y, yc, mdiff, mtot, K, G;
 	static double av = -1.0, qv = -1.0, Kv = -1.0, Gv = -1.0, Giv = -1.0, cq;
 	static complex  coefs[28], d1, d2, dy, dJ, dz;
 	double Mag = -1.0;
-	_theta *stheta;
-	_curve *Prov, *Prov2;
-	_point *scan1, *scan2;
+	_theta* stheta;
+	_curve* Prov, * Prov2;
+	_point* scan1, * scan2;
 
 	stheta = new _theta(-1.);
 	if ((a1 != av) || (q1 != qv) || (K1 != Kv) || (G1 != Gv) || (Gi != Giv)) {
@@ -8664,7 +8745,7 @@ double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double
 		Kv = K1;
 		Gv = G1;
 		Giv = Gi;
-		if (q1<1) {
+		if (q1 < 1) {
 			a = complex(-a1, 0);
 			q = complex(q1, 0);
 		}
@@ -8673,22 +8754,22 @@ double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double
 			q = complex(1 / q1, 0);
 		}
 		m1 = 1.0 / (1.0 + q);
-		m2 = q*m1;
+		m2 = q * m1;
 		mdiff = (m2 - m1) / 2; //this might be the opposite sign
 		mtot = (m2 + m1) / 2;
-		K = complex(K1,0);
-		G = complex(G1,Gi);
+		K = complex(K1, 0);
+		G = complex(G1, Gi);
 
 
 		coefs[20] = a;
 		coefs[21] = m1;
 		coefs[22] = m2;
-		coefs[6] = a*a;
+		coefs[6] = a * a;
 		coefs[7] = coefs[6] * a;
-		coefs[8] = m2*m2;
+		coefs[8] = m2 * m2;
 		coefs[9] = coefs[6] * coefs[8];
-		coefs[10] = a*m2;
-		coefs[11] = a*m1;
+		coefs[10] = a * m2;
+		coefs[11] = a * m1;
 		coefs[23] = 0;
 		coefs[24] = (m2 - m1) / 2;
 		coefs[25] = (m2 + m1) / 2;
@@ -8702,9 +8783,9 @@ double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double
 	safedist = 10;
 	Prov = NewImages_shear(y, coefs, stheta);
 	if (q.re < 0.01) {
-		safedist = y1v + coefs[11].re-1/a.re;
+		safedist = y1v + coefs[11].re - 1 / a.re;
 		safedist *= safedist;
-		safedist += y2v*y2v - 36 * q1/(a1*a1);
+		safedist += y2v * y2v - 36 * q1 / (a1 * a1);
 	}
 	Mag = 0.;
 	nim0 = 0;
@@ -8723,22 +8804,22 @@ double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double
 }
 
 double VBMicrolensing::BinaryMag0_shear(double a1, double q1, double y1v, double y2v, double K1, double G1, double Gi) {
-	_sols *images;
+	_sols* images;
 	double mag;
 	mag = BinaryMag0_shear(a1, q1, y1v, y2v, K1, G1, Gi, &images);
 	delete images;
 	return mag;
 }
 
-_curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *theta) {
-    // by Lawrence Pierson (https://github.com/alpv95)
-	static complex  y, yc, z, zc, Gc, J1, J1c, dy, dz, dJ,J2,J3,dza,za2,zb2,zaltc,Jalt,Jaltc,JJalt2;
-	static complex zr[9] = { 0.,0.,0.,0.,0.,0.,0.,0.,0.};
-	static double dzmax, dlmax = 1.0e-6, good[9], dJ2,ob2,cq;
+_curve* VBMicrolensing::NewImages_shear(complex yi, complex* coefs, _theta* theta) {
+	// by Lawrence Pierson (https://github.com/alpv95)
+	static complex  y, yc, z, zc, Gc, J1, J1c, dy, dz, dJ, J2, J3, dza, za2, zb2, zaltc, Jalt, Jaltc, JJalt2;
+	static complex zr[9] = { 0.,0.,0.,0.,0.,0.,0.,0.,0. };
+	static double dzmax, dlmax = 1.0e-6, good[9], dJ2, ob2, cq;
 	static int worst1, worst2, worst3, bad, f1;
 	static double av = 0.0, m1v = 0.0, disim, disisso;
-	static _curve *Prov;
-	static _point *scan, *prin, *fifth, *left, *right, *center;
+	static _curve* Prov;
+	static _point* scan, * prin, * fifth, * left, * right, * center;
 
 #ifdef _PRINT_TIMES
 	static double tim0, tim1;
@@ -8748,16 +8829,16 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 	yc = conj(y);
 	Gc = conj(coefs[27]);
 
-	coefs[9] = -coefs[27]*Gc*Gc*Gc + Gc*Gc*coefs[26]*coefs[26] - 2*Gc*Gc*coefs[26] + Gc*Gc;
-	coefs[8] = y*Gc*Gc*coefs[26] - y*Gc*Gc + 3*coefs[20]*coefs[27]*Gc*Gc*Gc - coefs[20]*coefs[27]*Gc*Gc*coefs[26] + coefs[20]*coefs[27]*Gc*Gc - 3*coefs[20]*Gc*Gc*coefs[26]*coefs[26] + 6*coefs[20]*Gc*Gc*coefs[26] - 3*coefs[20]*Gc*Gc + coefs[20]*Gc*coefs[26]*coefs[26]*coefs[26] - 3*coefs[20]*Gc*coefs[26]*coefs[26] + 3*coefs[20]*Gc*coefs[26] - coefs[20]*Gc - 3*coefs[27]*Gc*Gc*yc + 2*Gc*coefs[26]*coefs[26]*yc - 4*Gc*coefs[26]*yc + 2*Gc*yc;
-	coefs[7] = -6*coefs[25]*coefs[27]*Gc*Gc + 2*coefs[25]*Gc*coefs[26]*coefs[26] - 4*coefs[25]*Gc*coefs[26] + 2*coefs[25]*Gc - 3*y*coefs[20]*Gc*Gc*coefs[26] + 3*y*coefs[20]*Gc*Gc + y*coefs[20]*Gc*coefs[26]*coefs[26] - 2*y*coefs[20]*Gc*coefs[26] + y*coefs[20]*Gc + 2*y*Gc*coefs[26]*yc - 2*y*Gc*yc - 3*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*Gc + 3*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*coefs[26] - 3*coefs[20]*coefs[20]*coefs[27]*Gc*Gc + 3*coefs[20]*coefs[20]*Gc*Gc*coefs[26]*coefs[26] - 6*coefs[20]*coefs[20]*Gc*Gc*coefs[26] + 3*coefs[20]*coefs[20]*Gc*Gc - 3*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*coefs[26] + 9*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] - 9*coefs[20]*coefs[20]*Gc*coefs[26] + 3*coefs[20]*coefs[20]*Gc + 9*coefs[20]*coefs[27]*Gc*Gc*yc - 2*coefs[20]*coefs[27]*Gc*coefs[26]*yc + 2*coefs[20]*coefs[27]*Gc*yc - 6*coefs[20]*Gc*coefs[26]*coefs[26]*yc + 12*coefs[20]*Gc*coefs[26]*yc - 6*coefs[20]*Gc*yc + coefs[20]*coefs[26]*coefs[26]*coefs[26]*yc - 3*coefs[20]*coefs[26]*coefs[26]*yc + 3*coefs[20]*coefs[26]*yc - coefs[20]*yc - 3*coefs[27]*Gc*yc*yc + coefs[26]*coefs[26]*yc*yc - 2*coefs[26]*yc*yc + yc*yc;
-	coefs[6] = 4*coefs[25]*y*Gc*coefs[26] - 4*coefs[25]*y*Gc + 15*coefs[25]*coefs[20]*coefs[27]*Gc*Gc - 4*coefs[25]*coefs[20]*coefs[27]*Gc*coefs[26] + 4*coefs[25]*coefs[20]*coefs[27]*Gc - 4*coefs[25]*coefs[20]*Gc*coefs[26]*coefs[26] + 8*coefs[25]*coefs[20]*Gc*coefs[26] - 4*coefs[25]*coefs[20]*Gc + coefs[25]*coefs[20]*coefs[26]*coefs[26]*coefs[26] - 3*coefs[25]*coefs[20]*coefs[26]*coefs[26] + 3*coefs[25]*coefs[20]*coefs[26] - coefs[25]*coefs[20] - 12*coefs[25]*coefs[27]*Gc*yc + 2*coefs[25]*coefs[26]*coefs[26]*yc - 4*coefs[25]*coefs[26]*yc + 2*coefs[25]*yc + 3*y*coefs[20]*coefs[20]*Gc*Gc*coefs[26] - 3*y*coefs[20]*coefs[20]*Gc*Gc - 3*y*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] + 6*y*coefs[20]*coefs[20]*Gc*coefs[26] - 3*y*coefs[20]*coefs[20]*Gc - 6*y*coefs[20]*Gc*coefs[26]*yc + 6*y*coefs[20]*Gc*yc + y*coefs[20]*coefs[26]*coefs[26]*yc - 2*y*coefs[20]*coefs[26]*yc + y*coefs[20]*yc + y*coefs[26]*yc*yc - y*yc*yc + coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*Gc - 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*coefs[26] + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc - coefs[20]*coefs[20]*coefs[20]*Gc*Gc*coefs[26]*coefs[26] + 2*coefs[20]*coefs[20]*coefs[20]*Gc*Gc*coefs[26] - coefs[20]*coefs[20]*coefs[20]*Gc*Gc + 3*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*coefs[26] - 9*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] + 9*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26] - 3*coefs[20]*coefs[20]*coefs[20]*Gc - 9*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*yc + 6*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26]*yc - 6*coefs[20]*coefs[20]*coefs[27]*Gc*yc + 6*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*yc - 12*coefs[20]*coefs[20]*Gc*coefs[26]*yc + 6*coefs[20]*coefs[20]*Gc*yc - 3*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26]*yc + 9*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc - 9*coefs[20]*coefs[20]*coefs[26]*yc + 3*coefs[20]*coefs[20]*yc + 3*coefs[20]*coefs[27]*Gc*Gc*coefs[24] + 9*coefs[20]*coefs[27]*Gc*yc*yc - coefs[20]*coefs[27]*coefs[26]*yc*yc + coefs[20]*coefs[27]*yc*yc - 2*coefs[20]*Gc*coefs[26]*coefs[26]*coefs[24] + 4*coefs[20]*Gc*coefs[26]*coefs[24] - 2*coefs[20]*Gc*coefs[24] - coefs[20]*coefs[26]*coefs[26]*coefs[26]*coefs[24] + 3*coefs[20]*coefs[26]*coefs[26]*coefs[24] - 3*coefs[20]*coefs[26]*coefs[26]*yc*yc - 3*coefs[20]*coefs[26]*coefs[24] + 6*coefs[20]*coefs[26]*yc*yc + coefs[20]*coefs[24] - 3*coefs[20]*yc*yc - coefs[27]*yc*yc*yc;
-	coefs[5] = -12*coefs[25]*coefs[25]*coefs[27]*Gc - 10*coefs[25]*y*coefs[20]*Gc*coefs[26] + 10*coefs[25]*y*coefs[20]*Gc + 2*coefs[25]*y*coefs[20]*coefs[26]*coefs[26] - 4*coefs[25]*y*coefs[20]*coefs[26] + 2*coefs[25]*y*coefs[20] + 4*coefs[25]*y*coefs[26]*yc - 4*coefs[25]*y*yc - 12*coefs[25]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc + 10*coefs[25]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26] - 10*coefs[25]*coefs[20]*coefs[20]*coefs[27]*Gc + 2*coefs[25]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] - 4*coefs[25]*coefs[20]*coefs[20]*Gc*coefs[26] + 2*coefs[25]*coefs[20]*coefs[20]*Gc - 2*coefs[25]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26] + 6*coefs[25]*coefs[20]*coefs[20]*coefs[26]*coefs[26] - 6*coefs[25]*coefs[20]*coefs[20]*coefs[26] + 2*coefs[25]*coefs[20]*coefs[20] + 30*coefs[25]*coefs[20]*coefs[27]*Gc*yc - 4*coefs[25]*coefs[20]*coefs[27]*coefs[26]*yc + 4*coefs[25]*coefs[20]*coefs[27]*yc - 4*coefs[25]*coefs[20]*coefs[26]*coefs[26]*yc + 8*coefs[25]*coefs[20]*coefs[26]*yc - 4*coefs[25]*coefs[20]*yc - 6*coefs[25]*coefs[27]*yc*yc - y*coefs[20]*coefs[20]*coefs[20]*Gc*Gc*coefs[26] + y*coefs[20]*coefs[20]*coefs[20]*Gc*Gc + 3*y*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] - 6*y*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26] + 3*y*coefs[20]*coefs[20]*coefs[20]*Gc + 6*y*coefs[20]*coefs[20]*Gc*coefs[26]*yc - 6*y*coefs[20]*coefs[20]*Gc*yc - 3*y*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc + 6*y*coefs[20]*coefs[20]*coefs[26]*yc - 3*y*coefs[20]*coefs[20]*yc - 2*y*coefs[20]*Gc*coefs[26]*coefs[24] + 2*y*coefs[20]*Gc*coefs[24] - 3*y*coefs[20]*coefs[26]*yc*yc + 3*y*coefs[20]*yc*yc + coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*coefs[26] - coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc - coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*coefs[26] + 3*coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] - 3*coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26] + coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*yc - 6*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26]*yc + 6*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*yc - 2*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*yc + 4*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*yc - 2*coefs[20]*coefs[20]*coefs[20]*Gc*yc + 3*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26]*yc - 9*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc + 9*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc - 3*coefs[20]*coefs[20]*coefs[20]*yc - 6*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*coefs[24] + 2*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26]*coefs[24] - 2*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24] - 9*coefs[20]*coefs[20]*coefs[27]*Gc*yc*yc + 3*coefs[20]*coefs[20]*coefs[27]*coefs[26]*yc*yc - 3*coefs[20]*coefs[20]*coefs[27]*yc*yc + 4*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*coefs[24] - 8*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[24] + 4*coefs[20]*coefs[20]*Gc*coefs[24] + 2*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26]*coefs[24] - 6*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24] + 3*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc*yc + 6*coefs[20]*coefs[20]*coefs[26]*coefs[24] - 6*coefs[20]*coefs[20]*coefs[26]*yc*yc - 2*coefs[20]*coefs[20]*coefs[24] + 3*coefs[20]*coefs[20]*yc*yc + 6*coefs[20]*coefs[27]*Gc*coefs[24]*yc + 3*coefs[20]*coefs[27]*yc*yc*yc - 2*coefs[20]*coefs[26]*coefs[26]*coefs[24]*yc + 4*coefs[20]*coefs[26]*coefs[24]*yc - 2*coefs[20]*coefs[24]*yc;
-	coefs[4] = 4*coefs[25]*coefs[25]*y*coefs[26] - 4*coefs[25]*coefs[25]*y + 24*coefs[25]*coefs[25]*coefs[20]*coefs[27]*Gc - 4*coefs[25]*coefs[25]*coefs[20]*coefs[27]*coefs[26] + 4*coefs[25]*coefs[25]*coefs[20]*coefs[27] + 2*coefs[25]*coefs[25]*coefs[20]*coefs[26]*coefs[26] - 4*coefs[25]*coefs[25]*coefs[20]*coefs[26] + 2*coefs[25]*coefs[25]*coefs[20] - 12*coefs[25]*coefs[25]*coefs[27]*yc + 8*coefs[25]*y*coefs[20]*coefs[20]*Gc*coefs[26] - 8*coefs[25]*y*coefs[20]*coefs[20]*Gc - 5*coefs[25]*y*coefs[20]*coefs[20]*coefs[26]*coefs[26] + 10*coefs[25]*y*coefs[20]*coefs[20]*coefs[26] - 5*coefs[25]*y*coefs[20]*coefs[20] - 10*coefs[25]*y*coefs[20]*coefs[26]*yc + 10*coefs[25]*y*coefs[20]*yc + 3*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc - 8*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26] + 8*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc + coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26] - 3*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26] + 3*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[26] - coefs[25]*coefs[20]*coefs[20]*coefs[20] - 24*coefs[25]*coefs[20]*coefs[20]*coefs[27]*Gc*yc + 10*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*yc - 10*coefs[25]*coefs[20]*coefs[20]*coefs[27]*yc + 2*coefs[25]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc - 4*coefs[25]*coefs[20]*coefs[20]*coefs[26]*yc + 2*coefs[25]*coefs[20]*coefs[20]*yc + 12*coefs[25]*coefs[20]*coefs[27]*Gc*coefs[24] + 15*coefs[25]*coefs[20]*coefs[27]*yc*yc - 2*coefs[25]*coefs[20]*coefs[26]*coefs[26]*coefs[24] + 4*coefs[25]*coefs[20]*coefs[26]*coefs[24] - 2*coefs[25]*coefs[20]*coefs[24] - y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26] + 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26] - y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*Gc - 2*y*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*yc + 2*y*coefs[20]*coefs[20]*coefs[20]*Gc*yc + 3*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc - 6*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc + 3*y*coefs[20]*coefs[20]*coefs[20]*yc + 4*y*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[24] - 4*y*coefs[20]*coefs[20]*Gc*coefs[24] - y*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24] + 2*y*coefs[20]*coefs[20]*coefs[26]*coefs[24] + 3*y*coefs[20]*coefs[20]*coefs[26]*yc*yc - y*coefs[20]*coefs[20]*coefs[24] - 3*y*coefs[20]*coefs[20]*yc*yc - 2*y*coefs[20]*coefs[26]*coefs[24]*yc + 2*y*coefs[20]*coefs[24]*yc + 2*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26]*yc - 2*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*yc - coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26]*yc + 3*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc - 3*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc + coefs[20]*coefs[20]*coefs[20]*coefs[20]*yc + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*Gc*coefs[24] - 4*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26]*coefs[24] + 4*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24] + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*yc*yc - 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*yc*yc + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc*yc - 2*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[26]*coefs[24] + 4*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[24] - 2*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[24] - coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[26]*coefs[24] + 3*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24] - coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc*yc - 3*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24] + 2*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc*yc + coefs[20]*coefs[20]*coefs[20]*coefs[24] - coefs[20]*coefs[20]*coefs[20]*yc*yc - 12*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24]*yc + 2*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24]*yc - 2*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc - 3*coefs[20]*coefs[20]*coefs[27]*yc*yc*yc + 4*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24]*yc - 8*coefs[20]*coefs[20]*coefs[26]*coefs[24]*yc + 4*coefs[20]*coefs[20]*coefs[24]*yc + 3*coefs[20]*coefs[27]*coefs[24]*yc*yc;
-	coefs[3] = -8*coefs[25]*coefs[25]*coefs[25]*coefs[27] - 8*coefs[25]*coefs[25]*y*coefs[20]*coefs[26] + 8*coefs[25]*coefs[25]*y*coefs[20] - 15*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[27]*Gc + 8*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[26] - 8*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[27] - 3*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[26]*coefs[26] + 6*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[26] - 3*coefs[25]*coefs[25]*coefs[20]*coefs[20] + 24*coefs[25]*coefs[25]*coefs[20]*coefs[27]*yc - 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26] + 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*Gc + 4*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26] - 8*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[26] + 4*coefs[25]*y*coefs[20]*coefs[20]*coefs[20] + 8*coefs[25]*y*coefs[20]*coefs[20]*coefs[26]*yc - 8*coefs[25]*y*coefs[20]*coefs[20]*yc - 4*coefs[25]*y*coefs[20]*coefs[26]*coefs[24] + 4*coefs[25]*y*coefs[20]*coefs[24] + 2*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26] - 2*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc + 6*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*yc - 8*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*yc + 8*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc - 18*coefs[25]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24] + 4*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24] - 4*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[24] - 12*coefs[25]*coefs[20]*coefs[20]*coefs[27]*yc*yc + 2*coefs[25]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24] - 4*coefs[25]*coefs[20]*coefs[20]*coefs[26]*coefs[24] + 2*coefs[25]*coefs[20]*coefs[20]*coefs[24] + 12*coefs[25]*coefs[20]*coefs[27]*coefs[24]*yc - y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*yc + 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc - y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*yc - 2*y*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[26]*coefs[24] + 2*y*coefs[20]*coefs[20]*coefs[20]*Gc*coefs[24] + 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24] - 4*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24] - y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc*yc + 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[24] + y*coefs[20]*coefs[20]*coefs[20]*yc*yc + 4*y*coefs[20]*coefs[20]*coefs[26]*coefs[24]*yc - 4*y*coefs[20]*coefs[20]*coefs[24]*yc + 2*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[26]*coefs[24] - 2*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24] + coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*yc*yc - coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc*yc + 6*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24]*yc - 4*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24]*yc + 4*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc + coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc*yc*yc - 2*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24]*yc + 4*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24]*yc - 2*coefs[20]*coefs[20]*coefs[20]*coefs[24]*yc - 3*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24]*coefs[24] - 6*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc*yc + coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24]*coefs[24] - 2*coefs[20]*coefs[20]*coefs[26]*coefs[24]*coefs[24] + coefs[20]*coefs[20]*coefs[24]*coefs[24];
-	coefs[2] = 12*coefs[25]*coefs[25]*coefs[25]*coefs[20]*coefs[27] + 5*coefs[25]*coefs[25]*y*coefs[20]*coefs[20]*coefs[26] - 5*coefs[25]*coefs[25]*y*coefs[20]*coefs[20] + 3*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc - 5*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26] + 5*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27] + coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26] - 2*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[26] + coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20] - 15*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[27]*yc + 12*coefs[25]*coefs[25]*coefs[20]*coefs[27]*coefs[24] - coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26] + 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26] - coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[20] - 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*yc + 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*yc + 6*coefs[25]*y*coefs[20]*coefs[20]*coefs[26]*coefs[24] - 6*coefs[25]*y*coefs[20]*coefs[20]*coefs[24] + 2*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*yc - 2*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc + 6*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24] - 6*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24] + 6*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24] + 3*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc*yc - 18*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc - y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24] + 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24] - y*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[24] - 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24]*yc + 2*y*coefs[20]*coefs[20]*coefs[20]*coefs[24]*yc + y*coefs[20]*coefs[20]*coefs[26]*coefs[24]*coefs[24] - y*coefs[20]*coefs[20]*coefs[24]*coefs[24] + 2*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24]*yc - 2*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*Gc*coefs[24]*coefs[24] - coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24]*coefs[24] + coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24] + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc*yc - coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[26]*coefs[24]*coefs[24] + 2*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24]*coefs[24] - coefs[20]*coefs[20]*coefs[20]*coefs[24]*coefs[24] - 3*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24]*yc;
-	coefs[1] = -6*coefs[25]*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[27] - coefs[25]*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[26] + coefs[25]*coefs[25]*y*coefs[20]*coefs[20]*coefs[20] + coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26] - coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27] + 3*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*yc - 12*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[24] - 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24] + 2*coefs[25]*y*coefs[20]*coefs[20]*coefs[20]*coefs[24] + 2*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24] - 2*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24] + 6*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*yc - 6*coefs[25]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24] - y*coefs[20]*coefs[20]*coefs[20]*coefs[26]*coefs[24]*coefs[24] + y*coefs[20]*coefs[20]*coefs[20]*coefs[24]*coefs[24] + coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[26]*coefs[24]*coefs[24] - coefs[20]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24] + 3*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24]*yc;
-	coefs[0] = coefs[25]*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27] + 3*coefs[25]*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24] + 3*coefs[25]*coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24] + coefs[20]*coefs[20]*coefs[20]*coefs[27]*coefs[24]*coefs[24]*coefs[24];
+	coefs[9] = -coefs[27] * Gc * Gc * Gc + Gc * Gc * coefs[26] * coefs[26] - 2 * Gc * Gc * coefs[26] + Gc * Gc;
+	coefs[8] = y * Gc * Gc * coefs[26] - y * Gc * Gc + 3 * coefs[20] * coefs[27] * Gc * Gc * Gc - coefs[20] * coefs[27] * Gc * Gc * coefs[26] + coefs[20] * coefs[27] * Gc * Gc - 3 * coefs[20] * Gc * Gc * coefs[26] * coefs[26] + 6 * coefs[20] * Gc * Gc * coefs[26] - 3 * coefs[20] * Gc * Gc + coefs[20] * Gc * coefs[26] * coefs[26] * coefs[26] - 3 * coefs[20] * Gc * coefs[26] * coefs[26] + 3 * coefs[20] * Gc * coefs[26] - coefs[20] * Gc - 3 * coefs[27] * Gc * Gc * yc + 2 * Gc * coefs[26] * coefs[26] * yc - 4 * Gc * coefs[26] * yc + 2 * Gc * yc;
+	coefs[7] = -6 * coefs[25] * coefs[27] * Gc * Gc + 2 * coefs[25] * Gc * coefs[26] * coefs[26] - 4 * coefs[25] * Gc * coefs[26] + 2 * coefs[25] * Gc - 3 * y * coefs[20] * Gc * Gc * coefs[26] + 3 * y * coefs[20] * Gc * Gc + y * coefs[20] * Gc * coefs[26] * coefs[26] - 2 * y * coefs[20] * Gc * coefs[26] + y * coefs[20] * Gc + 2 * y * Gc * coefs[26] * yc - 2 * y * Gc * yc - 3 * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * Gc + 3 * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * coefs[26] - 3 * coefs[20] * coefs[20] * coefs[27] * Gc * Gc + 3 * coefs[20] * coefs[20] * Gc * Gc * coefs[26] * coefs[26] - 6 * coefs[20] * coefs[20] * Gc * Gc * coefs[26] + 3 * coefs[20] * coefs[20] * Gc * Gc - 3 * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * coefs[26] + 9 * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] - 9 * coefs[20] * coefs[20] * Gc * coefs[26] + 3 * coefs[20] * coefs[20] * Gc + 9 * coefs[20] * coefs[27] * Gc * Gc * yc - 2 * coefs[20] * coefs[27] * Gc * coefs[26] * yc + 2 * coefs[20] * coefs[27] * Gc * yc - 6 * coefs[20] * Gc * coefs[26] * coefs[26] * yc + 12 * coefs[20] * Gc * coefs[26] * yc - 6 * coefs[20] * Gc * yc + coefs[20] * coefs[26] * coefs[26] * coefs[26] * yc - 3 * coefs[20] * coefs[26] * coefs[26] * yc + 3 * coefs[20] * coefs[26] * yc - coefs[20] * yc - 3 * coefs[27] * Gc * yc * yc + coefs[26] * coefs[26] * yc * yc - 2 * coefs[26] * yc * yc + yc * yc;
+	coefs[6] = 4 * coefs[25] * y * Gc * coefs[26] - 4 * coefs[25] * y * Gc + 15 * coefs[25] * coefs[20] * coefs[27] * Gc * Gc - 4 * coefs[25] * coefs[20] * coefs[27] * Gc * coefs[26] + 4 * coefs[25] * coefs[20] * coefs[27] * Gc - 4 * coefs[25] * coefs[20] * Gc * coefs[26] * coefs[26] + 8 * coefs[25] * coefs[20] * Gc * coefs[26] - 4 * coefs[25] * coefs[20] * Gc + coefs[25] * coefs[20] * coefs[26] * coefs[26] * coefs[26] - 3 * coefs[25] * coefs[20] * coefs[26] * coefs[26] + 3 * coefs[25] * coefs[20] * coefs[26] - coefs[25] * coefs[20] - 12 * coefs[25] * coefs[27] * Gc * yc + 2 * coefs[25] * coefs[26] * coefs[26] * yc - 4 * coefs[25] * coefs[26] * yc + 2 * coefs[25] * yc + 3 * y * coefs[20] * coefs[20] * Gc * Gc * coefs[26] - 3 * y * coefs[20] * coefs[20] * Gc * Gc - 3 * y * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] + 6 * y * coefs[20] * coefs[20] * Gc * coefs[26] - 3 * y * coefs[20] * coefs[20] * Gc - 6 * y * coefs[20] * Gc * coefs[26] * yc + 6 * y * coefs[20] * Gc * yc + y * coefs[20] * coefs[26] * coefs[26] * yc - 2 * y * coefs[20] * coefs[26] * yc + y * coefs[20] * yc + y * coefs[26] * yc * yc - y * yc * yc + coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * Gc - 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * coefs[26] + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc - coefs[20] * coefs[20] * coefs[20] * Gc * Gc * coefs[26] * coefs[26] + 2 * coefs[20] * coefs[20] * coefs[20] * Gc * Gc * coefs[26] - coefs[20] * coefs[20] * coefs[20] * Gc * Gc + 3 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * coefs[26] - 9 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] + 9 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] - 3 * coefs[20] * coefs[20] * coefs[20] * Gc - 9 * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * yc + 6 * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] * yc - 6 * coefs[20] * coefs[20] * coefs[27] * Gc * yc + 6 * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * yc - 12 * coefs[20] * coefs[20] * Gc * coefs[26] * yc + 6 * coefs[20] * coefs[20] * Gc * yc - 3 * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] * yc + 9 * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc - 9 * coefs[20] * coefs[20] * coefs[26] * yc + 3 * coefs[20] * coefs[20] * yc + 3 * coefs[20] * coefs[27] * Gc * Gc * coefs[24] + 9 * coefs[20] * coefs[27] * Gc * yc * yc - coefs[20] * coefs[27] * coefs[26] * yc * yc + coefs[20] * coefs[27] * yc * yc - 2 * coefs[20] * Gc * coefs[26] * coefs[26] * coefs[24] + 4 * coefs[20] * Gc * coefs[26] * coefs[24] - 2 * coefs[20] * Gc * coefs[24] - coefs[20] * coefs[26] * coefs[26] * coefs[26] * coefs[24] + 3 * coefs[20] * coefs[26] * coefs[26] * coefs[24] - 3 * coefs[20] * coefs[26] * coefs[26] * yc * yc - 3 * coefs[20] * coefs[26] * coefs[24] + 6 * coefs[20] * coefs[26] * yc * yc + coefs[20] * coefs[24] - 3 * coefs[20] * yc * yc - coefs[27] * yc * yc * yc;
+	coefs[5] = -12 * coefs[25] * coefs[25] * coefs[27] * Gc - 10 * coefs[25] * y * coefs[20] * Gc * coefs[26] + 10 * coefs[25] * y * coefs[20] * Gc + 2 * coefs[25] * y * coefs[20] * coefs[26] * coefs[26] - 4 * coefs[25] * y * coefs[20] * coefs[26] + 2 * coefs[25] * y * coefs[20] + 4 * coefs[25] * y * coefs[26] * yc - 4 * coefs[25] * y * yc - 12 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc + 10 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] - 10 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * Gc + 2 * coefs[25] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] - 4 * coefs[25] * coefs[20] * coefs[20] * Gc * coefs[26] + 2 * coefs[25] * coefs[20] * coefs[20] * Gc - 2 * coefs[25] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] + 6 * coefs[25] * coefs[20] * coefs[20] * coefs[26] * coefs[26] - 6 * coefs[25] * coefs[20] * coefs[20] * coefs[26] + 2 * coefs[25] * coefs[20] * coefs[20] + 30 * coefs[25] * coefs[20] * coefs[27] * Gc * yc - 4 * coefs[25] * coefs[20] * coefs[27] * coefs[26] * yc + 4 * coefs[25] * coefs[20] * coefs[27] * yc - 4 * coefs[25] * coefs[20] * coefs[26] * coefs[26] * yc + 8 * coefs[25] * coefs[20] * coefs[26] * yc - 4 * coefs[25] * coefs[20] * yc - 6 * coefs[25] * coefs[27] * yc * yc - y * coefs[20] * coefs[20] * coefs[20] * Gc * Gc * coefs[26] + y * coefs[20] * coefs[20] * coefs[20] * Gc * Gc + 3 * y * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] - 6 * y * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] + 3 * y * coefs[20] * coefs[20] * coefs[20] * Gc + 6 * y * coefs[20] * coefs[20] * Gc * coefs[26] * yc - 6 * y * coefs[20] * coefs[20] * Gc * yc - 3 * y * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc + 6 * y * coefs[20] * coefs[20] * coefs[26] * yc - 3 * y * coefs[20] * coefs[20] * yc - 2 * y * coefs[20] * Gc * coefs[26] * coefs[24] + 2 * y * coefs[20] * Gc * coefs[24] - 3 * y * coefs[20] * coefs[26] * yc * yc + 3 * y * coefs[20] * yc * yc + coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * coefs[26] - coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc - coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * coefs[26] + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] - 3 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] + coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * yc - 6 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] * yc + 6 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * yc - 2 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * yc + 4 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * yc - 2 * coefs[20] * coefs[20] * coefs[20] * Gc * yc + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] * yc - 9 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc + 9 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc - 3 * coefs[20] * coefs[20] * coefs[20] * yc - 6 * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * coefs[24] + 2 * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] * coefs[24] - 2 * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] - 9 * coefs[20] * coefs[20] * coefs[27] * Gc * yc * yc + 3 * coefs[20] * coefs[20] * coefs[27] * coefs[26] * yc * yc - 3 * coefs[20] * coefs[20] * coefs[27] * yc * yc + 4 * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * coefs[24] - 8 * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[24] + 4 * coefs[20] * coefs[20] * Gc * coefs[24] + 2 * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] * coefs[24] - 6 * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] + 3 * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc * yc + 6 * coefs[20] * coefs[20] * coefs[26] * coefs[24] - 6 * coefs[20] * coefs[20] * coefs[26] * yc * yc - 2 * coefs[20] * coefs[20] * coefs[24] + 3 * coefs[20] * coefs[20] * yc * yc + 6 * coefs[20] * coefs[27] * Gc * coefs[24] * yc + 3 * coefs[20] * coefs[27] * yc * yc * yc - 2 * coefs[20] * coefs[26] * coefs[26] * coefs[24] * yc + 4 * coefs[20] * coefs[26] * coefs[24] * yc - 2 * coefs[20] * coefs[24] * yc;
+	coefs[4] = 4 * coefs[25] * coefs[25] * y * coefs[26] - 4 * coefs[25] * coefs[25] * y + 24 * coefs[25] * coefs[25] * coefs[20] * coefs[27] * Gc - 4 * coefs[25] * coefs[25] * coefs[20] * coefs[27] * coefs[26] + 4 * coefs[25] * coefs[25] * coefs[20] * coefs[27] + 2 * coefs[25] * coefs[25] * coefs[20] * coefs[26] * coefs[26] - 4 * coefs[25] * coefs[25] * coefs[20] * coefs[26] + 2 * coefs[25] * coefs[25] * coefs[20] - 12 * coefs[25] * coefs[25] * coefs[27] * yc + 8 * coefs[25] * y * coefs[20] * coefs[20] * Gc * coefs[26] - 8 * coefs[25] * y * coefs[20] * coefs[20] * Gc - 5 * coefs[25] * y * coefs[20] * coefs[20] * coefs[26] * coefs[26] + 10 * coefs[25] * y * coefs[20] * coefs[20] * coefs[26] - 5 * coefs[25] * y * coefs[20] * coefs[20] - 10 * coefs[25] * y * coefs[20] * coefs[26] * yc + 10 * coefs[25] * y * coefs[20] * yc + 3 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc - 8 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] + 8 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc + coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] - 3 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] + 3 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[26] - coefs[25] * coefs[20] * coefs[20] * coefs[20] - 24 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * Gc * yc + 10 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * yc - 10 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * yc + 2 * coefs[25] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc - 4 * coefs[25] * coefs[20] * coefs[20] * coefs[26] * yc + 2 * coefs[25] * coefs[20] * coefs[20] * yc + 12 * coefs[25] * coefs[20] * coefs[27] * Gc * coefs[24] + 15 * coefs[25] * coefs[20] * coefs[27] * yc * yc - 2 * coefs[25] * coefs[20] * coefs[26] * coefs[26] * coefs[24] + 4 * coefs[25] * coefs[20] * coefs[26] * coefs[24] - 2 * coefs[25] * coefs[20] * coefs[24] - y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] + 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] - y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * Gc - 2 * y * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * yc + 2 * y * coefs[20] * coefs[20] * coefs[20] * Gc * yc + 3 * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc - 6 * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc + 3 * y * coefs[20] * coefs[20] * coefs[20] * yc + 4 * y * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[24] - 4 * y * coefs[20] * coefs[20] * Gc * coefs[24] - y * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] + 2 * y * coefs[20] * coefs[20] * coefs[26] * coefs[24] + 3 * y * coefs[20] * coefs[20] * coefs[26] * yc * yc - y * coefs[20] * coefs[20] * coefs[24] - 3 * y * coefs[20] * coefs[20] * yc * yc - 2 * y * coefs[20] * coefs[26] * coefs[24] * yc + 2 * y * coefs[20] * coefs[24] * yc + 2 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] * yc - 2 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * yc - coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] * yc + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc - 3 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc + coefs[20] * coefs[20] * coefs[20] * coefs[20] * yc + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * Gc * coefs[24] - 4 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] * coefs[24] + 4 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * yc * yc - 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * yc * yc + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc * yc - 2 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[26] * coefs[24] + 4 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[24] - 2 * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[24] - coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[26] * coefs[24] + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] - coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc * yc - 3 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] + 2 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc * yc + coefs[20] * coefs[20] * coefs[20] * coefs[24] - coefs[20] * coefs[20] * coefs[20] * yc * yc - 12 * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] * yc + 2 * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] * yc - 2 * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc - 3 * coefs[20] * coefs[20] * coefs[27] * yc * yc * yc + 4 * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] * yc - 8 * coefs[20] * coefs[20] * coefs[26] * coefs[24] * yc + 4 * coefs[20] * coefs[20] * coefs[24] * yc + 3 * coefs[20] * coefs[27] * coefs[24] * yc * yc;
+	coefs[3] = -8 * coefs[25] * coefs[25] * coefs[25] * coefs[27] - 8 * coefs[25] * coefs[25] * y * coefs[20] * coefs[26] + 8 * coefs[25] * coefs[25] * y * coefs[20] - 15 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[27] * Gc + 8 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[26] - 8 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[27] - 3 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[26] * coefs[26] + 6 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[26] - 3 * coefs[25] * coefs[25] * coefs[20] * coefs[20] + 24 * coefs[25] * coefs[25] * coefs[20] * coefs[27] * yc - 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] + 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * Gc + 4 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] - 8 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] + 4 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] + 8 * coefs[25] * y * coefs[20] * coefs[20] * coefs[26] * yc - 8 * coefs[25] * y * coefs[20] * coefs[20] * yc - 4 * coefs[25] * y * coefs[20] * coefs[26] * coefs[24] + 4 * coefs[25] * y * coefs[20] * coefs[24] + 2 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] - 2 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc + 6 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * yc - 8 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * yc + 8 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc - 18 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] + 4 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] - 4 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[24] - 12 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * yc * yc + 2 * coefs[25] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] - 4 * coefs[25] * coefs[20] * coefs[20] * coefs[26] * coefs[24] + 2 * coefs[25] * coefs[20] * coefs[20] * coefs[24] + 12 * coefs[25] * coefs[20] * coefs[27] * coefs[24] * yc - y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * yc + 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc - y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * yc - 2 * y * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[26] * coefs[24] + 2 * y * coefs[20] * coefs[20] * coefs[20] * Gc * coefs[24] + 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] - 4 * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] - y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc * yc + 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[24] + y * coefs[20] * coefs[20] * coefs[20] * yc * yc + 4 * y * coefs[20] * coefs[20] * coefs[26] * coefs[24] * yc - 4 * y * coefs[20] * coefs[20] * coefs[24] * yc + 2 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[26] * coefs[24] - 2 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] + coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * yc * yc - coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc * yc + 6 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] * yc - 4 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] * yc + 4 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc + coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc * yc * yc - 2 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] * yc + 4 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] * yc - 2 * coefs[20] * coefs[20] * coefs[20] * coefs[24] * yc - 3 * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] * coefs[24] - 6 * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc * yc + coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] * coefs[24] - 2 * coefs[20] * coefs[20] * coefs[26] * coefs[24] * coefs[24] + coefs[20] * coefs[20] * coefs[24] * coefs[24];
+	coefs[2] = 12 * coefs[25] * coefs[25] * coefs[25] * coefs[20] * coefs[27] + 5 * coefs[25] * coefs[25] * y * coefs[20] * coefs[20] * coefs[26] - 5 * coefs[25] * coefs[25] * y * coefs[20] * coefs[20] + 3 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc - 5 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] + 5 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] + coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] - 2 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[26] + coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] - 15 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[27] * yc + 12 * coefs[25] * coefs[25] * coefs[20] * coefs[27] * coefs[24] - coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] + 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] - coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[20] - 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * yc + 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * yc + 6 * coefs[25] * y * coefs[20] * coefs[20] * coefs[26] * coefs[24] - 6 * coefs[25] * y * coefs[20] * coefs[20] * coefs[24] + 2 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * yc - 2 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc + 6 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] - 6 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] + 6 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] + 3 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc * yc - 18 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc - y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] + 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] - y * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[24] - 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] * yc + 2 * y * coefs[20] * coefs[20] * coefs[20] * coefs[24] * yc + y * coefs[20] * coefs[20] * coefs[26] * coefs[24] * coefs[24] - y * coefs[20] * coefs[20] * coefs[24] * coefs[24] + 2 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] * yc - 2 * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * Gc * coefs[24] * coefs[24] - coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] * coefs[24] + coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc * yc - coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[26] * coefs[24] * coefs[24] + 2 * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] * coefs[24] - coefs[20] * coefs[20] * coefs[20] * coefs[24] * coefs[24] - 3 * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] * yc;
+	coefs[1] = -6 * coefs[25] * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[27] - coefs[25] * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] + coefs[25] * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] + coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] - coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] + 3 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * yc - 12 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[24] - 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] + 2 * coefs[25] * y * coefs[20] * coefs[20] * coefs[20] * coefs[24] + 2 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] - 2 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] + 6 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * yc - 6 * coefs[25] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] - y * coefs[20] * coefs[20] * coefs[20] * coefs[26] * coefs[24] * coefs[24] + y * coefs[20] * coefs[20] * coefs[20] * coefs[24] * coefs[24] + coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[26] * coefs[24] * coefs[24] - coefs[20] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] + 3 * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] * yc;
+	coefs[0] = coefs[25] * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] + 3 * coefs[25] * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] + 3 * coefs[25] * coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] + coefs[20] * coefs[20] * coefs[20] * coefs[27] * coefs[24] * coefs[24] * coefs[24];
 
 	bad = 1;
 	dzmax = 1.0e-12;
@@ -8774,7 +8855,7 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 		inc += tim1 - tim0;
 #endif
 		// apply lens equation to check if it is really solved
-		for (int i = 0; i<9; i++) {
+		for (int i = 0; i < 9; i++) {
 			z = zr[i];
 			zc = conj(z);
 			good[i] = abs(_LL_shear); // Lens equation check
@@ -8783,45 +8864,45 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 				worst1 = i;
 				break;
 			case 1:
-				if (good[i]>good[worst1]) {
+				if (good[i] > good[worst1]) {
 					worst2 = worst1;
 					worst1 = i;
 				}
 				else worst2 = i;
 				break;
 			case 2:
-				if (good[i]>good[worst1]) {
+				if (good[i] > good[worst1]) {
 					worst3 = worst2;
 					worst2 = worst1;
 					worst1 = i;
 				}
-				else if (good[i]>good[worst2]) {
+				else if (good[i] > good[worst2]) {
 					worst3 = worst2;
 					worst2 = i;
 				}
 				else worst3 = i;
 				break;
 			default:
-				if (good[i]>good[worst1]) {
+				if (good[i] > good[worst1]) {
 					worst3 = worst2;
 					worst2 = worst1;
 					worst1 = i;
 				}
-				else if (good[i]>good[worst2]) {
+				else if (good[i] > good[worst2]) {
 					worst3 = worst2;
 					worst2 = i;
 				}
-				else if (good[i]>good[worst3]) {
+				else if (good[i] > good[worst3]) {
 					worst3 = i;
 				}
 			}
 		}
-		if ((good[worst3]<dlmax) && ((good[worst1]<dlmax) || (good[worst2]>1.e2*good[worst3]))) {
+		if ((good[worst3] < dlmax) && ((good[worst1] < dlmax) || (good[worst2] > 1.e2 * good[worst3]))) {
 			bad = 0;
 		}
 		else {
-			if ((disim>0) && (good[worst3] / disim>0.99)) {
-				if (f1>1) {
+			if ((disim > 0) && (good[worst3] / disim > 0.99)) {
+				if (f1 > 1) {
 					bad = 0;
 				}
 				else {
@@ -8837,21 +8918,22 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 	}
 	Prov = new _curve;
 	f1 = 0;
-	for (int i = 0; i<9; i++) {
-		if ( (good[i] < dlmax) && ((fabs(zr[i].re) > dlmax) || (fabs(zr[i].im) > dlmax)) && ((fabs(zr[i].re - coefs[20].re) > dlmax) || (fabs(zr[i].im) > dlmax)) ) {
+	for (int i = 0; i < 9; i++) {
+		if ((good[i] < dlmax) && ((fabs(zr[i].re) > dlmax) || (fabs(zr[i].im) > dlmax)) && ((fabs(zr[i].re - coefs[20].re) > dlmax) || (fabs(zr[i].im) > dlmax))) {
 			Prov->append(zr[i].re, zr[i].im);
 
 			_Jacobians1_shear
-			if (theta->th >= 0) {
-				_Jacobians2
-			}else {
-				_Jacobians3
-				corrquad += cq;
-			}
+				if (theta->th >= 0) {
+					_Jacobians2
+				}
+				else {
+					_Jacobians3
+						corrquad += cq;
+				}
 
 			Prov->last->theta = theta;
 
-			if (fabs(dJ.re)<1.e-5) f1 = 1;
+			if (fabs(dJ.re) < 1.e-5) f1 = 1;
 		}
 	}
 	theta->errworst = -1.e100;
@@ -8865,7 +8947,7 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 			}
 			else {
 				dz.re = fabs(scan->dJ);
-				if (dz.re>dJ.re) {
+				if (dz.re > dJ.re) {
 					fifth = scan;
 					dJ.re = dz.re;
 				}
@@ -8874,14 +8956,14 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 		for (scan = Prov->first; scan; scan = scan->next) {
 			if ((scan != prin) && (scan != fifth)) {
 				if (left) {
-					if (scan->x1<left->x1) {
+					if (scan->x1 < left->x1) {
 						if (left != right) {
 							center = left;
 						}
 						left = scan;
 					}
 					else {
-						if (scan->x1>right->x1) {
+						if (scan->x1 > right->x1) {
 							if (left != right) {
 								center = right;
 							}
@@ -8897,9 +8979,9 @@ _curve *VBMicrolensing::NewImages_shear(complex yi, complex  *coefs, _theta *the
 				}
 			}
 		}
-		if (left->dJ>0) left->dJ = -left->dJ;
-		if (center->dJ<0) center->dJ = -center->dJ;
-		if (right->dJ>0) right->dJ = -right->dJ;
+		if (left->dJ > 0) left->dJ = -left->dJ;
+		if (center->dJ < 0) center->dJ = -center->dJ;
+		if (right->dJ > 0) right->dJ = -right->dJ;
 	}
 	// }
 	return Prov;
@@ -9706,4 +9788,5 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
+
 
