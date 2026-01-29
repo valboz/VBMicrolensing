@@ -303,7 +303,6 @@ VBMicrolensing::VBMicrolensing() {
 	good = Jacs = m = 0;
 	pmza = pyaza = ppmy = 0;
 	pmza_mp = pyaza_mp = ppmy_mp = 0;
-	dist_mp = 0;
 	nrootsmp_mp = 0;
 	y_mp = 0;
 	init = 0;
@@ -458,7 +457,6 @@ VBMicrolensing::~VBMicrolensing() {
 		}
 		free(zr_mp);
 		free(nrootsmp_mp);
-		free(dist_mp);
 	}
 
 	delete s_offset;
@@ -7188,8 +7186,6 @@ void VBMicrolensing::change_n(int nn) {
 		zr_mp = NULL;
 		free(nrootsmp_mp);
 		nrootsmp_mp = NULL;
-		free(dist_mp);
-		dist_mp = NULL;
 	}
 
 	n = nn;
@@ -7361,7 +7357,6 @@ void VBMicrolensing::change_n_mp(int nn) {
 		}
 		free(zr_mp);
 		free(nrootsmp_mp);
-		free(dist_mp);
 	}
 
 	n = nn;
@@ -7404,7 +7399,6 @@ void VBMicrolensing::change_n_mp(int nn) {
 			ppmy_mp[j][i] = (complex*)malloc(sizeof(complex) * (nnm1 + 1));
 		}
 	}
-	dist_mp = (double*)malloc(sizeof(double) * n);
 
 	zr_mp = (complex**)malloc(sizeof(complex*) * n);
 	for (int j = 0; j < n; j++) {
@@ -7749,10 +7743,10 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 	static complex poly2[MAXM];
 	static int l, j, i, k, ind, degreenew, croots, m;
+	static int attempts;
 	static double dif0, br;
 	static bool success;
 	static complex coef, prev, przr;
-
 
 	//	n = (int) round(sqrt(degree - 1));
 	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
@@ -7763,17 +7757,32 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	}
 	//Cycle reference systems
 	for (l = 0; l < n; l++) {
-
 		br = false;
-		//copy poly coefs
+		attempts = 0;
+
+	Retry_Laguerre:
+
+		//copy poly coefs 
 		for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
-		//Don't do Lagierre's for small degree polybnomials
+		//Don't do Laguerre's for small degree polybnomials
 		if (l != n - 1) {
 			if (degree <= 1) {
-				if (degree == 1) zr_mp[l][0] = -poly[l][0] / poly[l][1];
-				nrootsmp_mp[l] = 1;
+				nrootsmp_mp[l] = degree;
+				if (degree == 1) {
+					zr_mp[l][0] = -poly[l][0] / poly[l][1];
+					//distance check
+					dif0 = abs2(zr_mp[l][0]);
+					for (i = 1; i < n; i++) {
+						if (abs2(zr_mp[l][0] - a_mp[l][i]) < dif0) {
+							zr_mp[l][0] = complex(0, 0);
+							nrootsmp_mp[l] = 0;
+							break;
+						}
+					}
+				}
 				break;
 			}
+
 			//Do Laguerre for degree >=3
 			for (m = degree; m >= 3; m--) {
 				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
@@ -7782,11 +7791,22 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
 				}
 				nrootsmp_mp[l]++;
+
 				//distance check
 				dif0 = abs2(zr_mp[l][m - 1]);
 				for (i = 1; i < n; i++) {
 					if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0) {
-						dist_mp[l] = abs2(zr_mp[l][m - 1] - a_mp[l][i]);
+
+						// Retry logic
+						if (m == degree && attempts < 10) {
+							attempts++;
+							nrootsmp_mp[l] = 0;
+							double shift = 1.0e-4;
+							double r_real = ((double)rand() / RAND_MAX - 0.5) * shift;
+							double r_imag = ((double)rand() / RAND_MAX - 0.5) * shift;
+							zr_mp[l][m - 1] = complex(r_real, r_imag);
+							goto Retry_Laguerre; // Restart
+						}
 						zr_mp[l][m - 1] = complex(0, 0);
 						br = true;
 						nrootsmp_mp[l]--;
@@ -7794,6 +7814,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 					}
 				}
 				if (br) break;
+
 				//Divide by root
 				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
 				coef = poly2[m];
@@ -7811,7 +7832,6 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				if (abs2(zr_mp[l][1] - a_mp[l][i]) < abs2(zr_mp[l][1])) {
 					zr_mp[l][1] = zr_mp[l][0];
 					zr_mp[l][0] = complex(0, 0);
-					dist_mp[l] = abs2(zr_mp[l][1] - a_mp[l][i]);
 					nrootsmp_mp[l]--;
 					break;
 				}
@@ -7837,9 +7857,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				ind += nrootsmp_mp[ll];
 			}
 
-
 			//divide by previous roots
-
 			degreenew = degree;
 			for (int i = 0; i < n - 1; i++) {
 				degreenew -= nrootsmp_mp[i];
@@ -7855,9 +7873,10 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 			}
 
 			if (degreenew <= 1) {
-				if (degreenew == 1) zr_mp[l][0] = -poly2[0] / poly2[1];
-				nrootsmp_mp[l] = 1;
-
+				if (degreenew == 1) {
+					zr_mp[l][0] = -poly2[0] / poly2[1];
+				}
+				nrootsmp_mp[l] = degreenew;
 				break;
 			}
 
