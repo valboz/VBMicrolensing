@@ -40,3 +40,14 @@
 *.iml
 out
 gen
+
+# test stuff
+build/
+build-cmake-release/
+build-cmake-debug/
+build-local-release/
+build-local-debug/
+smoke_results/
+VBMicrolensing/__pycache__/
+**.DS_Store
+*.pyc

@@ -23,7 +23,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "pytest",
 ]
 
 [project.urls]
@@ -38,7 +37,6 @@ build-verbosity = "3"
 
 [tool.setuptools.package-data]
 "VBMicrolensing.data" = ["data/*"]
-
 
 
 

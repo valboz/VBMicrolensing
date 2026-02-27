@@ -1,0 +1,166 @@
+name: Test Conda Recipe
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to smoke-test from PyPI (defaults to pyproject.toml version)"
+        required: false
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  conda-build:
+    if: github.event_name != 'release' || vars.ENABLE_PYPI_PUBLISH == 'true'
+    name: ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    env:
+      CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version and sync recipe from PyPI
+        id: pypi
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            tag="${{ github.event.release.tag_name }}"
+            version="${tag#v}"
+          elif [[ -n "${{ inputs.version || '' }}" ]]; then
+            version="${{ inputs.version }}"
+            tag="v${version}"
+          else
+            version="$(grep -m1 '^version = "' pyproject.toml | sed -E 's/version = "([^"]+)"/\1/')"
+            tag="v${version}"
+          fi
+
+          pyproject_version="$(grep -m1 '^version = "' pyproject.toml | sed -E 's/version = "([^"]+)"/\1/')"
+          if [[ "$version" != "$pyproject_version" ]]; then
+            echo "Version mismatch: tag/dispatch version '$version' vs pyproject.toml '$pyproject_version'" >&2
+            exit 1
+          fi
+
+          echo "Target version: $version"
+
+          for attempt in $(seq 1 10); do
+            if python .github/scripts/conda_recipe_sync_from_pypi.py "$version" \
+              --package vbmicrolensing \
+              --recipe conda/meta.yaml \
+              --drop-stdlib-c
+            then
+              break
+            fi
+
+            if [[ "$attempt" -eq 10 ]]; then
+              echo "PyPI sdist metadata not available for vbmicrolensing==$version after retries" >&2
+              exit 1
+            fi
+
+            echo "PyPI metadata not ready yet (attempt $attempt/10), retrying in 30s..." >&2
+            sleep 30
+          done > /tmp/pypi_sdist_info.txt
+
+          source_url="$(sed -n '1p' /tmp/pypi_sdist_info.txt)"
+          source_sha256="$(sed -n '2p' /tmp/pypi_sdist_info.txt)"
+
+          echo "PyPI sdist URL: $source_url"
+          echo "PyPI sdist SHA256: $source_sha256"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha256=$source_sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          auto-update-conda: false
+          activate-environment: base
+          # Keep CI tooling on a conda-build-compatible Python; target Python is set in
+          # `conda render/build --python` below.
+          python-version: "3.12"
+          channels: conda-forge
+          channel-priority: strict
+          conda-remove-defaults: true
+          use-mamba: true
+
+      - name: Install conda-build tooling
+        run: |
+          conda info
+          # Keep the Miniforge base untouched (setup-miniconda currently provisions conda on
+          # Python 3.13 on some runners). Build a separate tooling env instead.
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            create_solver="conda"
+            create_cmd=(conda create -y -n conda-build-tools -c conda-forge)
+          else
+            create_solver="mamba"
+            create_cmd=(mamba create -y -n conda-build-tools -c conda-forge)
+          fi
+
+          echo "Creating conda-build-tools environment with ${create_solver}"
+          "${create_cmd[@]}" \
+            python=3.11 \
+            "conda<26" \
+            "conda-build>=25,<26" \
+            "conda-index>=0.7" \
+            conda-verify
+          conda run --no-capture-output -n conda-build-tools conda info
+          conda run --no-capture-output -n conda-build-tools conda list | grep -E '^(conda|conda-build|conda-index|libmamba|conda-libmamba-solver)\s' || true
+
+      - name: Prepare conda-build variants for smoke test
+        run: |
+          variant_file="conda/conda_build_config.smoke.yaml"
+
+          case "${{ matrix.python-version }}" in
+            3.13) numpy_variant="2" ;;
+            *)    numpy_variant="1.26" ;;
+          esac
+
+          cat > "$variant_file" <<EOF
+          numpy:
+            - ${numpy_variant}
+          EOF
+
+          echo "Using numpy variant ${numpy_variant} for python ${{ matrix.python-version }}"
+          cat "$variant_file"
+
+      - name: Render recipe
+        run: |
+          conda run --no-capture-output -n conda-build-tools conda render conda \
+            --override-channels -c conda-forge \
+            -m conda/conda_build_config.smoke.yaml \
+            --python "${{ matrix.python-version }}"
+
+      - name: Build and test recipe
+        run: |
+          conda run --no-capture-output -n conda-build-tools conda build conda \
+            --override-channels -c conda-forge \
+            -m conda/conda_build_config.smoke.yaml \
+            --python "${{ matrix.python-version }}" \
+            --no-anaconda-upload
+
+      - name: Upload built packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: ${{ github.workspace }}/conda-bld/**/*.conda
+          if-no-files-found: ignore

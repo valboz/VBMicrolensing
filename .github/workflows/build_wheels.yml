@@ -14,16 +14,21 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-14,macos-15] # was macos-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prefetch cibuildwheel virtualenv helper
+        run: python .github/scripts/prefetch_cibuildwheel_virtualenv.py
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:                            #
-          MACOSX_DEPLOYMENT_TARGET: "10.15" # 
+          MACOSX_DEPLOYMENT_TARGET: "11.0" #
+          CIBW_ARCHS_WINDOWS: AMD64
           CIBW_SKIP: pp*
         #   CIBW_SOME_OPTION: value
         #    ...
@@ -48,9 +53,3 @@ jobs:
         with:
           name: cibw-sdist
           path: dist/*.tar.gz
-
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
