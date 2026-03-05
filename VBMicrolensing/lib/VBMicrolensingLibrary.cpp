@@ -1,4 +1,4 @@
-// VBMicrolensing v5.3.6 (2025)
+// VBMicrolensing v5.3.6 (2026)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -1179,7 +1179,7 @@ double VBMicrolensing::BinaryMag2(double s, double q, double y1v, double y2v, do
 	delete Images;
 	rho2 = rho * rho;
 	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
-	corrquad2 *= 256 * (rho2 + 1.e-6);
+	corrquad2 *= 256 * (rho2 + 1.e-8);
 	if (corrquad < Tol && corrquad2 < 1 && (/*rho2 * s * s<q || */ safedist > 4 * rho2)) {
 		Mag = Mag0;
 	}
@@ -1599,7 +1599,7 @@ _curve* VBMicrolensing::NewImages(complex yi, complex* coefs, _theta* theta) {
 			i = worst2;
 			_Jacobians1
 				_Jacobians4
-				if (cq < corrquad2) corrquad2 = cq;
+				if (cq > corrquad2) corrquad2 = cq;
 			//_Jacobians3
 			//corrquad2 +=  1/cq;
 
@@ -9788,6 +9788,5 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
-
 
 
