@@ -3,11 +3,11 @@ name: Build
 on: 
   push:
     paths:
-      - '**.cpp'
-      - '**.h'
-      - '**.py'
-      - '**.toml'
-      - '**.yml'
+      - '**/*.cpp'
+      - '**/*.h'
+      - '**/*.py'
+      - '**/*.toml'
+      - '**/*.yml'
 
 jobs:
   build_wheels:
