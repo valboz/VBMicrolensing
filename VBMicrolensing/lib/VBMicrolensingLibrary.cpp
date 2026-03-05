@@ -1179,7 +1179,7 @@ double VBMicrolensing::BinaryMag2(double s, double q, double y1v, double y2v, do
 	delete Images;
 	rho2 = rho * rho;
 	corrquad *= 6 * (rho2 + 1.e-4 * Tol);
-	corrquad2 *= 256 * (rho2 + 1.e-9);
+	corrquad2 *= 256 * (rho2 + 1.e-6);
 	if (corrquad < Tol && corrquad2 < 1 && (/*rho2 * s * s<q || */ safedist > 4 * rho2)) {
 		Mag = Mag0;
 	}
@@ -9788,5 +9788,6 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
+
 
 
