@@ -1458,7 +1458,7 @@ void VBMicrolensing::BinaryMagMultiDark(double a, double q, double y1, double y2
 	JJalt2=(1-J1c*Jalt);\
 	J3=J2*J1c*JJalt2;\
 	J3=(J3-conj(J3)*Jalt)/(JJalt2*JJalt2*dJ.re);\
-	cq=(dJ.re<-100)? 0.0 : (J3.re*J3.re+J3.im*J3.im);
+	cq=(dJ.re<-10)? -1.0 : (J3.re*J3.re+J3.im*J3.im);
 
 
 _curve* VBMicrolensing::NewImages(complex yi, complex* coefs, _theta* theta) {
@@ -1593,13 +1593,16 @@ _curve* VBMicrolensing::NewImages(complex yi, complex* coefs, _theta* theta) {
 
 			int i = worst1;
 			_Jacobians1
-				_Jacobians4
-				corrquad2 = cq;
+			_Jacobians4
+			corrquad2 = cq;
 
 			i = worst2;
 			_Jacobians1
-				_Jacobians4
+			_Jacobians4
+			if (corrquad2 < 0 || cq < 0) corrquad2 = 0;
+			else {
 				if (cq > corrquad2) corrquad2 = cq;
+			}
 			//_Jacobians3
 			//corrquad2 +=  1/cq;
 
