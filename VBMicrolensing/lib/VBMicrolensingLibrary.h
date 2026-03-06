@@ -1,4 +1,4 @@
-// VBMicrolensing v5.3.6 (2025)
+// VBMicrolensing v5.4 (2026)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -613,5 +613,6 @@ inline double _point::operator-(_point p2) {
 
 
 #endif
+
 
 
