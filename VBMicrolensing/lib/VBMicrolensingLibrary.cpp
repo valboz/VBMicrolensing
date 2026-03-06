@@ -1,4 +1,4 @@
-// VBMicrolensing v5.3.6 (2026)
+// VBMicrolensing v5.4 (2026)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -9791,5 +9791,6 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
+
 
 
