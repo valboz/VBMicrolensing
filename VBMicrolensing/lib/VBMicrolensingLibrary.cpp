@@ -3500,9 +3500,9 @@ int VBMicrolensing::froot(complex zi) {
 		iter++;
 	}
 	newtonstep += iter;
-	err = 3.163e-15 / Jac;
-	err *= err;
-	err += abs2(epsbase);
+	err = 1.e-29*(fabs(Jac) + 1/(Jac*Jac)); // First term comes from secondary images very close to small lenses, 
+									  // Second comes for images close to critical curves
+	err += abs2(epsbase);             // Last step size
 	zf = z;
 	Jacf = Jac;
 	S2f = S2;
@@ -9791,6 +9791,5 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
-
 
 
