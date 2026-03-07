@@ -1,4 +1,4 @@
--  **v5.4** - 2026/03/06 - Fixes avoiding crash of multipoly for exceptional parameters. Fixes in parallax calculation for binary lenses. Improved test on ghost images. pybind11 uses local definitions of types.
+-  **v5.4** - 2026/03/07 - Fixes avoiding crash of multipoly for exceptional parameters. New error estimator in nopoly. Fixes in parallax calculation for binary lenses. Improved test on ghost images. pybind11 uses local definitions of types.
 -  **v5.3.5** - 2025/12/04 - Binary lenses with shear, thanks to Radek Poleski and Lawrence Peirson.
 -  **v5.3.4** - 2025/11/19 - Deleted a wrong line in TripleAstroLightCurve. Function cmplx_roots_gen() for polynomial root calculation now available in Python.
 -  **v5.3.3** - 2025/08/20 - Patch for a bug in parallax.
