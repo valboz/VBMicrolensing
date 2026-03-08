@@ -7827,28 +7827,37 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 	static complex poly2[MAXM];
 	static int l, j, i, k, ind, degreenew, croots, m;
-	static int attempts;
+	static int attempts, tot_roots_found; // Inizializzato dopo
 	static double dif0, br;
 	static bool success;
 	static complex coef, prev, przr;
 
-	//	n = (int) round(sqrt(degree - 1));
+	// Inizializzazione sicura
+	tot_roots_found = 0;
 	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
 	for (l = 0; l < n; l++) {
 		for (i = 0; i < degree; i++) {
 			zr_mp[l][i] = complex(0., 0.);
 		}
 	}
-	//Cycle reference systems
+
+	// Cycle reference systems
 	for (l = 0; l < n; l++) {
 		br = false;
 		attempts = 0;
 
+		// EARLY EXIT: Se abbiamo già saturato il limite, saltiamo la lente
+		if (l > 0 && tot_roots_found >= degree) {
+			nrootsmp_mp[l] = 0;
+			continue;
+		}
+
 	Retry_Laguerre:
 
-		//copy poly coefs 
+		// copy poly coefs 
 		for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
-		//Don't do Laguerre's for small degree polybnomials
+
+		// Don't do Laguerre's for small degree polynomials
 		if (l != n - 1) {
 			if (degree <= 1) {
 				nrootsmp_mp[l] = degree;
@@ -7864,10 +7873,11 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 						}
 					}
 				}
-				break;
+				tot_roots_found += nrootsmp_mp[l]; // FIX: Aggiornamento mancante
+				continue; // FIX: Meglio continue che break per mantenere il flusso
 			}
 
-			//Do Laguerre for degree >=3
+			// Do Laguerre for degree >=3
 			for (m = degree; m >= 3; m--) {
 				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
 				if (!success) {
@@ -7876,7 +7886,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 				nrootsmp_mp[l]++;
 
-				//distance check
+				// distance check
 				dif0 = abs2(zr_mp[l][m - 1]);
 				for (i = 1; i < n; i++) {
 					if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0) {
@@ -7899,8 +7909,11 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 				if (br) break;
 
-				//Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
+				if (l > 0 && (tot_roots_found + nrootsmp_mp[l]) >= degree) {
+					break;
+				}
+
+				// Divide by root
 				coef = poly2[m];
 				for (i = m - 1; i >= 0; i--) {
 					prev = poly2[i];
@@ -7908,8 +7921,17 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 					coef = prev + zr_mp[l][m - 1] * coef;
 				}
 			}
-			if (br) continue;
-			//find the last 2 roots
+
+			if (br) {
+				tot_roots_found += nrootsmp_mp[l];
+				continue;
+			}
+			if (l > 0 && (tot_roots_found + nrootsmp_mp[l]) >= degree) {
+				tot_roots_found += nrootsmp_mp[l];
+				continue;
+			}
+
+			// find the last 2 roots
 			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
 			nrootsmp_mp[l] += 2;
 			for (i = 1; i < n; i++) {
@@ -7928,11 +7950,14 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 					break;
 				}
 			}
+
+			// FIX: Aggiornamento finale cumulativo per la lente corrente
+			tot_roots_found += nrootsmp_mp[l];
 		}
 
-		//LAST lens
+		// LAST lens
 		if (l == n - 1) {
-			//Set previous roots
+			// Set previous roots
 			ind = 0;
 			for (int ll = 0; ll < n - 1; ll++) {
 				for (int i = ind; i < ind + nrootsmp_mp[ll]; i++) {
@@ -7941,10 +7966,12 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				ind += nrootsmp_mp[ll];
 			}
 
-			//divide by previous roots
-			degreenew = degree;
-			for (int i = 0; i < n - 1; i++) {
-				degreenew -= nrootsmp_mp[i];
+			// divide by previous roots
+			degreenew = degree - tot_roots_found;
+
+			if (degreenew <= 0) {
+				nrootsmp_mp[l] = 0;
+				continue;
 			}
 
 			for (int m = degree; m > degreenew; m--) {
@@ -7973,7 +8000,6 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				nrootsmp_mp[l] += 1;
 
 				// Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
 				coef = poly2[m];
 				for (i = m - 1; i >= 0; i--) {
 					prev = poly2[i];
@@ -7983,20 +8009,24 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 			}
 			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
 			nrootsmp_mp[l] += 2;
-
 		}
 	}
 
+	// FIX: Array population con bounds checking (MAI rimuoverlo)
 	ind = degree - 1;
 	for (l = 0; l < n - 1; l++) {
 		for (i = 0; i < nrootsmp_mp[l]; i++) {
-			roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
-			ind--;
+			if (ind >= 0) {
+				roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
+				ind--;
+			}
 		}
 	}
 	for (i = 0; i < nrootsmp_mp[n - 1]; i++) {
-		roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
-		ind--;
+		if (ind >= 0) {
+			roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
+			ind--;
+		}
 	}
 
 	return;
@@ -9791,5 +9821,6 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
+
 
 
