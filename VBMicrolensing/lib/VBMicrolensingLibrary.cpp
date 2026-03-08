@@ -7827,12 +7827,11 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 	static complex poly2[MAXM];
 	static int l, j, i, k, ind, degreenew, croots, m;
-	static int attempts, tot_roots_found; // Inizializzato dopo
+	static int attempts, tot_roots_found; 
 	static double dif0, br;
 	static bool success;
 	static complex coef, prev, przr;
 
-	// Inizializzazione sicura
 	tot_roots_found = 0;
 	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
 	for (l = 0; l < n; l++) {
@@ -7846,7 +7845,6 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 		br = false;
 		attempts = 0;
 
-		// EARLY EXIT: Se abbiamo già saturato il limite, saltiamo la lente
 		if (l > 0 && tot_roots_found >= degree) {
 			nrootsmp_mp[l] = 0;
 			continue;
@@ -7874,7 +7872,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 					}
 				}
 				tot_roots_found += nrootsmp_mp[l]; // FIX: Aggiornamento mancante
-				continue; // FIX: Meglio continue che break per mantenere il flusso
+				continue; 
 			}
 
 			// Do Laguerre for degree >=3
@@ -7951,7 +7949,6 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 				}
 			}
 
-			// FIX: Aggiornamento finale cumulativo per la lente corrente
 			tot_roots_found += nrootsmp_mp[l];
 		}
 
@@ -8012,21 +8009,16 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 		}
 	}
 
-	// FIX: Array population con bounds checking (MAI rimuoverlo)
 	ind = degree - 1;
 	for (l = 0; l < n - 1; l++) {
 		for (i = 0; i < nrootsmp_mp[l]; i++) {
-			if (ind >= 0) {
-				roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
-				ind--;
-			}
+			roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
+			ind--;
 		}
 	}
 	for (i = 0; i < nrootsmp_mp[n - 1]; i++) {
-		if (ind >= 0) {
-			roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
-			ind--;
-		}
+		roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
+		ind--;
 	}
 
 	return;
@@ -9821,6 +9813,7 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
+
 
 
 
