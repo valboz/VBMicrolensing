@@ -3,11 +3,11 @@ name: Build
 on: 
   push:
     paths:
-      - '**/*.cpp'
-      - '**/*.h'
-      - '**/*.py'
-      - '**/*.toml'
-      - '**/*.yml'
+      - '**.cpp'
+      - '**.h'
+      - '**.py'
+      - '**.toml'
+      - '**.yml'
 
 jobs:
   build_wheels:
@@ -15,26 +15,27 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest,macos-latest] # was macos-latest
+        os: [ubuntu-latest, windows-latest, macos-14, macos-15]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
-        env:                            #
-          MACOSX_DEPLOYMENT_TARGET: "10.15" # 
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
           CIBW_SKIP: pp*
-        #   CIBW_SOME_OPTION: value
-        #    ...
-        #with:
-        #  package-dir: .
-        #  output-dir: wheelhouse
-        #  config-file: "{package}/pyproject.toml
+          # Add authentication token for Python package downloads
+          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
+        with:
+          # Optional: specify output directory explicitly
+          output-dir: wheelhouse
+
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
@@ -48,9 +49,3 @@ jobs:
         with:
           name: cibw-sdist
           path: dist/*.tar.gz
-
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
