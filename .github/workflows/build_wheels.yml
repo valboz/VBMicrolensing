@@ -20,15 +20,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache cibuildwheel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/cibuildwheel
+            ~/.cache/cibuildwheel
+          key: cibuildwheel-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            cibuildwheel-${{ runner.os }}-
+
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v2.23.0
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           CIBW_SKIP: pp*
-          # Add authentication token for Python package downloads
           CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
         with:
-          # Optional: specify output directory explicitly
           output-dir: wheelhouse
 
       - uses: actions/upload-artifact@v4
