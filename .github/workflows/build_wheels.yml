@@ -43,7 +43,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
+      - name: install virtualenv
+        run: pip install virtualenv
       - name: Cache cibuildwheel
         uses: actions/cache@v4
         with:
