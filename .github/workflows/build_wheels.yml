@@ -10,36 +10,9 @@ on:
       - '**.yml'
 
 jobs:
-  build_ubuntu:
-    name: Build wheels on ubuntu-latest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Cache cibuildwheel
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/cibuildwheel
-          key: cibuildwheel-ubuntu-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: cibuildwheel-ubuntu-
-      
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.0
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "10.15"
-          CIBW_SKIP: pp*
-          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
-        with:
-          output-dir: wheelhouse
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-ubuntu
-          path: ./wheelhouse/*.whl
 
   build_windows:
     name: Build wheels on windows-latest
-    needs: build_ubuntu
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +39,33 @@ jobs:
         with:
           name: cibw-wheels-windows
           path: ./wheelhouse/*.whl
-
+  build_ubuntu:
+    name: Build wheels on ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Cache cibuildwheel
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cibuildwheel
+          key: cibuildwheel-ubuntu-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: cibuildwheel-ubuntu-
+      
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.23.0
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
+          CIBW_SKIP: pp*
+          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
+        with:
+          output-dir: wheelhouse
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-ubuntu
+          path: ./wheelhouse/*.whl
+          
   build_macos14:
     name: Build wheels on macos-14
     needs: build_windows
