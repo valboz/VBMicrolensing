@@ -24,7 +24,7 @@ jobs:
           restore-keys: cibuildwheel-windows-
       
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_SKIP: pp*
           CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
@@ -50,7 +50,7 @@ jobs:
           restore-keys: cibuildwheel-ubuntu-
       
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           CIBW_SKIP: pp*
@@ -78,7 +78,7 @@ jobs:
           restore-keys: cibuildwheel-macos14-
       
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           CIBW_SKIP: pp*
@@ -107,7 +107,7 @@ jobs:
           restore-keys: cibuildwheel-macos15-
       
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           CIBW_SKIP: pp*
