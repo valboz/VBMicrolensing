@@ -1931,37 +1931,6 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             The magnification.
         )pbdoc");
 
-    vbm.def("BinaryMag0_shear",
-        (double (VBMicrolensing::*)(double, double, double, double, double, double, double))
-        & VBMicrolensing::BinaryMag0_shear,
-        py::return_value_policy::reference,
-        R"mydelimiter(
-            Magnification of a point-source by a binary lens.
-
-            Parameters
-            ----------
-            s : float 
-                The projected separation of the binary lens in units of the 
-                Einstein radius corresponding to the total mass.
-            q : float 
-                Binary lens mass fraction q = m1/m2 s.t. m1<m2 
-            y1 : float 
-                x-position of the source in the source plane.
-            y2 : float 
-                y-position of the source in the source plane.
-            convergence_K : float
-                External mass sheet convergence.
-            shear_G_re : float
-                External mass sheet shear - real part.
-            shear_G_im : float
-                External mass sheet shear - imaginary part.
-
-            Returns
-            -------
-            float
-                Magnification.
-            )mydelimiter");
-
     vbm.def("SetMethod",
         &VBMicrolensing::SetMethod,
         "User choice of Method");
@@ -2001,14 +1970,14 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
 
     //  Method: Singlepoly, Multipoly, Nopoly
-    py::enum_<VBMicrolensing::Method>(vbm, "Method")
+    py::enum_<VBMicrolensing::Method>(vbm, "Method", py::module_local())
         .value("Singlepoly", VBMicrolensing::Method::Singlepoly)
         .value("Multipoly", VBMicrolensing::Method::Multipoly)
         .value("Nopoly", VBMicrolensing::Method::Nopoly)
         .export_values();
 
     //LDlinear, LDquadratic, LDsquareroot, LDlog, LDuser
-    py::enum_<VBMicrolensing::LDprofiles>(vbm, "LDprofiles")
+    py::enum_<VBMicrolensing::LDprofiles>(vbm, "LDprofiles", py::module_local())
         .value("LDlinear", VBMicrolensing::LDprofiles::LDlinear)
         .value("LDquadratic", VBMicrolensing::LDprofiles::LDquadratic)
         .value("LDsquareroot", VBMicrolensing::LDprofiles::LDsquareroot)
@@ -2016,17 +1985,17 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         .value("LDuser", VBMicrolensing::LDprofiles::LDuser)
         .export_values();
 
-    py::class_<_theta>(m, "_theta")
+    py::class_<_theta>(m, "_theta", py::module_local())
         .def(py::init<double>()); //constructor 
 
-    py::class_<_point>(m, "_point")
+    py::class_<_point>(m, "_point", py::module_local())
         .def(py::init<double, double, _theta*>())
         .def_readwrite("next", &_point::next)
         .def_readwrite("prev", &_point::prev)
         .def_readonly("x1", &_point::x1)
         .def_readonly("x2", &_point::x2);
 
-    py::class_<_curve>(m, "_curve")
+    py::class_<_curve>(m, "_curve", py::module_local())
         .def(py::init<_point*>()) //constructor 1
         .def(py::init()) //constructor 2
         .def_readwrite("first", &_curve::first)
@@ -2034,7 +2003,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         .def_readwrite("next", &_curve::next)
         .def_readwrite("prev", &_curve::prev);
 
-    py::class_<_skiplist_curve>(m, "_skiplist_curve")
+    py::class_<_skiplist_curve>(m, "_skiplist_curve", py::module_local())
         .def(py::init<_point*, int>()) //constructor 1
         .def(py::init()) //constructor 2
         .def_readwrite("first", &_skiplist_curve::first)
@@ -2042,17 +2011,17 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         .def_readwrite("next", &_skiplist_curve::next)
         .def_readwrite("prev", &_skiplist_curve::prev);
 
-    py::class_<_sols>(m, "_sols")
+    py::class_<_sols>(m, "_sols", py::module_local())
         .def(py::init()) //constructor
         .def_readwrite("first", &_sols::first)
         .def_readwrite("last", &_sols::last);
 
-    py::class_<_sols_for_skiplist_curve>(m, "_sols_for_skiplist_curve")
+    py::class_<_sols_for_skiplist_curve>(m, "_sols_for_skiplist_curve", py::module_local())
         .def(py::init()) //constructor
         .def_readwrite("first", &_sols_for_skiplist_curve::first)
         .def_readwrite("last", &_sols_for_skiplist_curve::last);
 
-    py::class_<complex>(m, "complex")
+    py::class_<complex>(m, "complex", py::module_local())
         .def(py::init<double, double>())
         .def(py::init<double>())
         .def(py::init<>())

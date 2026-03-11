@@ -15,7 +15,7 @@ The first function describes circular orbital motion, while the second considers
 
 Both functions discussed here include the parallax calculation. Therefore, a preliminary call to `VBM.SetObjectCoordinates` is mandatory (see [Parallax](Parallax.md)). If you want to fit orbital motion without parallax, you may set the two components of the parallax to zero.
 
-Finally, the reference time for orbital motion calculation is by default $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. If you want to specify a different time, you can do it through $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)). There is no possibility to set two different reference times. Therefore, in VBMicrolensing we always have $t_{0,orb} = t_{0,par}$.
+Finally, the reference time for orbital motion calculation is always $t_{0,orb}=t_0$, i.e. the time of closest approach of the source to the center of mass. Notice that if you specify a different reference time for parallax $t_{0,par}$ (see [Parallax](Parallax.md#reference-time-for-parallax-t_0par)), this has no effect on $t_{0,orb}$.
 
 ## Circular orbital motion
 

@@ -1,4 +1,4 @@
-// VBMicrolensing v5.3 (2025)
+// VBMicrolensing v5.4 (2026)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -95,9 +95,9 @@ class VBMicrolensing
 	int* worst;
 	double e, phi, phip, phi0, Om, inc, u0, tE_inv, t0, alpha, pai1, pai2, PosAng, dPosAng, thetaE, d3, v3, GM, flagits;
 	int iastro;
-	double Obj[3], rad[3], tang[3], t0old;
+	double Obj[3], rad[3], tang[3], t0old, t0parold;
 	double Eq2000[3], Quad2000[3], North2000[3];
-	double Et0[2], vt0[2], Et[2], Ehel[2], lighttravel, lighttravel0;
+	double Et0[2], vt0[2], Et[2], Ehel[2], lighttravel, lighttravel0, lighttravel0par;
 	double ESPLout[__rsize_ESPL][__zsize_ESPL], ESPLin[__rsize_ESPL][__zsize_ESPL], ESPLoutastro[__rsize_ESPL][__zsize_ESPL], ESPLinastro[__rsize_ESPL][__zsize_ESPL];
 	bool coordinates_set;
 	bool multidark;
@@ -123,7 +123,7 @@ class VBMicrolensing
 	_curve* NewImages(_theta*);
 	_curve* NewImagespoly(_theta*);
 	_curve* NewImagesmultipoly(_theta*);
-	_curve* NewImages_shear(complex, complex*, _theta *);
+	_curve* NewImages_shear(complex, complex*, _theta*);
 	double BinaryMagSafe(double s, double q, double y1, double y2, double rho, _sols_for_skiplist_curve** images);
 	double MultiMagSafe(double y1, double y2, double rho, _sols_for_skiplist_curve** images);
 	void OrderImages(_sols_for_skiplist_curve*, _curve*);
@@ -143,7 +143,7 @@ class VBMicrolensing
 	void polycritcoefficients(complex eiphi);
 
 public:
-	
+
 	double rootaccuracy;
 	double samplingfactor;
 	bool squarecheck;
@@ -157,7 +157,7 @@ public:
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
 	static char Suntablefile[1024];
 	static void SetSuntablefile(char* instring) { strcpy(Suntablefile, instring); }
-	double Tol, RelTol, a1, a2,corrquad, corrquad2, safedist;
+	double Tol, RelTol, a1, a2, corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
 	double t0_par;
@@ -204,7 +204,7 @@ public:
 	double MultiMag2(double y1, double y2, double rho);
 	double MultiMagDark(double y1, double y2, double rho, double accuracy);
 
-	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi, _sols **Images);
+	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi, _sols** Images);
 	double BinaryMag0_shear(double s, double q, double y1, double y2, double K1, double G1, double Gi);
 
 	// Limb Darkening control
@@ -613,4 +613,6 @@ inline double _point::operator-(_point p2) {
 
 
 #endif
+
+
 
