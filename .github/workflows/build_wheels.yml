@@ -10,127 +10,47 @@ on:
       - '**.yml'
 
 jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14,macos-15] # was macos-latest
 
-  build_windows:
-    name: Build wheels on windows-latest
-    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache cibuildwheel
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/cibuildwheel
-          key: cibuildwheel-windows-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: cibuildwheel-windows-
-      
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          CIBW_SKIP: pp*
-          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
-          CIBW_BEFORE_ALL: "python -m pip install --upgrade pip virtualenv"
-        with:
-          output-dir: wheelhouse
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-windows
-          path: ./wheelhouse/*.whl
-  build_ubuntu:
-    name: Build wheels on ubuntu-latest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Cache cibuildwheel
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/cibuildwheel
-          key: cibuildwheel-ubuntu-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: cibuildwheel-ubuntu-
-      
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "10.15"
-          CIBW_SKIP: pp*
-          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
-        with:
-          output-dir: wheelhouse
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-ubuntu
-          path: ./wheelhouse/*.whl
-          
-  build_macos14:
-    name: Build wheels on macos-14
-    needs: build_windows
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Cache cibuildwheel
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/cibuildwheel
-          key: cibuildwheel-macos14-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: cibuildwheel-macos14-
-      
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "10.15"
-          CIBW_SKIP: pp*
-          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
-          CIBW_BEFORE_ALL: "python -m pip install --upgrade pip virtualenv"
-        with:
-          output-dir: wheelhouse
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-macos14
-          path: ./wheelhouse/*.whl
 
-  build_macos15:
-    name: Build wheels on macos-15
-    needs: build_macos14
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Cache cibuildwheel
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/cibuildwheel
-          key: cibuildwheel-macos15-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: cibuildwheel-macos15-
-      
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "10.15"
+        uses: pypa/cibuildwheel@v3.x.x
+        env:                            #
+          MACOSX_DEPLOYMENT_TARGET: "10.15" # 
           CIBW_SKIP: pp*
-          CIBW_ENVIRONMENT: "PIP_RETRIES=5 PIP_DEFAULT_TIMEOUT=1000"
-          CIBW_BEFORE_ALL: "python -m pip install --upgrade pip virtualenv"
-        with:
-          output-dir: wheelhouse
-      
+        #   CIBW_SOME_OPTION: value
+        #    ...
+        #with:
+        #  package-dir: .
+        #  output-dir: wheelhouse
+        #  config-file: "{package}/pyproject.toml
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-macos15
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
-
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build sdist
         run: pipx run build --sdist
-      
+
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-sdist
           path: dist/*.tar.gz
+
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
