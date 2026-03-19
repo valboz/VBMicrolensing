@@ -23,7 +23,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "pytest",
 ]
 
 [project.urls]
@@ -41,7 +40,6 @@ archs = ["x86_64", "arm64"]
 
 [tool.setuptools.package-data]
 "VBMicrolensing.data" = ["data/*"]
-
 
 
 
