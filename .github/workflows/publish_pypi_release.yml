@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14, macos-15]
+        os: [ubuntu-latest, windows-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v6
@@ -34,10 +34,10 @@ jobs:
         run: python .github/scripts/prefetch_cibuildwheel_virtualenv.py
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.4.0
         env:
           MACOSX_DEPLOYMENT_TARGET: "11.0"
-          CIBW_ARCHS_WINDOWS: AMD64
+          #CIBW_ARCHS_WINDOWS: AMD64
 
       - uses: actions/upload-artifact@v6
         with:
