@@ -3971,7 +3971,6 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 	static int nprec, npres, npres2, nfoll, issoc[2], ij;
 
 	nprec = nfoll = 0;
-	issoc[0] = issoc[1] = 0;
 	int new_and_append_Level = 0;
 	while (new_and_append_Level < max_skiplist_level && (engine() % 4) == 0)
 	{
