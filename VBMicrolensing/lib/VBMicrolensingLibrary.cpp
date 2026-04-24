@@ -353,6 +353,7 @@ VBMicrolensing::~VBMicrolensing() {
 		free(posEar);
 	}
 
+	if (coefs) free(coefs);
 	if (m) {
 		free(m);
 		free(a);
@@ -2532,7 +2533,7 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 					p = i + 1;
 				}
 			}
-			x = p;
+			if (k) x = p;
 		} while (k == 1);
 	}
 
@@ -2634,14 +2635,14 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-		Mag = 0.;
+	Mag = 0.;
 	nim0 = 0;
 	astrox1 = 0;
 	astrox2 = 0;
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
 		Prov2 = new _skiplist_curve(scan1, 0);						// create an object of class _curve with one member(_point class variable),
-		// input is pointer(scan1) that points to the member; 
+		// input is pointer(scan1) that points to the member;
 		// pointer to that object is assigned to static local variable 'Prov2'
 		(*Images)->append(Prov2);
 		Ai = fabs(1 / scan1->dJ);
@@ -2912,6 +2913,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 	}
 	catch (...) {
+		delete Thetas;
 		FILE* f = fopen("Geom.txt", "w");
 		fprintf(f, "\n%d\n", n);
 		for (int i = 0; i < n; i++) {
@@ -7486,6 +7488,10 @@ void VBMicrolensing::change_n_mp(int nn) {
 		free(errs);
 		free(newseeds);
 		free(grads);
+		free(S2s);
+		free(S3s);
+		free(S4s);
+		S2s = S3s = S4s = 0;
 	}
 	if (pmza) {
 		for (int i = 0; i < n; i++) {
@@ -7662,6 +7668,9 @@ void VBMicrolensing::change_n_mp(int nn) {
 	errs = (double*)malloc(sizeof(double) * nroots);
 	newseeds = (complex*)malloc(sizeof(complex) * (2 * nroots));
 	grads = (complex*)malloc(sizeof(complex) * (nroots));
+	S2s = (complex*)malloc(sizeof(complex) * (nroots));
+	S3s = (complex*)malloc(sizeof(complex) * (nroots));
+	S4s = (complex*)malloc(sizeof(complex) * (nroots));
 
 
 	cprec = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * nroots);
