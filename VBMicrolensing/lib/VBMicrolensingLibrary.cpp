@@ -8063,6 +8063,14 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 		//LAST lens
 		if (l == n - 1) {
+
+			int sum_prev = 0;
+			for (int ll = 0; ll < n - 1; ll++) {
+				int cap = degree - sum_prev;
+				if (nrootsmp_mp[ll] > cap) nrootsmp_mp[ll] = cap;
+				sum_prev += nrootsmp_mp[ll];
+			}
+
 			//Set previous roots
 			ind = 0;
 			for (int ll = 0; ll < n - 1; ll++) {
@@ -8117,6 +8125,26 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 		}
 	}
+
+	// --- DIAG: verifica invariante prima del packing
+	{
+		static int _call = 0; ++_call;
+		int _total = 0;
+		for (int _ll = 0; _ll < n; _ll++) _total += nrootsmp_mp[_ll];
+		if (_total != degree || _total < 0) {
+			FILE* _dbg = fopen("/tmp/vbm_debug.log", "a");
+			if (_dbg) {
+				fprintf(_dbg, "call=%d degree=%d total=%d nrootsmp=[", _call, degree, _total);
+				for (int _ll = 0; _ll < n; _ll++) fprintf(_dbg, "%d ", nrootsmp_mp[_ll]);
+				fprintf(_dbg, "]\n");
+				fclose(_dbg);
+			}
+			fprintf(stderr, "VBM DIAG call=%d degree=%d total=%d nrootsmp=[", _call, degree, _total);
+			for (int _ll = 0; _ll < n; _ll++) fprintf(stderr, "%d ", nrootsmp_mp[_ll]);
+			fprintf(stderr, "]\n"); fflush(stderr);
+		}
+	}
+	// --- END DIAG
 
 	ind = degree - 1;
 	for (l = 0; l < n - 1; l++) {
