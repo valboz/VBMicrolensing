@@ -7959,174 +7959,248 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	static complex poly2[MAXM];
 	static int l, j, i, k, ind, degreenew, croots, m;
 	static int attempts;
-	static double dif0, br;
+	static double dif0, dif0_lin, br;
 	static bool success;
 	static complex coef, prev, przr;
 
-	//	n = (int) round(sqrt(degree - 1));
-	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
-	for (l = 0; l < n; l++) {
-		for (i = 0; i < degree; i++) {
-			zr_mp[l][i] = complex(0., 0.);
+	static const double safety_levels[3] = { 0.001, 0.01, 0.1 };
+
+	auto total_roots_prev = [&]() -> int {
+		int tot = 0;
+		for (int ll = 0; ll < n - 1; ll++) tot += nrootsmp_mp[ll];
+		return tot;
+	};
+
+	// Main attempt loop over safety levels
+	for (int safety_attempt = 0; safety_attempt < 3; safety_attempt++) {
+
+		double safety = safety_levels[safety_attempt];
+		bool is_last_attempt = (safety_attempt == 2);
+		bool need_retry = false;
+
+		// --- Reset state ---
+		for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
+		for (l = 0; l < n; l++) {
+			for (i = 0; i < degree; i++) {
+				zr_mp[l][i] = complex(0., 0.);
+			}
 		}
-	}
-	//Cycle reference systems
-	for (l = 0; l < n; l++) {
-		br = false;
-		attempts = 0;
 
-	Retry_Laguerre:
+		for (l = 0; l < n; l++) {
+			br = false;
+			attempts = 0;
 
-		//copy poly coefs 
-		for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
-		//Don't do Laguerre's for small degree polybnomials
-		if (l != n - 1) {
-			if (degree <= 1) {
-				nrootsmp_mp[l] = degree;
-				if (degree == 1) {
-					zr_mp[l][0] = -poly[l][0] / poly[l][1];
-					//distance check
-					dif0 = abs2(zr_mp[l][0]);
+		Retry_Laguerre:
+
+			for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
+
+			if (l != n - 1) {
+				if (degree <= 1) {
+					nrootsmp_mp[l] = degree;
+					if (degree == 1) {
+						zr_mp[l][0] = -poly[l][0] / poly[l][1];
+						dif0 = abs2(zr_mp[l][0]);
+						dif0_lin = sqrt(dif0);
+						for (i = 1; i < n; i++) {
+							double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+							if (abs2(zr_mp[l][0] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+								zr_mp[l][0] = complex(0, 0);
+								nrootsmp_mp[l] = 0;
+								break;
+							}
+						}
+					}
+					break;
+				}
+
+				for (m = degree; m >= 3; m--) {
+					cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
+					if (!success) {
+						zr_mp[l][m - 1] = complex(0, 0);
+						cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
+					}
+
+					dif0 = abs2(zr_mp[l][m - 1]);
+					dif0_lin = sqrt(dif0);
 					for (i = 1; i < n; i++) {
-						if (abs2(zr_mp[l][0] - a_mp[l][i]) < dif0) {
-							zr_mp[l][0] = complex(0, 0);
-							nrootsmp_mp[l] = 0;
+						double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+						if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+
+							if (m == degree && attempts < 10) {
+								attempts++;
+								nrootsmp_mp[l] = 0;
+								double shift = 1.0e-4;
+								double r_real = ((double)rand() / RAND_MAX - 0.5) * shift;
+								double r_imag = ((double)rand() / RAND_MAX - 0.5) * shift;
+								zr_mp[l][m - 1] = complex(r_real, r_imag);
+								goto Retry_Laguerre;
+							}
+							zr_mp[l][m - 1] = complex(0, 0);
+							br = true;
 							break;
 						}
 					}
-				}
-				break;
-			}
+					if (br) break;
 
-			//Do Laguerre for degree >=3
-			for (m = degree; m >= 3; m--) {
-				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
-				if (!success) {
-					zr_mp[l][m - 1] = complex(0, 0);
-					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
-				}
-				nrootsmp_mp[l]++;
+					nrootsmp_mp[l]++;
 
-				//distance check
-				dif0 = abs2(zr_mp[l][m - 1]);
+					coef = poly2[m];
+					for (i = m - 1; i >= 0; i--) {
+						prev = poly2[i];
+						poly2[i] = coef;
+						coef = prev + zr_mp[l][m - 1] * coef;
+					}
+				}
+				if (br) continue;
+
+				solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
+				nrootsmp_mp[l] += 2;
+
+				dif0 = abs2(zr_mp[l][1]);
+				dif0_lin = sqrt(dif0);
 				for (i = 1; i < n; i++) {
-					if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0) {
-
-						// Retry logic
-						if (m == degree && attempts < 10) {
-							attempts++;
-							nrootsmp_mp[l] = 0;
-							double shift = 1.0e-4;
-							double r_real = ((double)rand() / RAND_MAX - 0.5) * shift;
-							double r_imag = ((double)rand() / RAND_MAX - 0.5) * shift;
-							zr_mp[l][m - 1] = complex(r_real, r_imag);
-							goto Retry_Laguerre; // Restart
-						}
-						zr_mp[l][m - 1] = complex(0, 0);
-						br = true;
+					double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+					if (abs2(zr_mp[l][1] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+						zr_mp[l][1] = zr_mp[l][0];
+						zr_mp[l][0] = complex(0, 0);
 						nrootsmp_mp[l]--;
 						break;
 					}
 				}
-				if (br) break;
+				k = degree - nrootsmp_mp[l];
+				if (k >= 0 && k < degree) {
+					dif0 = abs2(zr_mp[l][k]);
+					dif0_lin = sqrt(dif0);
+					for (i = 1; i < n; i++) {
+						double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+						if (abs2(zr_mp[l][k] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+							zr_mp[l][k] = complex(0, 0);
+							nrootsmp_mp[l]--;
+							break;
+						}
+					}
+				}
 
-				//Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
-				coef = poly2[m];
-				for (i = m - 1; i >= 0; i--) {
-					prev = poly2[i];
-					poly2[i] = coef;
-					coef = prev + zr_mp[l][m - 1] * coef;
+				// Clamp only on last attempt 
+				if (is_last_attempt) {
+					if (nrootsmp_mp[l] < 0) nrootsmp_mp[l] = 0;
+					if (nrootsmp_mp[l] > degree) nrootsmp_mp[l] = degree;
 				}
 			}
-			if (br) continue;
-			//find the last 2 roots
-			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
-			nrootsmp_mp[l] += 2;
-			for (i = 1; i < n; i++) {
-				if (abs2(zr_mp[l][1] - a_mp[l][i]) < abs2(zr_mp[l][1])) {
-					zr_mp[l][1] = zr_mp[l][0];
-					zr_mp[l][0] = complex(0, 0);
-					nrootsmp_mp[l]--;
+
+			// Last lens: use roots from previous lenses, solve for the rest
+			if (l == n - 1) {
+
+				int tot_prev = total_roots_prev();
+
+				if (tot_prev > degree) {
+					need_retry = true;
 					break;
 				}
-			}
-			k = degree - nrootsmp_mp[l];
-			for (i = 1; i < n; i++) {
-				if (abs2(zr_mp[l][k] - a_mp[l][i]) < abs2(zr_mp[l][k])) {
-					zr_mp[l][k] = complex(0, 0);
-					nrootsmp_mp[l]--;
+
+				ind = 0;
+				for (int ll = 0; ll < n - 1; ll++) {
+					for (int ii = ind; ii < ind + nrootsmp_mp[ll]; ii++) {
+						int widx = degree - ii - 1;
+						int ridx = degree - 1 - ii + ind;
+						if (widx >= 0 && widx < degree && ridx >= 0 && ridx < degree) {
+							zr_mp[l][widx] = zr_mp[ll][ridx] + s_sort[ll] - s_sort[l];
+						}
+					}
+					ind += nrootsmp_mp[ll];
+				}
+
+				degreenew = degree - tot_prev; // always >= 0 here
+
+				for (int mm = degree; mm > degreenew; mm--) {
+					if (mm - 1 < 0 || mm - 1 >= degree) break;
+					coef = poly2[mm];
+					for (i = mm - 1; i >= 0; i--) {
+						prev = poly2[i];
+						poly2[i] = coef;
+						coef = prev + zr_mp[l][mm - 1] * coef;
+					}
+				}
+
+				if (degreenew <= 1) {
+					if (degreenew == 1) {
+						zr_mp[l][0] = -poly2[0] / poly2[1];
+					}
+					nrootsmp_mp[l] = degreenew;
 					break;
 				}
-			}
-		}
 
-		//LAST lens
-		if (l == n - 1) {
-			//Set previous roots
-			ind = 0;
-			for (int ll = 0; ll < n - 1; ll++) {
-				for (int i = ind; i < ind + nrootsmp_mp[ll]; i++) {
-					zr_mp[l][degree - i - 1] = zr_mp[ll][degree - 1 - i + ind] + s_sort[ll] - s_sort[l];
+				int roots_so_far = tot_prev;
+
+				for (m = degreenew; m >= 3; m--) {
+					if (is_last_attempt && roots_so_far + nrootsmp_mp[l] + 1 > degree) break;
+
+					if (m - 1 < 0 || m - 1 >= degree) break;
+
+					cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
+					if (!success) {
+						zr_mp[l][m - 1] = complex(0, 0);
+						cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
+					}
+					nrootsmp_mp[l] += 1;
+
+					coef = poly2[m];
+					for (i = m - 1; i >= 0; i--) {
+						prev = poly2[i];
+						poly2[i] = coef;
+						coef = prev + zr_mp[l][m - 1] * coef;
+					}
 				}
-				ind += nrootsmp_mp[ll];
-			}
 
-			//divide by previous roots
-			degreenew = degree;
-			for (int i = 0; i < n - 1; i++) {
-				degreenew -= nrootsmp_mp[i];
-			}
+				// Add quadratic roots
+				if (!is_last_attempt) {
 
-			for (int m = degree; m > degreenew; m--) {
-				coef = poly2[m];
-				for (i = m - 1; i >= 0; i--) {
-					prev = poly2[i];
-					poly2[i] = coef;
-					coef = prev + zr_mp[l][m - 1] * coef;
-				}
-			}
+					solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
+					nrootsmp_mp[l] += 2;
+				} else {
+					int room = degree - roots_so_far - nrootsmp_mp[l];
+					if (room >= 2) {
+						solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
+						nrootsmp_mp[l] += 2;
+					} else if (room == 1) {
+						complex qa, qb;
+						solve_quadratic_eq(qb, qa, poly2);
+						int slot = nrootsmp_mp[l];
+						if (slot >= 0 && slot < degree) {
+							zr_mp[l][slot] = qa;
+						}
+						nrootsmp_mp[l] += 1;
+					}
 
-			if (degreenew <= 1) {
-				if (degreenew == 1) {
-					zr_mp[l][0] = -poly2[0] / poly2[1];
-				}
-				nrootsmp_mp[l] = degreenew;
-				break;
-			}
-
-			for (m = degreenew; m >= 3; m--) {
-				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
-				if (!success) {
-					zr_mp[l][m - 1] = complex(0, 0);
-					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
-				}
-				nrootsmp_mp[l] += 1;
-
-				// Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
-				coef = poly2[m];
-				for (i = m - 1; i >= 0; i--) {
-					prev = poly2[i];
-					poly2[i] = coef;
-					coef = prev + zr_mp[l][m - 1] * coef;
+					// Final clamp on last attempt only
+					if (nrootsmp_mp[l] < 0) nrootsmp_mp[l] = 0;
+					if (roots_so_far + nrootsmp_mp[l] > degree)
+						nrootsmp_mp[l] = degree - roots_so_far;
 				}
 			}
-			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
-			nrootsmp_mp[l] += 2;
+		} // end for l
 
-		}
-	}
+		if (!need_retry) break; 
 
+	} 
+
+	// Assemble final roots array
 	ind = degree - 1;
 	for (l = 0; l < n - 1; l++) {
 		for (i = 0; i < nrootsmp_mp[l]; i++) {
-			roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
+			if (ind < 0) break;
+			int ridx = degree - 1 - i;
+			if (ridx >= 0 && ridx < degree) {
+				roots[ind] = zr_mp[l][ridx] + s_sort[l] - s_sort[0];
+			}
 			ind--;
 		}
 	}
 	for (i = 0; i < nrootsmp_mp[n - 1]; i++) {
-		roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
+		if (ind < 0) break;
+		if (i >= 0 && i < degree) {
+			roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
+		}
 		ind--;
 	}
 
@@ -9922,5 +9996,3 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
-
-
