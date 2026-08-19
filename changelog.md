@@ -1,4 +1,4 @@
--  **v5.5.1** - 2026/04/25 - Bug fix in complex_multigen preventing array leakage. Safer management of nopoly failures.
+-  **v5.5.1** - 2026/09/?? - Bug fix in complex_multigen preventing array leakage. Safer management of nopoly failures.
 -  **v5.5** - 2026/03/25 - Introduction of coplanar orbital motion for triple lenses by TripleLightCurveOrbital. Includes conda installation by Amber Malpas.
 -  **v5.4.1** - 2026/03/19 - Restores BinaryMag0_shear, erroneously removed.
 -  **v5.4** - 2026/03/11 - Fixes avoiding crash of multipoly for exceptional parameters. New error estimator in nopoly. Fixes in parallax calculation for binary lenses. Improved test on ghost images. pybind11 uses local definitions of types.
