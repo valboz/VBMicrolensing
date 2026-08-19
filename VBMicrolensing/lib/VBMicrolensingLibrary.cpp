@@ -1595,16 +1595,16 @@ _curve* VBMicrolensing::NewImages(complex yi, complex* coefs, _theta* theta) {
 
 			int i = worst1;
 			_Jacobians1
-			_Jacobians4
-			corrquad2 = cq;
+				_Jacobians4
+				corrquad2 = cq;
 
 			i = worst2;
 			_Jacobians1
-			_Jacobians4
-			if (corrquad2 < 0 || cq < 0) corrquad2 = 0;
-			else {
-				if (cq > corrquad2) corrquad2 = cq;
-			}
+				_Jacobians4
+				if (corrquad2 < 0 || cq < 0) corrquad2 = 0;
+				else {
+					if (cq > corrquad2) corrquad2 = cq;
+				}
 			//_Jacobians3
 			//corrquad2 +=  1/cq;
 
@@ -2635,7 +2635,7 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 
 	EXECUTE_METHOD(SelectedMethod, stheta)
 
-	Mag = 0.;
+		Mag = 0.;
 	nim0 = 0;
 	astrox1 = 0;
 	astrox2 = 0;
@@ -2674,11 +2674,12 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s) {
 	return mag;
 }
 
+
 double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, _sols_for_skiplist_curve** Images) {
 	static complex y0, yi;
-	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
-	static double errimage, maxerr, currerr, Magold, rhorad2, th2;
-	static int NPSmax, flag, NPSold, isquare, flagfinal;
+	static double Mag = -1.0, th, thoff, thoff2 = 0.7956012033974483; //0.01020304
+	static double errimage, maxerr, currerr, Magold, rhorad2, th2, errbuff;
+	static int NPSmax, flag, NPSold, isquare, flagfinal, flagbad, flagbadmax = 3;
 	static _thetas* Thetas;
 	static _theta* stheta, * itheta, * jtheta;
 	static _curve* Prov;
@@ -2686,7 +2687,8 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 	static _point* scan1, * scan2;
 	static int lsquares[4];
 
-
+	flagbad = 0;
+	thoff = 0.01020304;
 	yi = complex(y1s, y2s);
 	static std::minstd_rand engine_start{ std::random_device{}() };
 
@@ -2729,14 +2731,24 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		(*Images) = new _sols_for_skiplist_curve;
 		Thetas = new _thetas;
-		th = thoff;
-		stheta = Thetas->insert(th);
-		stheta->maxerr = 0.;
-		stheta->Mag = 0.;
-		stheta->astrox1 = 0.;
-		stheta->astrox2 = 0.;
-		y = y0 + complex(RSv * cos(thoff), RSv * sin(thoff)); // first image
-
+		Prov = 0;
+		int count = 0;
+		do {
+			thoff += thoff;
+			th = thoff;
+			stheta = Thetas->insert(th);
+			stheta->maxerr = 0.;
+			stheta->Mag = 0.;
+			stheta->astrox1 = 0.;
+			stheta->astrox2 = 0.;
+			y = y0 + complex(RSv * cos(thoff), RSv * sin(thoff)); // first image
+			EXECUTE_METHOD(SelectedMethod, stheta)
+				if (Prov->length == 0) {
+					delete Prov; Prov = 0; Thetas->remove(stheta);
+					count++;
+				}
+		} while (count < 10 && (!Prov));
+		if (count == 10) return -1;
 
 
 #ifdef _PRINT_TIMES
@@ -2775,6 +2787,18 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		Prov->length = 0;
 		delete Prov;
 
+		//th = thoff;
+		//for (int i = 0; i < 3; i++) {
+		//	th += M_PI_2;
+		//	stheta = Thetas->insert(th);
+		//	y = y0 + complex(RSv * cos(th), RSv * sin(th));
+
+		//	EXECUTE_METHOD(SelectedMethod, stheta)
+
+		//		OrderMultipleImages((*Images), Prov);
+		//}
+		//NPS = 4;
+
 		th = thoff;
 		for (int i = 0; i < 3; i++) {
 			th += M_PI_2;
@@ -2782,10 +2806,15 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			y = y0 + complex(RSv * cos(th), RSv * sin(th));
 
 			EXECUTE_METHOD(SelectedMethod, stheta)
-
-				OrderMultipleImages((*Images), Prov);
+				if (Prov->length == 0) {
+					delete Prov;
+					Thetas->remove(stheta);
+				}
+				else {
+					OrderMultipleImages((*Images), Prov);
+					NPS++;
+				}
 		}
-		NPS = 4;
 
 		currerr = Mag = 0.;
 
@@ -2816,6 +2845,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		flag = 0;
 		Magold = -1.;
 		NPSold = NPS + 1;
+		errbuff = 0;
 
 		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && (flag < NPSold))) {
 			stheta = Thetas->insert_at_certain_position(itheta, th);
@@ -2842,62 +2872,87 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 #ifdef _PRINT_ERRORS2
 			int lim = Prov->length;
 #endif
-			Mag -= stheta->prev->Mag;
-			if (astrometry) {
-				astrox1 -= stheta->prev->astrox1;
-				astrox2 -= stheta->prev->astrox2;
+			if (Prov->length > 0) {
+				Mag -= stheta->prev->Mag;
+				if (astrometry) {
+					astrox1 -= stheta->prev->astrox1;
+					astrox2 -= stheta->prev->astrox2;
+				}
+				// Assign new images to correct curves
+				OrderMultipleImages((*Images), Prov);
+				Mag += stheta->prev->Mag;
+				Mag += stheta->Mag;
+				if (astrometry) {
+					astrox1 += stheta->prev->astrox1;
+					astrox1 += stheta->astrox1;
+
+					astrox2 += stheta->prev->astrox2;
+					astrox2 += stheta->astrox2;
+				}
+
+				if ((stheta->th - stheta->prev->th) < 1.e-8) {
+					errbuff += stheta->prev->maxerr + stheta->maxerr;
+					stheta->maxerr = 0;
+					stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
+				}
+
+				APQ.pop_then_push_augmented_heap(stheta->prev->maxerr, stheta->prev);
+				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
-			// Assign new images to correct curves
-			OrderMultipleImages((*Images), Prov);
-			Mag += stheta->prev->Mag;
-			Mag += stheta->Mag;
-			if (astrometry) {
-				astrox1 += stheta->prev->astrox1;
-				astrox1 += stheta->astrox1;
-
-				astrox2 += stheta->prev->astrox2;
-				astrox2 += stheta->astrox2;
-			}
-
-			if ((stheta->th - stheta->prev->th) < 1.e-8) {
-				stheta->maxerr = 0;
-				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
-			}
-
-			APQ.pop_then_push_augmented_heap(stheta->prev->maxerr, stheta->prev);
-			APQ.push_augmented_heap(stheta->maxerr, stheta);
-
-			itheta = APQ.apq_array[0].stheta;
-			currerr = APQ.sum_tree_array[0].sumerr;
-
-			th = (itheta->th + itheta->next->th) * 0.5;
-			NPS++;
-
-#ifndef _uniform
-			//if (fabs(Magold - Mag) * 2 < errimage) {
-			//	flag++;
-			//}
-			//else {
-			//	flag = 0;
-			//	Magold = Mag;
-			//	NPSold = NPS + 1;
-			//}
-#else
-			currerr = 2 * errimage;
-			if (NPS == 2 * NPSold) {
-				if (fabs(Magold - Mag) * 2 < errimage) {
-					flag = NPSold;
+			else {
+				delete Prov;
+				flagbad++;
+				if (flagbad == flagbadmax) {
+					if (NPS < 16) {
+						delete Thetas;
+						return -1;
+					}
+					errbuff += stheta->prev->maxerr;
+					stheta->prev->maxerr = 0;
+					APQ.pop_then_push_augmented_heap(0., stheta->prev);
+					NPS--;
+					NPSmax--;
 				}
 				else {
-					flag = 0;
-					NPSold = NPS;
-					Magold = Mag;
+					th = (th - stheta->prev->th >= stheta->next->th - th) ? (th + flagbad * stheta->prev->th) / (1 + flagbad) : (th + flagbad * stheta->next->th) / (1 + flagbad);
 				}
+				Thetas->remove(stheta);
 			}
+
+
+			if (flagbad == 0 || flagbad == flagbadmax) {
+				flagbad = 0;
+
+				itheta = APQ.apq_array[0].stheta;
+				currerr = APQ.sum_tree_array[0].sumerr;
+				th = (itheta->th + itheta->next->th) / 2;
+				NPS++;
+#ifndef _uniform
+				//if (fabs(Magold - Mag) * 2 < errimage) {
+				//	flag++;
+				//}
+				//else {
+				//	flag = 0;
+				//	Magold = Mag;
+				//	NPSold = NPS + 8;
+				//}
+#else
+				currerr = 2 * errimage;
+				if (NPS == 2 * NPSold) {
+					if (fabs(Magold - Mag) * 2 < errimage) {
+						flag = NPSold;
+					}
+					else {
+						flag = 0;
+						NPSold = NPS;
+						Magold = Mag;
+					}
+				}
 #endif
 #ifdef _PRINT_ERRORS2
-			printf("\nNPS= %d nim=%d Mag = %lf maxerr= %lg currerr =%lg th = %lf", NPS, lim, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), th);
+				printf("\nNPS= %d Mag = %lf maxerr= %lg currerr =%lg errbuff = %lg th = %lf", NPS, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), errbuff / (M_PI * RSv * RSv), th);
 #endif
+			}
 
 		}
 		if (astrometry) {
@@ -3503,8 +3558,8 @@ int VBMicrolensing::froot(complex zi) {
 		iter++;
 	}
 	newtonstep += iter;
-	err = 1.e-29*(fabs(Jac) + 1/(Jac*Jac)); // First term comes from secondary images very close to small lenses, 
-									  // Second comes for images close to critical curves
+	err = 1.e-29 * (fabs(Jac) + 1 / (Jac * Jac)); // First term comes from secondary images very close to small lenses, 
+	// Second comes for images close to critical curves
 	err += abs2(epsbase);             // Last step size
 	zf = z;
 	Jacf = Jac;
@@ -3647,6 +3702,10 @@ _curve* VBMicrolensing::NewImages(_theta* theta) {
 				nminus++;
 			}
 			ngoodold = ngood;
+		}
+		if (ngood > 5 * n - 5) {
+			ngood = 0;
+			break;
 		}
 		imass++;
 		if (imass == n) {
@@ -5511,7 +5570,7 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 	double w13, w123, den, den0;
 	double pphi0_2, phi0_2, s2_true, den0_2, Cphi0_2, Sphi0_2, w_2, phi_2, Cphi_2, Sphi_2, den_2, pphi_2;
 	iastro = 15;
-//	dPosAng = 0;
+	//	dPosAng = 0;
 	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
@@ -5547,12 +5606,12 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 	pphi0 = atan2(Cinc * Sphi0, Cphi0);
 
 	pphi0_2 = pphi0 + pr[9];
-	phi0_2 = atan2(sin(pphi0_2)/Cinc, cos(pphi0_2)); // Impose co-planarity and calculate orbital phase
+	phi0_2 = atan2(sin(pphi0_2) / Cinc, cos(pphi0_2)); // Impose co-planarity and calculate orbital phase
 	Cphi0_2 = cos(phi0_2);
 	Sphi0_2 = sin(phi0_2);
 	den0_2 = sqrt(Cphi0_2 * Cphi0_2 + Cinc * Cinc * Sphi0_2 * Sphi0_2);
-	s2_true = s2/den0_2;  // Orbital radius of second planet
-	w_2 = (block_tertiary_lens)? 0 : w * pow(s2_true / s_true, -1.5); // Third Kepler's law
+	s2_true = s2 / den0_2;  // Orbital radius of second planet
+	w_2 = (block_tertiary_lens) ? 0 : w * pow(s2_true / s_true, -1.5); // Third Kepler's law
 
 
 	for (int i = 0; i < np; i++) {
@@ -5591,7 +5650,7 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 		// We are implicitly assuming that the third object is negligible
 		// Since we are neglecting mutual interactions between planets, 
 		// this is still consistent at zero order in planets mass.
-		s[0] = seps[i] / (q[0] + q[1]); 
+		s[0] = seps[i] / (q[0] + q[1]);
 		s[1] = s[0] * q[0];
 		s[0] = -q[1] * s[0];
 		s[2] = seps2[i] * complex(cbeta, sbeta) + s[0];
@@ -7969,7 +8028,7 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 		int tot = 0;
 		for (int ll = 0; ll < n - 1; ll++) tot += nrootsmp_mp[ll];
 		return tot;
-	};
+		};
 
 	// Main attempt loop over safety levels
 	for (int safety_attempt = 0; safety_attempt < 3; safety_attempt++) {
@@ -8157,12 +8216,14 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 					solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
 					nrootsmp_mp[l] += 2;
-				} else {
+				}
+				else {
 					int room = degree - roots_so_far - nrootsmp_mp[l];
 					if (room >= 2) {
 						solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
 						nrootsmp_mp[l] += 2;
-					} else if (room == 1) {
+					}
+					else if (room == 1) {
 						complex qa, qb;
 						solve_quadratic_eq(qb, qa, poly2);
 						int slot = nrootsmp_mp[l];
@@ -8180,9 +8241,9 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 			}
 		} // end for l
 
-		if (!need_retry) break; 
+		if (!need_retry) break;
 
-	} 
+	}
 
 	// Assemble final roots array
 	ind = degree - 1;
