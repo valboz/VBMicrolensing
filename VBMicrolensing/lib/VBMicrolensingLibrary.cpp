@@ -5051,7 +5051,7 @@ void VBMicrolensing::BinaryAstroLightCurveOrbital(double* pr, double* ts, double
 	w123 = sqrt(w13 + w2 * w2);
 	w13 = sqrt(w13);
 	if (w13 > 1.e-8) {
-		w3 = (w3 > 1.e-8) ? w3 : 1.e-8;
+		w3 = (fabs(w3) > 1.e-8) ? w3 : ((w3 < 0.) ? -1.e-8 : 1.e-8);
 		w = w3 * w123 / w13;
 		inc = acos(w2 * w3 / w13 / w123);
 		phi0 = atan2(-w1 * w123, w3 * w13);
@@ -5356,7 +5356,7 @@ void VBMicrolensing::BinSourceBinLensAstroLightCurve(double* pr, double* ts, dou
 	w123 = sqrt(w13 + w2 * w2);
 	w13 = sqrt(w13);
 	if (w13 > 1.e-8) {
-		w3 = (w3 > 1.e-8) ? w3 : 1.e-8;
+		w3 = (fabs(w3) > 1.e-8) ? w3 : ((w3 < 0.) ? -1.e-8 : 1.e-8);
 		w = w3 * w123 / w13;
 		inc = acos(w2 * w3 / w13 / w123);
 		phi0 = atan2(-w1 * w123, w3 * w13);
@@ -5585,7 +5585,7 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 	w123 = sqrt(w13 + w2 * w2);
 	w13 = sqrt(w13);
 	if (w13 > 1.e-8) {
-		w3 = (w3 > 1.e-8) ? w3 : 1.e-8;
+		w3 = (fabs(w3) > 1.e-8) ? w3 : ((w3 < 0.) ? -1.e-8 : 1.e-8);
 		w = w3 * w123 / w13;
 		inc = acos(w2 * w3 / w13 / w123);
 		phi0 = atan2(-w1 * w123, w3 * w13);
@@ -5850,7 +5850,7 @@ void VBMicrolensing::BinSourceLightCurveXallarap(double* pr, double* ts, double*
 	w123 = sqrt(w13 + w2 * w2);
 	w13 = sqrt(w13);
 	if (w13 > 1.e-8) {
-		w3 = (w3 > 1.e-8) ? w3 : 1.e-8;
+		w3 = (fabs(w3) > 1.e-8) ? w3 : ((w3 < 0.) ? -1.e-8 : 1.e-8);
 		w = w3 * w123 / w13;
 		inc = acos(w2 * w3 / w13 / w123);
 		phi0 = atan2(-w1 * w123, w3 * w13);
