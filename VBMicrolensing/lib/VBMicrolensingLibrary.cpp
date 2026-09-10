@@ -767,6 +767,23 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, 
 		safedist *= safedist;
 		safedist += y2v * y2v - 4 * sqrt(q.re) / (a.re * a.re); // Caustic region of influence ~ sqrt(caustic size)
 	}
+	else {
+		// Without this branch safedist keeps its initialization value of 10,
+		// so the point-source shortcut in BinaryMag2 ("safedist > 4*rho*rho")
+		// can never pass for rho > sqrt(10)/2 ~ 1.6 when q >= 0.01. The full
+		// finite-source machinery then runs even for a source thousands of
+		// Einstein radii away, where the magnification is 1 to machine
+		// precision. All caustics of a binary lens lie within
+		// Rinf = s + 1/s + 2 of the center of mass, so outside that circle
+		// the distance to the caustic region grows with the source distance.
+		double sabs = fabs(a.re);
+		double Rinf = sabs + 1 / sabs + 2;
+		double d2 = y1v * y1v + y2v * y2v;
+		if (d2 > Rinf * Rinf) {
+			double d = sqrt(d2);
+			safedist = (d - Rinf) * (d - Rinf);
+		}
+	}
 	Mag = 0.;
 	astrox1 = 0.;
 	astrox2 = 0.;
