@@ -2772,8 +2772,6 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		tim0 = Environment::TickCount;
 #endif
 
-		EXECUTE_METHOD(SelectedMethod, stheta)
-
 #ifdef _PRINT_TIMES
 			tim1 = Environment::TickCount;
 		GM += tim1 - tim0;
@@ -2977,7 +2975,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			astrox2 /= (Mag);
 		}
 		Mag /= (M_PI * RSv * RSv);
-		therr = currerr / (M_PI * RSv * RSv);
+		therr = (currerr + errbuff) / (M_PI * RSv * RSv);
 
 		delete Thetas;
 
@@ -3963,7 +3961,7 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	tim0 = Environment::TickCount;
 #endif
 
-	cmplx_roots_multigen(zr, coefs_mp, n2 + 1, false, false);
+	cmplx_roots_multigen(zr, coefs_mp, n2 + 1, false, true);
 
 	for (int i = n2; i >= 0; i--) {
 		findimagepoly(i);
@@ -3996,6 +3994,9 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 		else nminus++;
 		ngood++;
 		if (ngood < n2 + 1)	isgood = good[worst[ngood]];
+	}
+	if (theta->th >= 0 && (nminus != nplus + n - 1 || nplus == 0)) {
+		ngood = 0;
 	}
 	Prov = new _curve;
 	for (int i = 0; i < ngood; i++) {
@@ -6623,98 +6624,99 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 			}
 		}
 
+		if (nsat > 0) {
+			tsat = (double**)malloc(sizeof(double*) * nsat);
+			possat = (double***)malloc(sizeof(double**) * nsat);
+			ndatasat = (int*)malloc(sizeof(int) * nsat);
 
-		tsat = (double**)malloc(sizeof(double*) * nsat);
-		possat = (double***)malloc(sizeof(double**) * nsat);
-		ndatasat = (int*)malloc(sizeof(int) * nsat);
+			// Reading satellite table files
+			ic = 0;
+			for (unsigned char c = 32; c < 255; c++) {
+				filename[strlen(filename) - 5] = c;
+				f = fopen(filename, "r");
+				if (f != 0) {
+					int flag2 = 0;
+					char teststring[1000];
+					ndatasat[ic] = 1;
 
-		// Reading satellite table files
-		ic = 0;
-		for (unsigned char c = 32; c < 255; c++) {
-			filename[strlen(filename) - 5] = c;
-			f = fopen(filename, "r");
-			if (f != 0) {
-				int flag2 = 0;
-				char teststring[1000];
-				ndatasat[ic] = 1;
-
-				// Finding start of data
-				while (!feof(f)) {
-					fscanf(f, "%s", teststring);
-					if (!feof(f)) {
-						fgetc(f); //fseek(f, 1, SEEK_CUR);
-						teststring[5] = 0;
-						if (strcmp(teststring, "$$SOE") == 0) {
-							flag2 = 1;
-							break;
-						}
-					}
-				}
-				// Finding end of data
-				if (flag2) {
-					flag2 = 0;
+					// Finding start of data
 					while (!feof(f)) {
-						fscanf(f, "%[^\n]s", teststring);
+						fscanf(f, "%s", teststring);
 						if (!feof(f)) {
-							//fseek(f, 1, SEEK_CUR);
-							fgetc(f);
+							fgetc(f); //fseek(f, 1, SEEK_CUR);
 							teststring[5] = 0;
-							if (strcmp(teststring, "$$EOE") == 0) {
+							if (strcmp(teststring, "$$SOE") == 0) {
 								flag2 = 1;
 								break;
 							}
-							else {
-								ndatasat[ic]++;
-							}
 						}
 					}
-				}
-				fclose(f);
-
-				// Allocating memory according to the length of the table
-				tsat[ic] = (double*)malloc(sizeof(double) * ndatasat[ic]);
-				possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
-
-				for (int j = 0; j < ndatasat[ic]; j++) {
-					possat[ic][j] = (double*)malloc(sizeof(double) * 3);
-				}
-				ndatasat[ic]--;
-
-				f = fopen(filename, "r");
-				// Finding start of data
-				while (!feof(f)) {
-					fscanf(f, "%s", teststring);
-					if (!feof(f)) {
-						fgetc(f); //fseek(f, 1, SEEK_CUR);
-						teststring[5] = 0;
-						if (strcmp(teststring, "$$SOE") == 0) {
-							flag2 = 1;
-							break;
-						}
-					}
-				}
-
-				// Reading data
-				if (f) {
-					for (int id = 0; id < ndatasat[ic]; id++) {
-
-						if (fscanf(f, "%lf %lf %lf %lf %lf", &(tsat[ic][id]), &RA, &Dec, &dis, &phiprec) == 5) {
-							tsat[ic][id] -= 2450000;
-							RA *= M_PI / 180;
-							Dec *= M_PI / 180;
-							for (int i = 0; i < 3; i++) {
-								possat[ic][id][i] = dis * (cos(RA) * cos(Dec) * Eq2000[i] + sin(RA) * cos(Dec) * Quad2000[i] + sin(Dec) * North2000[i]);
+					// Finding end of data
+					if (flag2) {
+						flag2 = 0;
+						while (!feof(f)) {
+							fscanf(f, "%[^\n]s", teststring);
+							if (!feof(f)) {
+								//fseek(f, 1, SEEK_CUR);
+								fgetc(f);
+								teststring[5] = 0;
+								if (strcmp(teststring, "$$EOE") == 0) {
+									flag2 = 1;
+									break;
+								}
+								else {
+									ndatasat[ic]++;
+								}
 							}
-						}
-						else {
-							ndatasat[ic] = id;
-							break;
 						}
 					}
 					fclose(f);
-				}
 
-				ic++;
+					// Allocating memory according to the length of the table
+					tsat[ic] = (double*)malloc(sizeof(double) * ndatasat[ic]);
+					possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
+
+					for (int j = 0; j < ndatasat[ic]; j++) {
+						possat[ic][j] = (double*)malloc(sizeof(double) * 3);
+					}
+					ndatasat[ic]--;
+
+					f = fopen(filename, "r");
+					// Finding start of data
+					while (!feof(f)) {
+						fscanf(f, "%s", teststring);
+						if (!feof(f)) {
+							fgetc(f); //fseek(f, 1, SEEK_CUR);
+							teststring[5] = 0;
+							if (strcmp(teststring, "$$SOE") == 0) {
+								flag2 = 1;
+								break;
+							}
+						}
+					}
+
+					// Reading data
+					if (f) {
+						for (int id = 0; id < ndatasat[ic]; id++) {
+
+							if (fscanf(f, "%lf %lf %lf %lf %lf", &(tsat[ic][id]), &RA, &Dec, &dis, &phiprec) == 5) {
+								tsat[ic][id] -= 2450000;
+								RA *= M_PI / 180;
+								Dec *= M_PI / 180;
+								for (int i = 0; i < 3; i++) {
+									possat[ic][id][i] = dis * (cos(RA) * cos(Dec) * Eq2000[i] + sin(RA) * cos(Dec) * Quad2000[i] + sin(Dec) * North2000[i]);
+								}
+							}
+							else {
+								ndatasat[ic] = id;
+								break;
+							}
+						}
+						fclose(f);
+					}
+
+					ic++;
+				}
 			}
 		}
 	}
@@ -7147,6 +7149,70 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	}
 }
 
+
+void VBMicrolensing::t0_from_t0_par(double t0_in, double tE_in, double u0_in, double pai1_in, double pai2_in) {
+	double u, u1, duleft, duright, dun;
+	double tleft, tright, tn, t, pai, pai_psi;
+
+	t0 = t0_in;
+	tE_inv = 1 / tE_in;
+	u0 = u0_in;
+	pai1 = pai1_in;
+	pai2 = pai2_in;
+
+	tleft = tn = (t0 + t0_par) * 0.5;
+	tright = (1.5 * t0 - 0.5 * t0_par);
+
+	duleft = du_par(tleft);
+	duright = du_par(tright);
+	if (duleft < 0 && duright < 0) {
+		tright += tright - tleft;
+		duright = du_par(tright);
+	}
+	if (duleft > 0 && duright > 0) {
+		tleft -= tright - tleft;
+		duleft = du_par(tleft);
+	}
+	int iter = 0;
+	while (fabs(tright - tleft) > 1.e-9 && iter < 50) {
+		tn = (tleft * duright - tright * duleft) / (duright - duleft);
+		dun = du_par(tn);
+		if (dun < 0) {
+			tleft = tn;
+			duleft = dun;
+		}
+		else {
+			tright = tn;
+			duright = dun;
+		}
+		iter++;
+	}
+
+	t0_out = tn;
+	pai = sqrt(pai1 * pai1 + pai2 * pai2);
+	pai_psi = atan2(pai2, pai1);
+	pai1_out = pai * cos(-alpha_out + pai_psi);
+	pai2_out = pai * sin(-alpha_out + pai_psi);
+}
+
+double VBMicrolensing::du_par(double t) {
+	double tn, tn1, un, un1, dt = 1.e-6, u;
+	ComputeParallax(t, t0);
+	tn = (t + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+	un = u0 + pai1 * Et[1] - pai2 * Et[0];
+	u = sqrt(tn * tn + un * un);
+	u0_out = u;
+	alpha_out = atan2(tn, un);
+	ComputeParallax(t + dt, t0);
+	tn1 = (t + dt + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+	un1 = u0 + pai1 * Et[1] - pai2 * Et[0];
+	if (un * (tn1 - tn) < 0) {
+		u0_out = -u;
+		alpha_out += M_PI;
+	}
+	tE_out = dt / sqrt((tn1 - tn) * (tn1 - tn) + (un1 - un) * (un1 - un));
+	return sqrt(tn1 * tn1 + un1 * un1) - u;
+}
 
 
 #pragma endregion
@@ -7691,7 +7757,7 @@ void VBMicrolensing::change_n_mp(int nn) {
 	zr_mp = (complex**)malloc(sizeof(complex*) * n);
 	for (int j = 0; j < n; j++) {
 		zr_mp[j] = (complex*)malloc(sizeof(complex) * nroots);
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i < nroots; i++) {
 			zr_mp[j][i] = 0;
 		}
 	}
@@ -8056,9 +8122,11 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 
 		// --- Reset state ---
 		for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
-		for (l = 0; l < n; l++) {
-			for (i = 0; i < degree; i++) {
-				zr_mp[l][i] = complex(0., 0.);
+		if (!use_roots_as_starting_points) {
+			for (l = 0; l < n; l++) {
+				for (i = 0; i < degree; i++) {
+					zr_mp[l][i] = complex(0., 0.);
+				}
 			}
 		}
 
@@ -8106,8 +8174,10 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 								attempts++;
 								nrootsmp_mp[l] = 0;
 								double shift = 1.0e-4;
-								double r_real = ((double)rand() / RAND_MAX - 0.5) * shift;
-								double r_imag = ((double)rand() / RAND_MAX - 0.5) * shift;
+								double u1 = attempts * 0.7548776662466927;
+								double u2 = attempts * 0.5698402909980532;
+								double r_real = (u1 - floor(u1) - 0.5) * shift;
+								double r_imag = (u2 - floor(u2) - 0.5) * shift;
 								zr_mp[l][m - 1] = complex(r_real, r_imag);
 								goto Retry_Laguerre;
 							}
@@ -8274,12 +8344,17 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 			ind--;
 		}
 	}
+	int ind_last = ind;
 	for (i = 0; i < nrootsmp_mp[n - 1]; i++) {
 		if (ind < 0) break;
 		if (i >= 0 && i < degree) {
 			roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
 		}
 		ind--;
+	}
+
+	for (i = ind + 1; i <= ind_last; i++) {
+		cmplx_newton_spec(poly[0], degree, &roots[i], iter, success);
 	}
 
 	return;
@@ -8357,6 +8432,12 @@ void VBMicrolensing::solve_cubic_eq(complex& x0, complex& x1, complex& x2, compl
 
 	return;
 
+}
+
+static double abs2poly(complex* poly, int degree, complex z) {
+	complex pv = poly[degree];
+	for (int k = degree - 1; k >= 0; k--) pv = poly[k] + z * pv;
+	return real(conj(pv) * pv);
 }
 
 void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, int& iter, bool& success) {
@@ -8495,7 +8576,7 @@ void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, in
 		newroot = *root - dx;
 		if (newroot == *root) return; //nothing changes so return
 		if (good_to_go) {
-			*root = newroot;
+			if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 			return;
 		}
 		if (i % FRAC_JUMP_EVERY == 0) { //decide whether to do a jump of modified length (to break cycles)
@@ -8632,7 +8713,7 @@ void VBMicrolensing::cmplx_newton_spec(complex* poly, int degree, complex* root,
 		newroot = *root - dx;
 		if (newroot == *root) return; //nothing changes -> return
 		if (good_to_go) {//this was jump already after stopping criterion was met
-			*root = newroot;
+			if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 			return;
 		}
 		if (i % FRAC_JUMP_EVERY == 0) { // decide whether to do a jump of modified length (to break cycles)
@@ -8824,7 +8905,7 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 				newroot = *root - dx;
 				if (newroot == *root) return; // nothing changes -> return
 				if (good_to_go) {//this was jump already after stopping criterion was met
-					*root = newroot;
+					if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 					return;
 				}
 				if (mode != 2) {
@@ -8912,8 +8993,8 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 				}
 				newroot = *root - dx;
 				if (newroot == *root) return; //nothing changes -> return
-				if (good_to_go) {
-					*root = newroot; //this was jump already after stopping criterion was met
+				if (good_to_go) {//this was jump already after stopping criterion was met
+					if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 					return;
 				}
 				if (mode != 1) {
@@ -8986,7 +9067,7 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 				newroot = *root - dx;
 				if (newroot == *root) return;
 				if (good_to_go) {
-					*root = newroot;
+					if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 					return;
 				}
 				*root = newroot;
