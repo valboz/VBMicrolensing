@@ -174,7 +174,7 @@ Note that for more complicated light curves (binary-lens, binary-source, ...) th
 
 `pars2 = [np.log(s), np.log(q), u0_out, alpha-delta_alpha_out, np.log(rho), np.log(tE_out), t0_out, paiN_out, paiE_out]`
 
-Note that $s$, $q$ and $\rho$ are unaffected, while all other paramters must change.
+Note that $s$, $q$ and $\rho$ are unaffected, while all other parameters must change.
 
 ## JD vs HJD
 
