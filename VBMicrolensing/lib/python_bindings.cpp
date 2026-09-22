@@ -43,6 +43,18 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Set to 1 if you want to specify a constant t_{0,par}.");
     vbm.def_readwrite("t0_par", &VBMicrolensing::t0_par,
         "Reference time for parallax t_{0,par}. Only used if t0_par_fixed=1.");
+    vbm.def_readwrite("t0_out", &VBMicrolensing::t0_out,
+        "t0 calculated by t0_from_t0_par.");
+    vbm.def_readwrite("tE_out", &VBMicrolensing::tE_out,
+        "tE calculated by t0_from_t0_par.");
+    vbm.def_readwrite("u0_out", &VBMicrolensing::u0_out,
+        "u0 calculated by t0_from_t0_par.");
+    vbm.def_readwrite("alpha_out", &VBMicrolensing::u0_out,
+        "alpha calculated by t0_from_t0_par.");
+    vbm.def_readwrite("paiN_out", &VBMicrolensing::pai1_out,
+        "paiN calculated by t0_from_t0_par.");
+    vbm.def_readwrite("paiE_out", &VBMicrolensing::pai2_out,
+        "paiE calculated by t0_from_t0_par.");
     vbm.def_readwrite("satellite", &VBMicrolensing::satellite,
         "Specifies the satellite number for the next calculation \
                 (0 for observations from the ground);.");
@@ -1711,7 +1723,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.parallaxsystem = 1;
             self.TripleAstroLightCurveOrbital(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), seps.data(), seps2.data(), psis.data(), times.size());
-            std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s, seps, seps2, psis};
+            std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s, seps, seps2, psis };
             if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
@@ -1909,6 +1921,31 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             -------
             solutions : _sols
                 List of critical curves.
+            )mydelimiter");
+
+    vbm.def("t0_from_t0_par",
+        (double (VBMicrolensing::*)(double, double, double, double, double))
+        & VBMicrolensing::t0_from_t0_par,
+        py::return_value_policy::reference,
+        R"mydelimiter(
+            Given a model obtained with t0_par different from t0, calculates the equivalent model with t0_par=t0.
+
+            Parameters
+            ----------
+            t0 : float 
+                t0 in the original model.
+            tE : float 
+                tE in the original model 
+            u0 : float 
+                u0 in the original model.
+            paiN : float 
+                paiN in the original model.
+            paiE : float 
+                paiE in the original model.
+
+            Returns
+            -------
+            Nothing. Results are stored in the properties t0_out, tE_out, u0_out, alpha_out, paiN_out, paiE_out
             )mydelimiter");
 
     // Limb darkening
