@@ -128,7 +128,59 @@ By default, the parallax components are expressed in the North-East system $(\pi
 
 ## Reference time for parallax $t_{0,par}$
 
-The parallax effect is introduced as a deviation of the observer from a frame centered on the Earth at a specific reference time $t_{0,par}$, in such a way that the position and the velocity of the source at time $t=t_{0,par}$ remains fixed as seen from the observer. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBM.t0_par_fixed = 1;` and choose your reference time via `VBM.t0_par`.
+The parallax effect is introduced as a deviation of the observer from a frame centered on the Earth at a specific reference time $t_{0,par}$, in such a way that the position and the velocity of the source at time $t=t_{0,par}$ remains fixed as seen from the observer. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position fixed at another time, you can set `VBM.t0_par_fixed = 1` and choose your reference time via `VBM.t0_par`.
+
+Comparing models obtained with different $t_{0,par}$ can be very painful, because the choice of this reference time affects many other parameters. We therefore include a function `t0_from_t0_par` that for a given light curve obtained with some arbitrary $t_{0,par}$ provides the parameters of the equivalent light curve with $t_{0,par} = t_0$. Here is an example of use:
+
+```
+VBMicrolensing VBM;
+double pars[5];
+double t0, tE, u0, paiN, paiE, mag, mag2, t;
+
+VBM.LoadSunTable("SunEphemeris.txt");
+VBM.SetObjectCoordinates("18:00:00 -29:00:00");
+VBM.t0_par_fixed = 1;     // Enable t0_par different from t_0
+VBM.t0_par = 11523.0;   // Set t0_par
+
+t0 = 11581.0;       // Specify parameters of the light curve
+paiN = 0.1;
+paiE = -0.5;
+u0 = 0.1;
+tE = 100.0;
+
+pars[0] = u0;   // Prepare array of parameters
+pars[1] = log(tE);
+pars[2] = t0;
+pars[3] = paiN;
+pars[4] = paiE;
+t = 11550.1;
+mag = VBM.PSPLLightCurveParallax(pars, t);  // Calculate magnification with t0_par different from t_0
+
+// Calculate new parameters to reproduce the same light curve with t0_par = t_0
+VBM.t0_from_t0_par(t0, tE, u0, paiN, paiE);
+// Results are stored in VBM variables
+
+VBM.t0_par_fixed = 0;  // Set t0_par = t_0
+	// Use new parameters
+pars[0] = VBM.u0_out;
+pars[1] = log(VBM.tE_out);
+pars[2] = VBM.t0_out;
+pars[3] = VBM.pai1_out;
+pars[4] = VBM.pai2_out;
+mag2 = VBM.PSPLLightCurveParallax(pars, t);  // Calculate magnification with t0_par = t_0
+
+	// Compare light curves
+printf("mag with t0_par fixed: %lf", mag);
+printf("mag with t0_par = t0: %lf", mag2);
+```
+
+The two light curves calculated in different parametrization perfectly overlap.
+
+Note that for more complicated light curves (binary-lens, binary-source, ...) the affected parameters remain the same. The value of `VBM.delta_alpha_out` is necessary to correct the angle of the source trajectory. For example, the updated parameters for a binary-lens light curve would be
+
+`double pars[9] = {log(s), log(q), VBM.u0_out, alpha-VBM.delta_alpha_out, log(rho), log(VBM.tE_out), VBM.t0_out, VBM.paiN_out, VBM.paiE_out};`
+
+Note that $s$, $q$ and $\rho$ are unaffected, while all other parameters must change.
 
 ## JD vs HJD
 
