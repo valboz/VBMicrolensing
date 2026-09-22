@@ -143,8 +143,8 @@ import matplotlib.pyplot as plt
 vbm = VBMicrolensing.VBMicrolensing()
 
 vbm.SetObjectCoordinates("18:00:00 -29:00:00")
-vbm.t0_par_fixed = 1     # Use t0_par different from t_0
-vbm.t0_par = 11523.0    # Fix t0_par
+vbm.t0_par_fixed = 1     # Enable t0_par different from t_0
+vbm.t0_par = 11523.0    # Set t0_par
 
 t0 = 11581.0       # Specify parameters of the light curve
 paiN=0.1
