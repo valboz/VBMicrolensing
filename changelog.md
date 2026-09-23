@@ -1,4 +1,4 @@
--  **v5.6** - 2026/09/?? - Restructuring in complex_multigen preventing array leakage for multipoly. Safer management of nopoly failures. Corrected behaviour for very large sources in BinaryMag2. Added function t0_from_t0_par to translate parameters across different parallax reference times.
+-  **v5.6** - 2026/09/?? - Restructuring in complex_multigen preventing array leakage for multipoly. Safer management of nopoly failures. Corrected behaviour for very large sources in BinaryMag2 thanks to Jason Eastman. Added function t0_from_t0_par to translate parameters across different parallax reference times.
 -  **v5.5.1** - 2026/08/20 - Negative dsz/dt allowed in orbital motion.
 -  **v5.5** - 2026/03/25 - Introduction of coplanar orbital motion for triple lenses by TripleLightCurveOrbital. Includes conda installation by Amber Malpas.
 -  **v5.4.1** - 2026/03/19 - Restores BinaryMag0_shear, erroneously removed.
