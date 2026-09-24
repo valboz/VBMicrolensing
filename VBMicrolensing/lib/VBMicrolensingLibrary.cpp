@@ -1,4 +1,4 @@
-// VBMicrolensing v5.5 (2026)
+// VBMicrolensing v5.6 (2026)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -353,6 +353,7 @@ VBMicrolensing::~VBMicrolensing() {
 		free(posEar);
 	}
 
+	if (coefs) free(coefs);
 	if (m) {
 		free(m);
 		free(a);
@@ -766,6 +767,23 @@ double VBMicrolensing::BinaryMag0(double a1, double q1, double y1v, double y2v, 
 		safedist = y1v + (a.re - 1 / a.re) * coefs[21].re; // Note that a.re is negative 
 		safedist *= safedist;
 		safedist += y2v * y2v - 4 * sqrt(q.re) / (a.re * a.re); // Caustic region of influence ~ sqrt(caustic size)
+	}
+	else {
+		// Without this branch safedist keeps its initialization value of 10,
+		// so the point-source shortcut in BinaryMag2 ("safedist > 4*rho*rho")
+		// can never pass for rho > sqrt(10)/2 ~ 1.6 when q >= 0.01. The full
+		// finite-source machinery then runs even for a source thousands of
+		// Einstein radii away, where the magnification is 1 to machine
+		// precision. All caustics of a binary lens lie within
+		// Rinf = s + 1/s + 2 of the center of mass, so outside that circle
+		// the distance to the caustic region grows with the source distance.
+		double sabs = fabs(a.re);
+		double Rinf = sabs + 1 / sabs + 2;
+		double d2 = y1v * y1v + y2v * y2v;
+		if (d2 > Rinf * Rinf) {
+			double d = sqrt(d2);
+			safedist = (d - Rinf) * (d - Rinf);
+		}
 	}
 	Mag = 0.;
 	astrox1 = 0.;
@@ -1594,16 +1612,16 @@ _curve* VBMicrolensing::NewImages(complex yi, complex* coefs, _theta* theta) {
 
 			int i = worst1;
 			_Jacobians1
-			_Jacobians4
-			corrquad2 = cq;
+				_Jacobians4
+				corrquad2 = cq;
 
 			i = worst2;
 			_Jacobians1
-			_Jacobians4
-			if (corrquad2 < 0 || cq < 0) corrquad2 = 0;
-			else {
-				if (cq > corrquad2) corrquad2 = cq;
-			}
+				_Jacobians4
+				if (corrquad2 < 0 || cq < 0) corrquad2 = 0;
+				else {
+					if (cq > corrquad2) corrquad2 = cq;
+				}
 			//_Jacobians3
 			//corrquad2 +=  1/cq;
 
@@ -2532,7 +2550,7 @@ void VBMicrolensing::SetLensGeometry_multipoly(int nn, double* q, complex* s) {
 					p = i + 1;
 				}
 			}
-			x = p;
+			if (k) x = p;
 		} while (k == 1);
 	}
 
@@ -2641,7 +2659,7 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s, _sols_for_skiplist_curv
 	for (scan1 = Prov->first; scan1; scan1 = scan2) {
 		scan2 = scan1->next;
 		Prov2 = new _skiplist_curve(scan1, 0);						// create an object of class _curve with one member(_point class variable),
-		// input is pointer(scan1) that points to the member; 
+		// input is pointer(scan1) that points to the member;
 		// pointer to that object is assigned to static local variable 'Prov2'
 		(*Images)->append(Prov2);
 		Ai = fabs(1 / scan1->dJ);
@@ -2673,11 +2691,12 @@ double VBMicrolensing::MultiMag0(double y1s, double y2s) {
 	return mag;
 }
 
+
 double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, _sols_for_skiplist_curve** Images) {
 	static complex y0, yi;
-	static double Mag = -1.0, th, thoff = 0.01020304, thoff2 = 0.7956012033974483; //0.01020304
-	static double errimage, maxerr, currerr, Magold, rhorad2, th2;
-	static int NPSmax, flag, NPSold, isquare, flagfinal;
+	static double Mag = -1.0, th, thoff, thoff2 = 0.7956012033974483; //0.01020304
+	static double errimage, maxerr, currerr, Magold, rhorad2, th2, errbuff;
+	static int NPSmax, flag, NPSold, isquare, flagfinal, flagbad, flagbadmax = 3;
 	static _thetas* Thetas;
 	static _theta* stheta, * itheta, * jtheta;
 	static _curve* Prov;
@@ -2685,7 +2704,8 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 	static _point* scan1, * scan2;
 	static int lsquares[4];
 
-
+	flagbad = 0;
+	thoff = 0.01020304;
 	yi = complex(y1s, y2s);
 	static std::minstd_rand engine_start{ std::random_device{}() };
 
@@ -2728,21 +2748,29 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 		(*Images) = new _sols_for_skiplist_curve;
 		Thetas = new _thetas;
-		th = thoff;
-		stheta = Thetas->insert(th);
-		stheta->maxerr = 0.;
-		stheta->Mag = 0.;
-		stheta->astrox1 = 0.;
-		stheta->astrox2 = 0.;
-		y = y0 + complex(RSv * cos(thoff), RSv * sin(thoff)); // first image
-
+		Prov = 0;
+		int count = 0;
+		do {
+			thoff += thoff;
+			th = thoff;
+			stheta = Thetas->insert(th);
+			stheta->maxerr = 0.;
+			stheta->Mag = 0.;
+			stheta->astrox1 = 0.;
+			stheta->astrox2 = 0.;
+			y = y0 + complex(RSv * cos(thoff), RSv * sin(thoff)); // first image
+			EXECUTE_METHOD(SelectedMethod, stheta)
+				if (Prov->length == 0) {
+					delete Prov; Prov = 0; Thetas->remove(stheta);
+					count++;
+				}
+		} while (count < 10 && (!Prov));
+		if (count == 10) return -1;
 
 
 #ifdef _PRINT_TIMES
 		tim0 = Environment::TickCount;
 #endif
-
-		EXECUTE_METHOD(SelectedMethod, stheta)
 
 #ifdef _PRINT_TIMES
 			tim1 = Environment::TickCount;
@@ -2774,6 +2802,18 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		Prov->length = 0;
 		delete Prov;
 
+		//th = thoff;
+		//for (int i = 0; i < 3; i++) {
+		//	th += M_PI_2;
+		//	stheta = Thetas->insert(th);
+		//	y = y0 + complex(RSv * cos(th), RSv * sin(th));
+
+		//	EXECUTE_METHOD(SelectedMethod, stheta)
+
+		//		OrderMultipleImages((*Images), Prov);
+		//}
+		//NPS = 4;
+
 		th = thoff;
 		for (int i = 0; i < 3; i++) {
 			th += M_PI_2;
@@ -2781,10 +2821,15 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			y = y0 + complex(RSv * cos(th), RSv * sin(th));
 
 			EXECUTE_METHOD(SelectedMethod, stheta)
-
-				OrderMultipleImages((*Images), Prov);
+				if (Prov->length == 0) {
+					delete Prov;
+					Thetas->remove(stheta);
+				}
+				else {
+					OrderMultipleImages((*Images), Prov);
+					NPS++;
+				}
 		}
-		NPS = 4;
 
 		currerr = Mag = 0.;
 
@@ -2815,6 +2860,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 		flag = 0;
 		Magold = -1.;
 		NPSold = NPS + 1;
+		errbuff = 0;
 
 		while (((currerr > errimage) && (currerr > RelTol * Mag) && (NPS < NPSmax) && (flag < NPSold))) {
 			stheta = Thetas->insert_at_certain_position(itheta, th);
@@ -2841,62 +2887,87 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 #ifdef _PRINT_ERRORS2
 			int lim = Prov->length;
 #endif
-			Mag -= stheta->prev->Mag;
-			if (astrometry) {
-				astrox1 -= stheta->prev->astrox1;
-				astrox2 -= stheta->prev->astrox2;
+			if (Prov->length > 0) {
+				Mag -= stheta->prev->Mag;
+				if (astrometry) {
+					astrox1 -= stheta->prev->astrox1;
+					astrox2 -= stheta->prev->astrox2;
+				}
+				// Assign new images to correct curves
+				OrderMultipleImages((*Images), Prov);
+				Mag += stheta->prev->Mag;
+				Mag += stheta->Mag;
+				if (astrometry) {
+					astrox1 += stheta->prev->astrox1;
+					astrox1 += stheta->astrox1;
+
+					astrox2 += stheta->prev->astrox2;
+					astrox2 += stheta->astrox2;
+				}
+
+				if ((stheta->th - stheta->prev->th) < 1.e-8) {
+					errbuff += stheta->prev->maxerr + stheta->maxerr;
+					stheta->maxerr = 0;
+					stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
+				}
+
+				APQ.pop_then_push_augmented_heap(stheta->prev->maxerr, stheta->prev);
+				APQ.push_augmented_heap(stheta->maxerr, stheta);
 			}
-			// Assign new images to correct curves
-			OrderMultipleImages((*Images), Prov);
-			Mag += stheta->prev->Mag;
-			Mag += stheta->Mag;
-			if (astrometry) {
-				astrox1 += stheta->prev->astrox1;
-				astrox1 += stheta->astrox1;
-
-				astrox2 += stheta->prev->astrox2;
-				astrox2 += stheta->astrox2;
-			}
-
-			if ((stheta->th - stheta->prev->th) < 1.e-8) {
-				stheta->maxerr = 0;
-				stheta->prev->maxerr = 0;				// stop to insert new theta behind stheta and stheta->prev
-			}
-
-			APQ.pop_then_push_augmented_heap(stheta->prev->maxerr, stheta->prev);
-			APQ.push_augmented_heap(stheta->maxerr, stheta);
-
-			itheta = APQ.apq_array[0].stheta;
-			currerr = APQ.sum_tree_array[0].sumerr;
-
-			th = (itheta->th + itheta->next->th) * 0.5;
-			NPS++;
-
-#ifndef _uniform
-			//if (fabs(Magold - Mag) * 2 < errimage) {
-			//	flag++;
-			//}
-			//else {
-			//	flag = 0;
-			//	Magold = Mag;
-			//	NPSold = NPS + 1;
-			//}
-#else
-			currerr = 2 * errimage;
-			if (NPS == 2 * NPSold) {
-				if (fabs(Magold - Mag) * 2 < errimage) {
-					flag = NPSold;
+			else {
+				delete Prov;
+				flagbad++;
+				if (flagbad == flagbadmax) {
+					if (NPS < 16) {
+						delete Thetas;
+						return -1;
+					}
+					errbuff += stheta->prev->maxerr;
+					stheta->prev->maxerr = 0;
+					APQ.pop_then_push_augmented_heap(0., stheta->prev);
+					NPS--;
+					NPSmax--;
 				}
 				else {
-					flag = 0;
-					NPSold = NPS;
-					Magold = Mag;
+					th = (th - stheta->prev->th >= stheta->next->th - th) ? (th + flagbad * stheta->prev->th) / (1 + flagbad) : (th + flagbad * stheta->next->th) / (1 + flagbad);
 				}
+				Thetas->remove(stheta);
 			}
+
+
+			if (flagbad == 0 || flagbad == flagbadmax) {
+				flagbad = 0;
+
+				itheta = APQ.apq_array[0].stheta;
+				currerr = APQ.sum_tree_array[0].sumerr;
+				th = (itheta->th + itheta->next->th) / 2;
+				NPS++;
+#ifndef _uniform
+				//if (fabs(Magold - Mag) * 2 < errimage) {
+				//	flag++;
+				//}
+				//else {
+				//	flag = 0;
+				//	Magold = Mag;
+				//	NPSold = NPS + 8;
+				//}
+#else
+				currerr = 2 * errimage;
+				if (NPS == 2 * NPSold) {
+					if (fabs(Magold - Mag) * 2 < errimage) {
+						flag = NPSold;
+					}
+					else {
+						flag = 0;
+						NPSold = NPS;
+						Magold = Mag;
+					}
+				}
 #endif
 #ifdef _PRINT_ERRORS2
-			printf("\nNPS= %d nim=%d Mag = %lf maxerr= %lg currerr =%lg th = %lf", NPS, lim, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), th);
+				printf("\nNPS= %d Mag = %lf maxerr= %lg currerr =%lg errbuff = %lg th = %lf", NPS, Mag / (M_PI * RSv * RSv), maxerr / (M_PI * RSv * RSv), currerr / (M_PI * RSv * RSv), errbuff / (M_PI * RSv * RSv), th);
 #endif
+			}
 
 		}
 		if (astrometry) {
@@ -2904,7 +2975,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			astrox2 /= (Mag);
 		}
 		Mag /= (M_PI * RSv * RSv);
-		therr = currerr / (M_PI * RSv * RSv);
+		therr = (currerr + errbuff) / (M_PI * RSv * RSv);
 
 		delete Thetas;
 
@@ -2912,6 +2983,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 
 	}
 	catch (...) {
+		delete Thetas;
 		FILE* f = fopen("Geom.txt", "w");
 		fprintf(f, "\n%d\n", n);
 		for (int i = 0; i < n; i++) {
@@ -3501,8 +3573,8 @@ int VBMicrolensing::froot(complex zi) {
 		iter++;
 	}
 	newtonstep += iter;
-	err = 1.e-29*(fabs(Jac) + 1/(Jac*Jac)); // First term comes from secondary images very close to small lenses, 
-									  // Second comes for images close to critical curves
+	err = 1.e-29 * (fabs(Jac) + 1 / (Jac * Jac)); // First term comes from secondary images very close to small lenses, 
+	// Second comes for images close to critical curves
 	err += abs2(epsbase);             // Last step size
 	zf = z;
 	Jacf = Jac;
@@ -3645,6 +3717,10 @@ _curve* VBMicrolensing::NewImages(_theta* theta) {
 				nminus++;
 			}
 			ngoodold = ngood;
+		}
+		if (ngood > 5 * n - 5) {
+			ngood = 0;
+			break;
 		}
 		imass++;
 		if (imass == n) {
@@ -3885,7 +3961,7 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	tim0 = Environment::TickCount;
 #endif
 
-	cmplx_roots_multigen(zr, coefs_mp, n2 + 1, false, false);
+	cmplx_roots_multigen(zr, coefs_mp, n2 + 1, false, true);
 
 	for (int i = n2; i >= 0; i--) {
 		findimagepoly(i);
@@ -3918,6 +3994,9 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 		else nminus++;
 		ngood++;
 		if (ngood < n2 + 1)	isgood = good[worst[ngood]];
+	}
+	if (theta->th >= 0 && (nminus != nplus + n - 1 || nplus == 0)) {
+		ngood = 0;
 	}
 	Prov = new _curve;
 	for (int i = 0; i < ngood; i++) {
@@ -5509,7 +5588,7 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 	double w13, w123, den, den0;
 	double pphi0_2, phi0_2, s2_true, den0_2, Cphi0_2, Sphi0_2, w_2, phi_2, Cphi_2, Sphi_2, den_2, pphi_2;
 	iastro = 15;
-//	dPosAng = 0;
+	//	dPosAng = 0;
 	t0old = t0parold = 1.e200;
 	parallaxextrapolation = 0;
 
@@ -5545,12 +5624,12 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 	pphi0 = atan2(Cinc * Sphi0, Cphi0);
 
 	pphi0_2 = pphi0 + pr[9];
-	phi0_2 = atan2(sin(pphi0_2)/Cinc, cos(pphi0_2)); // Impose co-planarity and calculate orbital phase
+	phi0_2 = atan2(sin(pphi0_2) / Cinc, cos(pphi0_2)); // Impose co-planarity and calculate orbital phase
 	Cphi0_2 = cos(phi0_2);
 	Sphi0_2 = sin(phi0_2);
 	den0_2 = sqrt(Cphi0_2 * Cphi0_2 + Cinc * Cinc * Sphi0_2 * Sphi0_2);
-	s2_true = s2/den0_2;  // Orbital radius of second planet
-	w_2 = (block_tertiary_lens)? 0 : w * pow(s2_true / s_true, -1.5); // Third Kepler's law
+	s2_true = s2 / den0_2;  // Orbital radius of second planet
+	w_2 = (block_tertiary_lens) ? 0 : w * pow(s2_true / s_true, -1.5); // Third Kepler's law
 
 
 	for (int i = 0; i < np; i++) {
@@ -5589,7 +5668,7 @@ void VBMicrolensing::TripleAstroLightCurveOrbital(double* pr, double* ts, double
 		// We are implicitly assuming that the third object is negligible
 		// Since we are neglecting mutual interactions between planets, 
 		// this is still consistent at zero order in planets mass.
-		s[0] = seps[i] / (q[0] + q[1]); 
+		s[0] = seps[i] / (q[0] + q[1]);
 		s[1] = s[0] * q[0];
 		s[0] = -q[1] * s[0];
 		s[2] = seps2[i] * complex(cbeta, sbeta) + s[0];
@@ -6545,98 +6624,99 @@ void VBMicrolensing::SetObjectCoordinates(char* modelfile, char* sateltabledir) 
 			}
 		}
 
+		if (nsat > 0) {
+			tsat = (double**)malloc(sizeof(double*) * nsat);
+			possat = (double***)malloc(sizeof(double**) * nsat);
+			ndatasat = (int*)malloc(sizeof(int) * nsat);
 
-		tsat = (double**)malloc(sizeof(double*) * nsat);
-		possat = (double***)malloc(sizeof(double**) * nsat);
-		ndatasat = (int*)malloc(sizeof(int) * nsat);
+			// Reading satellite table files
+			ic = 0;
+			for (unsigned char c = 32; c < 255; c++) {
+				filename[strlen(filename) - 5] = c;
+				f = fopen(filename, "r");
+				if (f != 0) {
+					int flag2 = 0;
+					char teststring[1000];
+					ndatasat[ic] = 1;
 
-		// Reading satellite table files
-		ic = 0;
-		for (unsigned char c = 32; c < 255; c++) {
-			filename[strlen(filename) - 5] = c;
-			f = fopen(filename, "r");
-			if (f != 0) {
-				int flag2 = 0;
-				char teststring[1000];
-				ndatasat[ic] = 1;
-
-				// Finding start of data
-				while (!feof(f)) {
-					fscanf(f, "%s", teststring);
-					if (!feof(f)) {
-						fgetc(f); //fseek(f, 1, SEEK_CUR);
-						teststring[5] = 0;
-						if (strcmp(teststring, "$$SOE") == 0) {
-							flag2 = 1;
-							break;
-						}
-					}
-				}
-				// Finding end of data
-				if (flag2) {
-					flag2 = 0;
+					// Finding start of data
 					while (!feof(f)) {
-						fscanf(f, "%[^\n]s", teststring);
+						fscanf(f, "%s", teststring);
 						if (!feof(f)) {
-							//fseek(f, 1, SEEK_CUR);
-							fgetc(f);
+							fgetc(f); //fseek(f, 1, SEEK_CUR);
 							teststring[5] = 0;
-							if (strcmp(teststring, "$$EOE") == 0) {
+							if (strcmp(teststring, "$$SOE") == 0) {
 								flag2 = 1;
 								break;
 							}
-							else {
-								ndatasat[ic]++;
-							}
 						}
 					}
-				}
-				fclose(f);
-
-				// Allocating memory according to the length of the table
-				tsat[ic] = (double*)malloc(sizeof(double) * ndatasat[ic]);
-				possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
-
-				for (int j = 0; j < ndatasat[ic]; j++) {
-					possat[ic][j] = (double*)malloc(sizeof(double) * 3);
-				}
-				ndatasat[ic]--;
-
-				f = fopen(filename, "r");
-				// Finding start of data
-				while (!feof(f)) {
-					fscanf(f, "%s", teststring);
-					if (!feof(f)) {
-						fgetc(f); //fseek(f, 1, SEEK_CUR);
-						teststring[5] = 0;
-						if (strcmp(teststring, "$$SOE") == 0) {
-							flag2 = 1;
-							break;
-						}
-					}
-				}
-
-				// Reading data
-				if (f) {
-					for (int id = 0; id < ndatasat[ic]; id++) {
-
-						if (fscanf(f, "%lf %lf %lf %lf %lf", &(tsat[ic][id]), &RA, &Dec, &dis, &phiprec) == 5) {
-							tsat[ic][id] -= 2450000;
-							RA *= M_PI / 180;
-							Dec *= M_PI / 180;
-							for (int i = 0; i < 3; i++) {
-								possat[ic][id][i] = dis * (cos(RA) * cos(Dec) * Eq2000[i] + sin(RA) * cos(Dec) * Quad2000[i] + sin(Dec) * North2000[i]);
+					// Finding end of data
+					if (flag2) {
+						flag2 = 0;
+						while (!feof(f)) {
+							fscanf(f, "%[^\n]s", teststring);
+							if (!feof(f)) {
+								//fseek(f, 1, SEEK_CUR);
+								fgetc(f);
+								teststring[5] = 0;
+								if (strcmp(teststring, "$$EOE") == 0) {
+									flag2 = 1;
+									break;
+								}
+								else {
+									ndatasat[ic]++;
+								}
 							}
-						}
-						else {
-							ndatasat[ic] = id;
-							break;
 						}
 					}
 					fclose(f);
-				}
 
-				ic++;
+					// Allocating memory according to the length of the table
+					tsat[ic] = (double*)malloc(sizeof(double) * ndatasat[ic]);
+					possat[ic] = (double**)malloc(sizeof(double*) * ndatasat[ic]);
+
+					for (int j = 0; j < ndatasat[ic]; j++) {
+						possat[ic][j] = (double*)malloc(sizeof(double) * 3);
+					}
+					ndatasat[ic]--;
+
+					f = fopen(filename, "r");
+					// Finding start of data
+					while (!feof(f)) {
+						fscanf(f, "%s", teststring);
+						if (!feof(f)) {
+							fgetc(f); //fseek(f, 1, SEEK_CUR);
+							teststring[5] = 0;
+							if (strcmp(teststring, "$$SOE") == 0) {
+								flag2 = 1;
+								break;
+							}
+						}
+					}
+
+					// Reading data
+					if (f) {
+						for (int id = 0; id < ndatasat[ic]; id++) {
+
+							if (fscanf(f, "%lf %lf %lf %lf %lf", &(tsat[ic][id]), &RA, &Dec, &dis, &phiprec) == 5) {
+								tsat[ic][id] -= 2450000;
+								RA *= M_PI / 180;
+								Dec *= M_PI / 180;
+								for (int i = 0; i < 3; i++) {
+									possat[ic][id][i] = dis * (cos(RA) * cos(Dec) * Eq2000[i] + sin(RA) * cos(Dec) * Quad2000[i] + sin(Dec) * North2000[i]);
+								}
+							}
+							else {
+								ndatasat[ic] = id;
+								break;
+							}
+						}
+						fclose(f);
+					}
+
+					ic++;
+				}
 			}
 		}
 	}
@@ -7070,6 +7150,70 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 }
 
 
+void VBMicrolensing::t0_from_t0_par(double t0_in, double tE_in, double u0_in, double pai1_in, double pai2_in) {
+	double u, u1, duleft, duright, dun;
+	double tleft, tright, tn, t, pai, pai_psi;
+
+	t0 = t0_in;
+	tE_inv = 1 / tE_in;
+	u0 = u0_in;
+	pai1 = pai1_in;
+	pai2 = pai2_in;
+
+	tleft = tn = (t0 + t0_par) * 0.5;
+	tright = (1.5 * t0 - 0.5 * t0_par);
+
+	duleft = du_par(tleft);
+	duright = du_par(tright);
+	if (duleft < 0 && duright < 0) {
+		tright += tright - tleft;
+		duright = du_par(tright);
+	}
+	if (duleft > 0 && duright > 0) {
+		tleft -= tright - tleft;
+		duleft = du_par(tleft);
+	}
+	int iter = 0;
+	while (fabs(tright - tleft) > 1.e-9 && iter < 50) {
+		tn = (tleft * duright - tright * duleft) / (duright - duleft);
+		dun = du_par(tn);
+		if (dun < 0) {
+			tleft = tn;
+			duleft = dun;
+		}
+		else {
+			tright = tn;
+			duright = dun;
+		}
+		iter++;
+	}
+
+	t0_out = tn;
+	pai = sqrt(pai1 * pai1 + pai2 * pai2);
+	pai_psi = atan2(pai2, pai1);
+	pai1_out = pai * cos(-alpha_out + pai_psi);
+	pai2_out = pai * sin(-alpha_out + pai_psi);
+}
+
+double VBMicrolensing::du_par(double t) {
+	double tn, tn1, un, un1, dt = 1.e-6, u;
+	ComputeParallax(t, t0);
+	tn = (t + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+	un = u0 + pai1 * Et[1] - pai2 * Et[0];
+	u = sqrt(tn * tn + un * un);
+	u0_out = u;
+	alpha_out = atan2(tn, un);
+	ComputeParallax(t + dt, t0);
+	tn1 = (t + dt + lighttravel - t0 - lighttravel0) * tE_inv + pai1 * Et[0] + pai2 * Et[1];
+	un1 = u0 + pai1 * Et[1] - pai2 * Et[0];
+	if (un * (tn1 - tn) < 0) {
+		u0_out = -u;
+		alpha_out += M_PI;
+	}
+	tE_out = dt / sqrt((tn1 - tn) * (tn1 - tn) + (un1 - un) * (un1 - un));
+	return sqrt(tn1 * tn1 + un1 * un1) - u;
+}
+
 
 #pragma endregion
 
@@ -7486,6 +7630,10 @@ void VBMicrolensing::change_n_mp(int nn) {
 		free(errs);
 		free(newseeds);
 		free(grads);
+		free(S2s);
+		free(S3s);
+		free(S4s);
+		S2s = S3s = S4s = 0;
 	}
 	if (pmza) {
 		for (int i = 0; i < n; i++) {
@@ -7609,7 +7757,7 @@ void VBMicrolensing::change_n_mp(int nn) {
 	zr_mp = (complex**)malloc(sizeof(complex*) * n);
 	for (int j = 0; j < n; j++) {
 		zr_mp[j] = (complex*)malloc(sizeof(complex) * nroots);
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i < nroots; i++) {
 			zr_mp[j][i] = 0;
 		}
 	}
@@ -7662,6 +7810,9 @@ void VBMicrolensing::change_n_mp(int nn) {
 	errs = (double*)malloc(sizeof(double) * nroots);
 	newseeds = (complex*)malloc(sizeof(complex) * (2 * nroots));
 	grads = (complex*)malloc(sizeof(complex) * (nroots));
+	S2s = (complex*)malloc(sizeof(complex) * (nroots));
+	S3s = (complex*)malloc(sizeof(complex) * (nroots));
+	S4s = (complex*)malloc(sizeof(complex) * (nroots));
 
 
 	cprec = (_skiplist_curve**)malloc(sizeof(_skiplist_curve*) * nroots);
@@ -7950,175 +8101,260 @@ void VBMicrolensing::cmplx_roots_multigen(complex* roots, complex** poly, int de
 	static complex poly2[MAXM];
 	static int l, j, i, k, ind, degreenew, croots, m;
 	static int attempts;
-	static double dif0, br;
+	static double dif0, dif0_lin, br;
 	static bool success;
 	static complex coef, prev, przr;
 
-	//	n = (int) round(sqrt(degree - 1));
-	for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
-	for (l = 0; l < n; l++) {
-		for (i = 0; i < degree; i++) {
-			zr_mp[l][i] = complex(0., 0.);
+	static const double safety_levels[3] = { 0.001, 0.01, 0.1 };
+
+	auto total_roots_prev = [&]() -> int {
+		int tot = 0;
+		for (int ll = 0; ll < n - 1; ll++) tot += nrootsmp_mp[ll];
+		return tot;
+		};
+
+	// Main attempt loop over safety levels
+	for (int safety_attempt = 0; safety_attempt < 3; safety_attempt++) {
+
+		double safety = safety_levels[safety_attempt];
+		bool is_last_attempt = (safety_attempt == 2);
+		bool need_retry = false;
+
+		// --- Reset state ---
+		for (l = 0; l < n; l++) nrootsmp_mp[l] = 0;
+		if (!use_roots_as_starting_points) {
+			for (l = 0; l < n; l++) {
+				for (i = 0; i < degree; i++) {
+					zr_mp[l][i] = complex(0., 0.);
+				}
+			}
 		}
-	}
-	//Cycle reference systems
-	for (l = 0; l < n; l++) {
-		br = false;
-		attempts = 0;
 
-	Retry_Laguerre:
+		for (l = 0; l < n; l++) {
+			br = false;
+			attempts = 0;
 
-		//copy poly coefs 
-		for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
-		//Don't do Laguerre's for small degree polybnomials
-		if (l != n - 1) {
-			if (degree <= 1) {
-				nrootsmp_mp[l] = degree;
-				if (degree == 1) {
-					zr_mp[l][0] = -poly[l][0] / poly[l][1];
-					//distance check
-					dif0 = abs2(zr_mp[l][0]);
+		Retry_Laguerre:
+
+			for (j = 0; j <= degree; j++) poly2[j] = poly[l][j];
+
+			if (l != n - 1) {
+				if (degree <= 1) {
+					nrootsmp_mp[l] = degree;
+					if (degree == 1) {
+						zr_mp[l][0] = -poly[l][0] / poly[l][1];
+						dif0 = abs2(zr_mp[l][0]);
+						dif0_lin = sqrt(dif0);
+						for (i = 1; i < n; i++) {
+							double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+							if (abs2(zr_mp[l][0] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+								zr_mp[l][0] = complex(0, 0);
+								nrootsmp_mp[l] = 0;
+								break;
+							}
+						}
+					}
+					break;
+				}
+
+				for (m = degree; m >= 3; m--) {
+					cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
+					if (!success) {
+						zr_mp[l][m - 1] = complex(0, 0);
+						cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
+					}
+
+					dif0 = abs2(zr_mp[l][m - 1]);
+					dif0_lin = sqrt(dif0);
 					for (i = 1; i < n; i++) {
-						if (abs2(zr_mp[l][0] - a_mp[l][i]) < dif0) {
-							zr_mp[l][0] = complex(0, 0);
-							nrootsmp_mp[l] = 0;
+						double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+						if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+
+							if (m == degree && attempts < 10) {
+								attempts++;
+								nrootsmp_mp[l] = 0;
+								double shift = 1.0e-4;
+								double u1 = attempts * 0.7548776662466927;
+								double u2 = attempts * 0.5698402909980532;
+								double r_real = (u1 - floor(u1) - 0.5) * shift;
+								double r_imag = (u2 - floor(u2) - 0.5) * shift;
+								zr_mp[l][m - 1] = complex(r_real, r_imag);
+								goto Retry_Laguerre;
+							}
+							zr_mp[l][m - 1] = complex(0, 0);
+							br = true;
 							break;
 						}
 					}
-				}
-				break;
-			}
+					if (br) break;
 
-			//Do Laguerre for degree >=3
-			for (m = degree; m >= 3; m--) {
-				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
-				if (!success) {
-					zr_mp[l][m - 1] = complex(0, 0);
-					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
-				}
-				nrootsmp_mp[l]++;
+					nrootsmp_mp[l]++;
 
-				//distance check
-				dif0 = abs2(zr_mp[l][m - 1]);
+					coef = poly2[m];
+					for (i = m - 1; i >= 0; i--) {
+						prev = poly2[i];
+						poly2[i] = coef;
+						coef = prev + zr_mp[l][m - 1] * coef;
+					}
+				}
+				if (br) continue;
+
+				solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
+				nrootsmp_mp[l] += 2;
+
+				dif0 = abs2(zr_mp[l][1]);
+				dif0_lin = sqrt(dif0);
 				for (i = 1; i < n; i++) {
-					if (abs2(zr_mp[l][m - 1] - a_mp[l][i]) < dif0) {
-
-						// Retry logic
-						if (m == degree && attempts < 10) {
-							attempts++;
-							nrootsmp_mp[l] = 0;
-							double shift = 1.0e-4;
-							double r_real = ((double)rand() / RAND_MAX - 0.5) * shift;
-							double r_imag = ((double)rand() / RAND_MAX - 0.5) * shift;
-							zr_mp[l][m - 1] = complex(r_real, r_imag);
-							goto Retry_Laguerre; // Restart
-						}
-						zr_mp[l][m - 1] = complex(0, 0);
-						br = true;
+					double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+					if (abs2(zr_mp[l][1] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+						zr_mp[l][1] = zr_mp[l][0];
+						zr_mp[l][0] = complex(0, 0);
 						nrootsmp_mp[l]--;
 						break;
 					}
 				}
-				if (br) break;
+				k = degree - nrootsmp_mp[l];
+				if (k >= 0 && k < degree) {
+					dif0 = abs2(zr_mp[l][k]);
+					dif0_lin = sqrt(dif0);
+					for (i = 1; i < n; i++) {
+						double safety_i = safety * sqrt(abs2(a_mp[l][i]));
+						if (abs2(zr_mp[l][k] - a_mp[l][i]) < dif0 + 2 * safety_i * dif0_lin + safety_i * safety_i) {
+							zr_mp[l][k] = complex(0, 0);
+							nrootsmp_mp[l]--;
+							break;
+						}
+					}
+				}
 
-				//Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
-				coef = poly2[m];
-				for (i = m - 1; i >= 0; i--) {
-					prev = poly2[i];
-					poly2[i] = coef;
-					coef = prev + zr_mp[l][m - 1] * coef;
+				// Clamp only on last attempt 
+				if (is_last_attempt) {
+					if (nrootsmp_mp[l] < 0) nrootsmp_mp[l] = 0;
+					if (nrootsmp_mp[l] > degree) nrootsmp_mp[l] = degree;
 				}
 			}
-			if (br) continue;
-			//find the last 2 roots
-			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
-			nrootsmp_mp[l] += 2;
-			for (i = 1; i < n; i++) {
-				if (abs2(zr_mp[l][1] - a_mp[l][i]) < abs2(zr_mp[l][1])) {
-					zr_mp[l][1] = zr_mp[l][0];
-					zr_mp[l][0] = complex(0, 0);
-					nrootsmp_mp[l]--;
+
+			// Last lens: use roots from previous lenses, solve for the rest
+			if (l == n - 1) {
+
+				int tot_prev = total_roots_prev();
+
+				if (tot_prev > degree) {
+					need_retry = true;
 					break;
 				}
-			}
-			k = degree - nrootsmp_mp[l];
-			for (i = 1; i < n; i++) {
-				if (abs2(zr_mp[l][k] - a_mp[l][i]) < abs2(zr_mp[l][k])) {
-					zr_mp[l][k] = complex(0, 0);
-					nrootsmp_mp[l]--;
+
+				ind = 0;
+				for (int ll = 0; ll < n - 1; ll++) {
+					for (int ii = ind; ii < ind + nrootsmp_mp[ll]; ii++) {
+						int widx = degree - ii - 1;
+						int ridx = degree - 1 - ii + ind;
+						if (widx >= 0 && widx < degree && ridx >= 0 && ridx < degree) {
+							zr_mp[l][widx] = zr_mp[ll][ridx] + s_sort[ll] - s_sort[l];
+						}
+					}
+					ind += nrootsmp_mp[ll];
+				}
+
+				degreenew = degree - tot_prev; // always >= 0 here
+
+				for (int mm = degree; mm > degreenew; mm--) {
+					if (mm - 1 < 0 || mm - 1 >= degree) break;
+					coef = poly2[mm];
+					for (i = mm - 1; i >= 0; i--) {
+						prev = poly2[i];
+						poly2[i] = coef;
+						coef = prev + zr_mp[l][mm - 1] * coef;
+					}
+				}
+
+				if (degreenew <= 1) {
+					if (degreenew == 1) {
+						zr_mp[l][0] = -poly2[0] / poly2[1];
+					}
+					nrootsmp_mp[l] = degreenew;
 					break;
 				}
-			}
-		}
 
-		//LAST lens
-		if (l == n - 1) {
-			//Set previous roots
-			ind = 0;
-			for (int ll = 0; ll < n - 1; ll++) {
-				for (int i = ind; i < ind + nrootsmp_mp[ll]; i++) {
-					zr_mp[l][degree - i - 1] = zr_mp[ll][degree - 1 - i + ind] + s_sort[ll] - s_sort[l];
+				int roots_so_far = tot_prev;
+
+				for (m = degreenew; m >= 3; m--) {
+					if (is_last_attempt && roots_so_far + nrootsmp_mp[l] + 1 > degree) break;
+
+					if (m - 1 < 0 || m - 1 >= degree) break;
+
+					cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
+					if (!success) {
+						zr_mp[l][m - 1] = complex(0, 0);
+						cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
+					}
+					nrootsmp_mp[l] += 1;
+
+					coef = poly2[m];
+					for (i = m - 1; i >= 0; i--) {
+						prev = poly2[i];
+						poly2[i] = coef;
+						coef = prev + zr_mp[l][m - 1] * coef;
+					}
 				}
-				ind += nrootsmp_mp[ll];
-			}
 
-			//divide by previous roots
-			degreenew = degree;
-			for (int i = 0; i < n - 1; i++) {
-				degreenew -= nrootsmp_mp[i];
-			}
+				// Add quadratic roots
+				if (!is_last_attempt) {
 
-			for (int m = degree; m > degreenew; m--) {
-				coef = poly2[m];
-				for (i = m - 1; i >= 0; i--) {
-					prev = poly2[i];
-					poly2[i] = coef;
-					coef = prev + zr_mp[l][m - 1] * coef;
+					solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
+					nrootsmp_mp[l] += 2;
 				}
-			}
+				else {
+					int room = degree - roots_so_far - nrootsmp_mp[l];
+					if (room >= 2) {
+						solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
+						nrootsmp_mp[l] += 2;
+					}
+					else if (room == 1) {
+						complex qa, qb;
+						solve_quadratic_eq(qb, qa, poly2);
+						int slot = nrootsmp_mp[l];
+						if (slot >= 0 && slot < degree) {
+							zr_mp[l][slot] = qa;
+						}
+						nrootsmp_mp[l] += 1;
+					}
 
-			if (degreenew <= 1) {
-				if (degreenew == 1) {
-					zr_mp[l][0] = -poly2[0] / poly2[1];
-				}
-				nrootsmp_mp[l] = degreenew;
-				break;
-			}
-
-			for (m = degreenew; m >= 3; m--) {
-				cmplx_laguerre2newton(poly2, m, &zr_mp[l][m - 1], iter, success, 2);
-				if (!success) {
-					zr_mp[l][m - 1] = complex(0, 0);
-					cmplx_laguerre(poly2, m, &zr_mp[l][m - 1], iter, success);
-				}
-				nrootsmp_mp[l] += 1;
-
-				// Divide by root
-				//cmplx_newton_spec(poly[l], degree, &zr_mp[l][m - 1], iter, success);
-				coef = poly2[m];
-				for (i = m - 1; i >= 0; i--) {
-					prev = poly2[i];
-					poly2[i] = coef;
-					coef = prev + zr_mp[l][m - 1] * coef;
+					// Final clamp on last attempt only
+					if (nrootsmp_mp[l] < 0) nrootsmp_mp[l] = 0;
+					if (roots_so_far + nrootsmp_mp[l] > degree)
+						nrootsmp_mp[l] = degree - roots_so_far;
 				}
 			}
-			solve_quadratic_eq(zr_mp[l][1], zr_mp[l][0], poly2);
-			nrootsmp_mp[l] += 2;
+		} // end for l
 
-		}
+		if (!need_retry) break;
+
 	}
 
+	// Assemble final roots array
 	ind = degree - 1;
 	for (l = 0; l < n - 1; l++) {
 		for (i = 0; i < nrootsmp_mp[l]; i++) {
-			roots[ind] = zr_mp[l][degree - 1 - i] + s_sort[l] - s_sort[0];
+			if (ind < 0) break;
+			int ridx = degree - 1 - i;
+			if (ridx >= 0 && ridx < degree) {
+				roots[ind] = zr_mp[l][ridx] + s_sort[l] - s_sort[0];
+			}
 			ind--;
 		}
 	}
+	int ind_last = ind;
 	for (i = 0; i < nrootsmp_mp[n - 1]; i++) {
-		roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
+		if (ind < 0) break;
+		if (i >= 0 && i < degree) {
+			roots[ind] = zr_mp[n - 1][i] + s_sort[n - 1] - s_sort[0];
+		}
 		ind--;
+	}
+
+	for (i = ind + 1; i <= ind_last; i++) {
+		cmplx_newton_spec(poly[0], degree, &roots[i], iter, success);
 	}
 
 	return;
@@ -8196,6 +8432,12 @@ void VBMicrolensing::solve_cubic_eq(complex& x0, complex& x1, complex& x2, compl
 
 	return;
 
+}
+
+static double abs2poly(complex* poly, int degree, complex z) {
+	complex pv = poly[degree];
+	for (int k = degree - 1; k >= 0; k--) pv = poly[k] + z * pv;
+	return real(conj(pv) * pv);
 }
 
 void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, int& iter, bool& success) {
@@ -8334,7 +8576,7 @@ void VBMicrolensing::cmplx_laguerre(complex* poly, int degree, complex* root, in
 		newroot = *root - dx;
 		if (newroot == *root) return; //nothing changes so return
 		if (good_to_go) {
-			*root = newroot;
+			if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 			return;
 		}
 		if (i % FRAC_JUMP_EVERY == 0) { //decide whether to do a jump of modified length (to break cycles)
@@ -8471,7 +8713,7 @@ void VBMicrolensing::cmplx_newton_spec(complex* poly, int degree, complex* root,
 		newroot = *root - dx;
 		if (newroot == *root) return; //nothing changes -> return
 		if (good_to_go) {//this was jump already after stopping criterion was met
-			*root = newroot;
+			if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 			return;
 		}
 		if (i % FRAC_JUMP_EVERY == 0) { // decide whether to do a jump of modified length (to break cycles)
@@ -8663,7 +8905,7 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 				newroot = *root - dx;
 				if (newroot == *root) return; // nothing changes -> return
 				if (good_to_go) {//this was jump already after stopping criterion was met
-					*root = newroot;
+					if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 					return;
 				}
 				if (mode != 2) {
@@ -8751,8 +8993,8 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 				}
 				newroot = *root - dx;
 				if (newroot == *root) return; //nothing changes -> return
-				if (good_to_go) {
-					*root = newroot; //this was jump already after stopping criterion was met
+				if (good_to_go) {//this was jump already after stopping criterion was met
+					if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 					return;
 				}
 				if (mode != 1) {
@@ -8825,7 +9067,7 @@ void VBMicrolensing::cmplx_laguerre2newton(complex* poly, int degree, complex* r
 				newroot = *root - dx;
 				if (newroot == *root) return;
 				if (good_to_go) {
-					*root = newroot;
+					if (abs2poly(poly, degree, newroot) < abs2p) *root = newroot;
 					return;
 				}
 				*root = newroot;
@@ -9913,5 +10155,3 @@ void _thetas::remove(_theta* stheta) {
 
 
 #pragma endregion
-
-

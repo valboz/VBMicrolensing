@@ -132,7 +132,49 @@ By default, the parallax components are expressed in the North-East system $(\pi
 
 ## Reference time for parallax $t_{0,par}$
 
-The parallax effect is introduced as a deviation of the observer from a frame centered on the Earth at a specific reference time $t_{0,par}$, in such a way that the position and the velocity of the source at time $t=t_{0,par}$ remains fixed as seen from the observer. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position at another time fixed, you can set `VBM.t0_par_fixed = 1` and choose your reference time via `VBM.t0_par`.
+The parallax effect is introduced as a deviation of the observer from a frame centered on the Earth at a specific reference time $t_{0,par}$, in such a way that the position and the velocity of the source at time $t=t_{0,par}$ remains fixed as seen from the observer. By default, VBMicrolensing uses $t_{0,par}=t_0$, so that the light curve is unchanged at the time of closest approach to the center of mass of the lens. However, if you want to keep the source position fixed at another time, you can set `VBM.t0_par_fixed = 1` and choose your reference time via `VBM.t0_par`.
+
+Comparing models obtained with different $t_{0,par}$ can be very painful, because the choice of this reference time affects many other parameters. We therefore include a function `t0_from_t0_par` that for a given light curve obtained with some arbitrary $t_{0,par}$ provides the parameters of the equivalent light curve with $t_{0,par} = t_0$. Here is an example of use:
+
+```
+import VBMicrolensing
+import numpy as np
+import matplotlib.pyplot as plt
+vbm = VBMicrolensing.VBMicrolensing()
+
+vbm.SetObjectCoordinates("18:00:00 -29:00:00")
+vbm.t0_par_fixed = 1     # Enable t0_par different from t_0
+vbm.t0_par = 11523.0    # Set t0_par
+
+t0 = 11581.0       # Specify parameters of the light curve
+paiN=0.1
+paiE=-0.5 
+u0=0.1
+tE=100.0
+
+ts = np.linspace(t0-100, t0+100, 3000)    # Prepare array of epochs
+pars = [u0, np.log(tE), t0, paiN, paiE]   # Prepare array of parameters
+results = vbm.PSPLLightCurveParallax(pars, ts)   # Calculate light curve with t0_par different from t_0
+
+# Calculate new parameters to reproduce the same light curve with t0_par = t_0
+t0_out, tE_out, u0_out, delta_alpha_out, paiN_out, paiE_out = vbm.t0_from_t0_par(t0, tE, u0, paiN, paiE)
+
+vbm.t0_par_fixed=0  # Set t0_par = t_0
+pars2 = [u0_out, np.log(tE_out), t0_out, paiN_out, paiE_out] # Prepare array of parameters
+results2 = vbm.PSPLLightCurveParallax(pars2, ts)  # Calculate light curve with t0_par = t_0
+
+# Compare light curves
+plt.plot(ts, results[0])
+plt.plot(ts, results2[0])
+```
+
+The two light curves calculated in different parametrization perfectly overlap.
+
+Note that for more complicated light curves (binary-lens, binary-source, ...) the affected parameters remain the same. The value of `delta_alpha_out` is necessary to correct the angle of the source trajectory. For example, the updated parameters for a binary-lens light curve would be
+
+`pars2 = [np.log(s), np.log(q), u0_out, alpha-delta_alpha_out, np.log(rho), np.log(tE_out), t0_out, paiN_out, paiE_out]`
+
+Note that $s$, $q$ and $\rho$ are unaffected, while all other parameters must change.
 
 ## JD vs HJD
 

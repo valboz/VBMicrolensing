@@ -1,4 +1,4 @@
-// VBMicrolensing v5.5 (2026)
+// VBMicrolensing v5.6 (2026)
 //
 // This code has been developed by Valerio Bozza (University of Salerno) and collaborators.
 // Check the repository at https://github.com/valboz/VBMicrolensing
@@ -110,6 +110,7 @@ class VBMicrolensing
 
 	void ComputeCentroids(double* pr, double t, double* c1s, double* c2s, double* c1l, double* c2l);
 	void ComputeParallax(double, double);
+	double du_par(double t);
 	double LDprofile(double r);
 	double rCLDprofile(double tc, annulus*, annulus*);
 	void initroot();
@@ -162,6 +163,8 @@ public:
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
 	double t0_par;
+	void t0_from_t0_par(double t0, double tE, double u0, double pai1, double pai2);
+	double t0_out, u0_out, alpha_out, pai1_out, pai2_out, tE_out;
 	bool suntable, parallaxephemeris;
 	int parallaxextrapolation;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;

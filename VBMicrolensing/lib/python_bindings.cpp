@@ -1711,7 +1711,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             self.parallaxsystem = 1;
             self.TripleAstroLightCurveOrbital(params.data(), times.data(), mags.data(), c1s.data(), c2s.data(), c1l.data(), c2l.data(),
                 y1s.data(), y2s.data(), seps.data(), seps2.data(), psis.data(), times.size());
-            std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s, seps, seps2, psis};
+            std::vector< std::vector<double> > results{ mags, c1s, c2s, c1l, c2l,y1s,y2s, seps, seps2, psis };
             if (self.parallaxextrapolation > 0) py::print("Input time is outside range of lookup tables: extrapolation is used.");
             return results;
         },
@@ -1909,6 +1909,33 @@ PYBIND11_MODULE(VBMicrolensing, m) {
             -------
             solutions : _sols
                 List of critical curves.
+            )mydelimiter");
+
+    vbm.def("t0_from_t0_par",
+        [](VBMicrolensing& self, double t0, double tE, double u0, double pai1, double pai2) {
+            self.t0_from_t0_par(t0, tE, u0, pai1, pai2);
+            std::vector<double> ret = { self.t0_out, self.tE_out, self.u0_out, self.alpha_out, self.pai1_out, self.pai2_out };
+            return ret;
+        },
+        R"mydelimiter(
+            Given a model obtained with t0_par different from t0, calculates the equivalent model with t0_par=t0.
+
+            Parameters
+            ----------
+            t0 : float 
+                t0 in the original model.
+            tE : float 
+                tE in the original model 
+            u0 : float 
+                u0 in the original model.
+            paiN : float 
+                paiN in the original model.
+            paiE : float 
+                paiE in the original model.
+
+            Returns
+            -------
+            Parameters for the equivalent model: t0_out, tE_out, u0_out, delta_alpha_out, paiN_out, paiE_out
             )mydelimiter");
 
     // Limb darkening
