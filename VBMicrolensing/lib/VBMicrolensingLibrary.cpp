@@ -3055,7 +3055,7 @@ double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols_for
 				deltabest = RSi / delta1;
 				magbest = mag1;
 			}
-		} while ((weird || cerr > 10 * (Tol + RelTol * mag1)) && delta1 < 1);
+		} while ((weird || cerr > 10 * (Tol + RelTol * mag1)) && delta1 < 1 && 9 * delta1 * delta1 < minerr * RS); // Later steps cannot have cerr < minerr
 
 		mag1 = magbest;
 		delta1 = deltabest;
@@ -3079,7 +3079,7 @@ double VBMicrolensing::MultiMagSafe(double y1s, double y2s, double RS, _sols_for
 				deltabest = RSo / delta2;
 				magbest = mag2;
 			}
-		} while ((weird || cerr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4);
+		} while ((weird || cerr > 10 * (Tol + RelTol * mag2)) && RSo < 1.e4 && 9 * delta2 * delta2 < minerr * RS); // Later steps cannot have cerr < minerr
 		mag2 = magbest;
 		delta2 = deltabest;
 		if (mag2 < 0) mag2 = 1.0;
