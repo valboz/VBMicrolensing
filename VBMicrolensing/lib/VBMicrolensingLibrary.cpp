@@ -2888,6 +2888,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 			int lim = Prov->length;
 #endif
 			if (Prov->length > 0) {
+				flagbad = 0;
 				Mag -= stheta->prev->Mag;
 				if (astrometry) {
 					astrox1 -= stheta->prev->astrox1;
@@ -4152,7 +4153,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _PRINT_ERRORS
 	printf("\nPreceding ordinary");
 #endif
-	while (nprec && npres) {
+	while (nprec && npres && mi < 1.e99) {
 		scan = cprec[issoc[0]]->last;
 		scan2 = isso[1];
 		cmp2 = mi / fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
@@ -4548,7 +4549,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _PRINT_ERRORS
 	printf("\nFollowing ordinary");
 #endif
-	while (nfoll && npres) {
+	while (nfoll && npres && mi < 1.e99) {
 		scan = cpres[issoc[0]]->last;
 		scan2 = cfoll[issoc[1]]->first;
 		cmp2 = mi / fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
