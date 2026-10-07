@@ -3589,6 +3589,7 @@ bool VBMicrolensing::checkroot(_theta* theta) {
 	static int imn;
 	static complex S3, z, S4;
 	static double fad;
+	if (!(zf.re > -1.e99) || !(zf.im > -1.e99)) return false;
 	if ((iter2 < 9 && iter < maxiter) || L0f < 1.e-29) {
 		mn = 1.e100;
 		imn = 0;
@@ -4153,7 +4154,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _PRINT_ERRORS
 	printf("\nPreceding ordinary");
 #endif
-	while (nprec && npres && mi < 1.e99) {
+	while (nprec && npres) {
 		scan = cprec[issoc[0]]->last;
 		scan2 = isso[1];
 		cmp2 = mi / fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
@@ -4549,7 +4550,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 #ifdef _PRINT_ERRORS
 	printf("\nFollowing ordinary");
 #endif
-	while (nfoll && npres && mi < 1.e99) {
+	while (nfoll && npres) {
 		scan = cpres[issoc[0]]->last;
 		scan2 = cfoll[issoc[1]]->first;
 		cmp2 = mi / fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
