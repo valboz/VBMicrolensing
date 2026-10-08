@@ -3949,7 +3949,8 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	static complex  yc, z, zc, zo, delta, dy, dz, J2, J3, Jalt, Jaltc, JJalt2, LL, J1c2, dzita;
 	static double dlmax = 1.0e-12, dzmax = 1.e-10, dJ2, ob2, cq, Jold, LLold;
 	static int ngood, nplus, nminus, bad, isso, ncrit, igood, iter, iter2;
-	static double mi, tst, isgood;
+	static double mi, tst, isgood, goodpol[MAXM];
+	static complex zpol[MAXM];
 	static _curve* Prov;
 	static _point* scan, * prin, * fifth, * left, * right, * center;
 
@@ -3999,6 +4000,55 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	}
 	if (theta->th >= 0 && (nminus != nplus + n - 1 || nplus == 0)) {
 		ngood = 0;
+	}
+	// Polynomial roots of images very close to a lens (strongly demagnified images,
+	// e.g. near a close pair or a wide companion) can be accurate only to ~1e-5,
+	// more than the size of the image itself. Then the image contour is noise, the error
+	// estimate never converges and MultiMagDark keeps adding annuli.
+	// Polish the accepted roots that do not satisfy the lens equation to dlmax
+	// by Newton on the lens equation. Keep the root as it was if Newton does not converge
+	// or lands on another accepted image.
+	for (int ig = 0; ig < ngood; ig++) {
+		int i = worst[ig];
+		zpol[ig] = zr[i];
+		goodpol[ig] = -1; // Not polished
+		if (good[i] > dlmax) {
+			z = zo = zr[i];
+			zc = conj(z);
+			_MJacobians1
+			LLold = good[i];
+			Jold = Jacs[i];
+			for (iter = 0; iter < 20; iter++) {
+				delta = (conj(LL) - LL * J1c[i]) / Jacs[i];
+				z = zo + delta;
+				zc = conj(z);
+				_MJacobians1
+				tst = abs2(LL);
+				if (!(tst < LLold) || signbit(Jacs[i]) != signbit(Jold)) break;
+				zo = z;
+				LLold = tst;
+			}
+			if (LLold < dlmax) {
+				zpol[ig] = zo;
+				goodpol[ig] = LLold;
+			}
+		}
+	}
+	for (int ig = 0; ig < ngood; ig++) {
+		int i = worst[ig];
+		if (good[i] > dlmax) {
+			if (goodpol[ig] >= 0) {
+				int jg = 0;
+				while (jg < ngood && (jg == ig || abs2(zpol[ig] - zpol[jg]) > dzmax)) jg++;
+				if (jg == ngood) {
+					zr[i] = zpol[ig];
+					good[i] = goodpol[ig];
+				}
+			}
+			z = zr[i]; // Jacobians at the final root
+			zc = conj(z);
+			_MJacobians1
+		}
 	}
 	Prov = new _curve;
 	for (int i = 0; i < ngood; i++) {
