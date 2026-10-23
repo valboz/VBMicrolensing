@@ -4920,18 +4920,22 @@ void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double*
 	double paiE, paiL, pairel, muL1, muL2;
 	double c1, c2, c1prov;
 
-	pai2 += 1.01e-10;
-	paiE = sqrt(pai1 * pai1 + pai2 * pai2);
+	// Guard the parallax direction against pai1 = pai2 = 0 with a LOCAL copy:
+	// this function runs once per epoch, and nudging the member pai2 here used
+	// to shift it by 1.01e-10 at every epoch, so later epochs of the same light
+	// curve were computed with a slightly different pi_E than earlier ones.
+	double p1 = pai1, p2 = pai2 + 1.01e-10;
+	paiE = sqrt(p1 * p1 + p2 * p2);
 	pairel = paiE * thetaE;
 	paiL = paiS + pairel; // lens parallax in mas
-	muL1 = muS1 + thetaE * tE_inv * pai1 / paiE - vt0[0] * pairel; // Note that vt0 is in South-West system, hence the "-"
-	muL2 = muS2 + thetaE * tE_inv * pai2 / paiE - vt0[1] * pairel;
+	muL1 = muS1 + thetaE * tE_inv * p1 / paiE - vt0[0] * pairel; // Note that vt0 is in South-West system, hence the "-"
+	muL2 = muS2 + thetaE * tE_inv * p2 / paiE - vt0[1] * pairel;
 	// heliocentric lens proper motion in mas/day
 
 	c1 = c1s[0] * thetaE; // Centroid coordinates come in x1,x2 system of the lens
 	c2 = c2s[0] * thetaE;
 
-	PosAng = atan2(pai2, pai1) - alpha + dPosAng; // Angle between North and axis x1 of the lens system counterclockwise
+	PosAng = atan2(p2, p1) - alpha + dPosAng; // Angle between North and axis x1 of the lens system counterclockwise
 
 	c1prov = c1 * cos(PosAng) - c2 * sin(PosAng);
 	c2 = c1 * sin(PosAng) + c2 * cos(PosAng);
