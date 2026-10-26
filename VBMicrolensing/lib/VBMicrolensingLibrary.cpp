@@ -496,9 +496,76 @@ double VBMicrolensing::PSPLMag(double u) {
 	return  u22 / sqrt(u2 * (u2 + 4));
 }
 
+// Uniform-disk ESPL magnification near the limb.
+// The uniform-disk magnification A(u, rho) has a term ~ (u - rho) ln|u - rho| at the limb crossing
+// u = rho, so its derivative is logarithmically singular there and a fixed bilinear table cannot follow
+// it: interpolating ESPL.tbl alone leaves errors up to ~2 mmag within ~0.3% of the limb and ~0.1 mmag
+// out to ~5%. ESPLMag therefore (1) evaluates A exactly (Witt & Mao 1994) within ESPL_LIMB_CELLS
+// table cells of the limb and (2) elsewhere adds back the interpolation error of the singular term,
+// which is known analytically.
+
+#define ESPL_LIMB_CELLS 3
+// The correction vanishes at the table nodes, so cutting it off at a node keeps A continuous. Beyond
+// this many cells from the limb it is below the table's own interpolation error (~2e-5).
+#define ESPL_CORR_CELLS 30
+
+// Bulirsch's general complete elliptic integral (Bulirsch 1969, Numer. Math. 13, 305; as in Numerical
+// Recipes):  cel(kc, p, a, b) = int_0^{pi/2} (a cos^2 + b sin^2) / ((cos^2 + p sin^2) sqrt(cos^2 + kc^2 sin^2)) dphi,
+// for kc > 0, p > 0. Converges quadratically; the stopping test gives full double precision.
+static double ESPL_cel(double kc, double p, double a, double b) {
+	double e, f, g, em = 1.0, qc = kc;
+	p = sqrt(p);
+	b /= p;
+	e = qc;
+	for (;;) {
+		f = a;
+		a += b / p;
+		g = e / p;
+		b += f * g;
+		b += b;
+		p = g + p;
+		g = em;
+		em += qc;
+		if (fabs(g - qc) <= g * 1.e-8) break;
+		qc = sqrt(e);
+		qc += qc;
+		e = qc * em;
+	}
+	return M_PI_2 * (b + a * em) / (em * (em + p));
+}
+
+// Exact uniform-disk magnification, Witt & Mao (1994, ApJ 430, 505), eq. (9):
+// A = (a1 E(m) + a2 K(m) + a3 Pi(n, m)) / pi, with K and E in the order of Gradshteyn & Ryzhik (WM94's
+// labels below their eq. 9 are swapped). a1 E + a2 K = cel(kc, 1, a1 + a2, a1 kc^2 + a2) and
+// Pi(n, m) = cel(kc, 1 - n, 1, 1), kc = sqrt(1 - m). Used near u = rho only.
+static double ESPLUniformExact(double u, double rho) {
+	double d = u - rho, s = u + rho, d2 = d * d, s2 = s * s, r2 = rho * rho, q = sqrt(4. + d2);
+	if (fabs(d) < 1.e-10 * rho) { // u = rho: closed form (the (u - rho) ln|u - rho| term is below 1e-8 here)
+		return (2. / rho + (1. + r2) / r2 * (M_PI_2 + asin((r2 - 1.) / (r2 + 1.)))) / M_PI;
+	}
+	double mc = d2 * (1. + 4. / s2) / (4. + d2);   // 1 - m, written without cancellation
+	double kc = sqrt(mc);
+	double a1 = 0.5 * s * q / r2;
+	double a2 = -d * (4. + 0.5 * (u * u - r2)) / (r2 * q);
+	double a3 = 2. * d2 * (1. + r2) / (r2 * s * q);
+	return (ESPL_cel(kc, 1., a1 + a2, a1 * mc + a2) + a3 * ESPL_cel(kc, d2 / s2, 1., 1.)) / M_PI;
+}
+
+// x ln x at the table nodes x = k / (__zsize_ESPL - 1), k cells from the limb.
+static struct _ESPLlimbnodes {
+	double g[__zsize_ESPL];
+	_ESPLlimbnodes() {
+		g[0] = 0;
+		for (int k = 1; k < __zsize_ESPL; k++) {
+			double x = ((double)k) / (__zsize_ESPL - 1);
+			g[k] = x * log(x);
+		}
+	}
+} ESPLlimbnodes;
+
 double VBMicrolensing::ESPLMag(double u, double RSv) {
-	double mag, z, fr, cz, cr, u2;
-	int iz, ir;
+	double mag, z, fr, cz, cr, u2, x, norm;
+	int iz, ir, k;
 
 	if (ESPLoff) {
 		//printf("\nLoad ESPL table first!");
@@ -516,12 +583,22 @@ double VBMicrolensing::ESPLMag(double u, double RSv) {
 	z = u / RSv;
 
 	if (z < 1) {
+		x = 1 - z;
 		z *= __zsize_ESPL - 1;
 		iz = (int)floor(z);
 		z -= iz;
 		cz = 1 - z;
-		mag = sqrt(1 + 4. / (RSv * RSv));
-		mag *= ESPLin[ir][iz] * cr * cz + ESPLin[ir + 1][iz] * fr * cz + ESPLin[ir][iz + 1] * cr * z + ESPLin[ir + 1][iz + 1] * fr * z;
+		if (iz >= __zsize_ESPL - 1 - ESPL_LIMB_CELLS) {
+			mag = ESPLUniformExact(u, RSv);
+		}
+		else {
+			norm = sqrt(1 + 4. / (RSv * RSv));
+			mag = ESPLin[ir][iz] * cr * cz + ESPLin[ir + 1][iz] * fr * cz + ESPLin[ir][iz + 1] * cr * z + ESPLin[ir + 1][iz + 1] * fr * z;
+			// add back the interpolation error of the limb term (2 / (pi sqrt(RSv^2 + 4))) (z - 1) ln(1 - z)
+			k = __zsize_ESPL - 1 - iz;
+			if (k <= ESPL_CORR_CELLS) mag -= 0.63661977236758134 / (RSv * norm) * (x * log(x) - ESPLlimbnodes.g[k] * cz - ESPLlimbnodes.g[k - 1] * z);
+			mag *= norm;
+		}
 		if (astrometry) {
 			astrox1 = (1 - 1. / (4 + RSv * RSv)) * u;
 			astrox1 *= ESPLinastro[ir][iz] * cr * cz + ESPLinastro[ir + 1][iz] * fr * cz + ESPLinastro[ir][iz + 1] * cr * z + ESPLinastro[ir + 1][iz + 1] * fr * z;
@@ -529,14 +606,26 @@ double VBMicrolensing::ESPLMag(double u, double RSv) {
 	}
 	else {
 		z = 0.99999999999999 / z;
+		x = 1 - z;
 		z *= __zsize_ESPL - 1;
 		iz = (int)floor(z);
 		z -= iz;
 		cz = 1 - z;
 
 		u2 = u * u;
-		mag = (u2 + 2) / sqrt(u2 * (u2 + 4));
-		mag *= ESPLout[ir][iz] * cr * cz + ESPLout[ir + 1][iz] * fr * cz + ESPLout[ir][iz + 1] * cr * z + ESPLout[ir + 1][iz + 1] * fr * z;
+		if (iz >= __zsize_ESPL - 1 - ESPL_LIMB_CELLS) {
+			mag = ESPLUniformExact(u, RSv);
+		}
+		else {
+			mag = ESPLout[ir][iz] * cr * cz + ESPLout[ir + 1][iz] * fr * cz + ESPLout[ir][iz + 1] * cr * z + ESPLout[ir + 1][iz + 1] * fr * z;
+			// add back the interpolation error of the limb term (2 sqrt(RSv^2 + 4) / (pi (RSv^2 + 2))) (1 - w) ln(1 - w), w = RSv / u
+			k = __zsize_ESPL - 1 - iz;
+			if (k <= ESPL_CORR_CELLS) {
+				norm = RSv * RSv;
+				mag += 0.63661977236758134 * sqrt(norm + 4) / (norm + 2) * (x * log(x) - ESPLlimbnodes.g[k] * cz - ESPLlimbnodes.g[k - 1] * z);
+			}
+			mag *= (u2 + 2) / sqrt(u2 * (u2 + 4));
+		}
 		if (astrometry) {
 			astrox1 = u * (u2 + 3) / (u2 + 2);
 			astrox1 *= ESPLoutastro[ir][iz] * cr * cz + ESPLoutastro[ir + 1][iz] * fr * cz + ESPLoutastro[ir][iz + 1] * cr * z + ESPLoutastro[ir + 1][iz + 1] * fr * z;
@@ -577,7 +666,7 @@ double VBMicrolensing::ESPLMag2(double u, double rho) {
 
 double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 	double Mag = -1.0, Magold = 0., Tolv = Tol;
-	double tc, rb, lc, rc, cb, u2;
+	double tc, rb, lc, rc, cb, u2, us;
 	int c = 0, flag;
 	double currerr, maxerr;
 	annulus* first, * scan, * scan2;
@@ -590,10 +679,16 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 		first->bin = 0.;
 		first->cum = 0.;
 
-		u2 = u * u;
-		first->Mag = Mag0 = (u2 + 2) / (u * sqrt(u2 + 4));
+		// The radius-0 annulus is seeded with the point-source magnification at u. Its weight
+		// (bin^2 = 0) removes it from Mag, so it only enters the error estimates. It diverges as
+		// u -> 0 (inf/NaN at u = 0, and error bookkeeping swamped for u < ~1e-10 RSv), so evaluate
+		// the seed no closer than 1e-3 RSv: the estimates stay conservative there.
+		us = (u > 1.e-3 * RSv) ? u : 1.e-3 * RSv;
+		u2 = us * us;
+		first->Mag = Mag0 = (u2 + 2) / (us * sqrt(u2 + 4));
 		first->nim = 2;
 		if (astrometry) {
+			u2 = u * u;
 			astrox1 = u * (u2 + 3) / (u2 + 2);
 			first->LDastrox1 = astrox1 * first->Mag;
 		}
@@ -658,7 +753,7 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = ESPLMag(u, RSv * cb);
 			if (astrometry) {
@@ -1328,7 +1423,7 @@ double VBMicrolensing::BinaryMagDark(double a, double q, double y1, double y2, d
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = BinaryMagSafe(a, q, y_1, y_2, RSv * cb, &Images);
 			if (astrometry) {
@@ -3195,7 +3290,7 @@ double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double T
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = MultiMagSafe(y1s, y2s, RSv * cb, &Images);
 			if (astrometry) {
@@ -6313,7 +6408,10 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 		rc = tc * npLD;
 		ic = (int)rc;
 		rc -= ic;
-		cb = rCLDtab[ic] * (1 - rc) + rCLDtab[ic + 1] * rc;
+		// Interpolate r^2, not r: the cumulative flux is linear in r^2 near the center (and wherever
+		// the profile is locally flat), so the annulus radius stays consistent with its flux fraction tc.
+		cb = sqrt(rCLDtab[ic] * rCLDtab[ic] * (1 - rc) + rCLDtab[ic + 1] * rCLDtab[ic + 1] * rc);
+		cumLDcb = tc;
 		break;
 	case LDlinear:
 		lb = left->bin;
@@ -6335,6 +6433,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDsquareroot:
 		lb = left->bin;
@@ -6358,6 +6457,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDquadratic:
 		lb = left->bin;
@@ -6380,6 +6480,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDlog:
 		lb = left->bin;
@@ -6403,6 +6504,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	}
 
