@@ -159,6 +159,8 @@ public:
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
 	static char RefEphemerisFile[1024];
 	static void SetRefEphemerisFile(char* instring) { strcpy(RefEphemerisFile, instring); }
+	// Deprecated (v5.7): the reference ephemeris is the solar-system barycenter and input times are BJD; see LoadRefEphemeris, SetRefEphemerisFile, t_in_BJD.
+	[[deprecated("use SetRefEphemerisFile")]] static void SetSuntablefile(char* instring) { SetRefEphemerisFile(instring); }
 	double Tol, RelTol, a1, a2, corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
@@ -231,6 +233,7 @@ public:
 	// New (v2) light curve functions, operating on arrays
 
 	void LoadRefEphemeris(char* tablefilename);
+	[[deprecated("use LoadRefEphemeris")]] void LoadSunTable(char* tablefilename) { LoadRefEphemeris(tablefilename); }
 	void PSPLLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void PSPLLightCurveParallax(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void ESPLLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
