@@ -253,7 +253,7 @@ public:
 #pragma endregion
 
 char VBMicrolensing::ESPLtablefile[1024] = "placeholder";
-char VBMicrolensing::Suntablefile[1024] = "placeholder";
+char VBMicrolensing::RefEphemerisFile[1024] = "placeholder";
 
 #pragma region Constructor/destructor
 
@@ -278,7 +278,7 @@ VBMicrolensing::VBMicrolensing() {
 	t0old = 0.;
 	Tol = 1.e-2;
 	RelTol = 0;
-	suntable = false;
+	reftable = false;
 	parallaxephemeris = true;
 	tsat = 0;
 	possat = 0;
@@ -332,7 +332,7 @@ VBMicrolensing::VBMicrolensing() {
 	SelectedMethod = Method::Nopoly;
 	turn_off_secondary_source = turn_off_secondary_lens = false;
 	block_tertiary_lens = false;
-	t_in_HJD = true;
+	t_in_BJD = true;
 	parallaxextrapolation = 0;
 	//	testnewcoefs = true;
 }
@@ -348,7 +348,7 @@ VBMicrolensing::~VBMicrolensing() {
 		free(possat);
 		free(ndatasat);
 	}
-	if (suntable) {
+	if (reftable) {
 		for (int j = 0; j < ndataEar; j++) free(posEar[j]);
 		free(posEar);
 	}
@@ -6486,18 +6486,18 @@ void VBMicrolensing::SetLDprofile(LDprofiles LDval) {
 //////////////////////////////
 //////////////////////////////
 
-void VBMicrolensing::LoadSunTable(char* filename) {
+void VBMicrolensing::LoadRefEphemeris(char* filename) {
 	FILE* f;
 	double RA, Dec, dis, phiprec;
 
 	if ((f = fopen(filename, "r")) != 0) {
-		if (suntable) {
+		if (reftable) {
 			// Removing existing table if any
 			for (int j = 0; j < ndataEar; j++) free(posEar[j]);
 			free(posEar);
-			suntable = false;
+			reftable = false;
 		}
-		// Reading Sun table files
+		// Reading the reference ephemeris table (Earth relative to the solar-system barycenter by default)
 		int flag2 = 0;
 		//		long startpos = 0;
 		char teststring[1000];
@@ -6586,11 +6586,11 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 			}
 		}
 		fclose(f);
-		suntable = true;
+		reftable = true;
 	}
 	else {
-		printf("\nSun ephemeris table not found !");
-		suntable = false;
+		printf("\nReference ephemeris table not found !");
+		reftable = false;
 	}
 }
 
@@ -6793,9 +6793,9 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	if (t0_par_fixed == 0) t0_par = t0;
 
 	if (parallaxephemeris) {
-		// Calculation with lookup ephemeris table 
-		if (!suntable) {
-			LoadSunTable(Suntablefile);
+		// Calculation with lookup ephemeris table (Earth relative to the reference center of the table; the solar-system barycenter for the default table)
+		if (!reftable) {
+			LoadRefEphemeris(RefEphemerisFile);
 		}
 		if (t0_par != t0parold) {
 			t0parold = t0_par;
@@ -6803,7 +6803,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			ic = (int)floor(ty);
 			ty -= ic;
 			for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
-			if (t_in_HJD) {
+			if (t_in_BJD) {
 				double told = t0_par, tnew;
 				lighttravel0par = 0;
 				for (int i = 0; i < 3; i++) lighttravel0par += Ear[i] * Obj[i];
@@ -6852,7 +6852,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
 				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
 			}
-			lighttravel0par *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			lighttravel0par *= (t_in_BJD) ? 0 : au_c; // Light travel time from the Earth to the reference center (the solar-system barycenter for the default table): BJD = JD + lighttravel.
 		}
 
 		// Let's also update traveltime for t0 
@@ -6861,7 +6861,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		else {
 			lighttravel0 = 0; //Only non-zero for t in JD
-			if (!t_in_HJD && t0 != t0old) {
+			if (!t_in_BJD && t0 != t0old) {
 				t0old = t0;
 				ty = (t0 - startEar) / stepEar;
 				ic = (int)floor(ty);
@@ -6870,7 +6870,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				for (int i = 0; i < 3; i++) {
 					lighttravel0 += Ear[i] * Obj[i];
 				}
-				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+				lighttravel0 *= au_c; // Light travel time from the Earth to the reference center (the solar-system barycenter for the default table): BJD = JD + lighttravel.
 			}
 
 		}
@@ -6886,7 +6886,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		lighttravel = 0;
 		for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
 		lighttravel *= au_c;
-		if (t_in_HJD) {
+		if (t_in_BJD) {
 			double told = t, tnew;
 			tnew = t - lighttravel;
 			while (fabs(told - tnew) > 1.e-8) {
@@ -6906,7 +6906,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		Ehel[0] = Ehel[1] = 0;
 		for (int i = 0; i < 3; i++) {
-			Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
+			Ehel[0] += Ear[i] * rad[i]; // Ehel is the position of Earth relative to the reference center (the solar-system barycenter for the default table) along South and West at time t
 			Ehel[1] += Ear[i] * tang[i];
 		}
 		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
@@ -6932,8 +6932,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			dE = 1;
 			dLtof = 0;
 			while (fabs(dE) > 1.e-8) {
-				if (t_in_HJD) {
-					// Correction to calculate Earth position at JD not HJD
+				if (t_in_BJD) {
+					// Correction to calculate Earth position at JD not BJD (heliocentric light travel time in this branch)
 					x1 = a * (cos(EE) - e);
 					y1 = a * sqrt(1 - e * e) * sin(EE);
 					Ear[0] = x1 * cos(om) - y1 * sin(om);
@@ -6985,7 +6985,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
 				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
 			}
-			lighttravel0par *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			lighttravel0par *= (t_in_BJD) ? 0 : au_c; // Light travel time from Earth projection to Sun (this branch is heliocentric): HJD = JD + lighttravel.
 		}
 
 		// Let's also update traveltime for t0 
@@ -6994,7 +6994,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		else {
 			lighttravel0 = 0; //Only non-zero for t in JD
-			if (!t_in_HJD && t0 != t0old) {
+			if (!t_in_BJD && t0 != t0old) {
 				t0old = t0;
 				ty = (t0 - 1545) / 36525.0;
 
@@ -7011,8 +7011,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				dE = 1;
 				dLtof = 0;
 				while (fabs(dE) > 1.e-8) {
-					if (t_in_HJD) {
-						// Correction to calculate Earth position at JD not HJD
+					if (t_in_BJD) {
+						// Correction to calculate Earth position at JD not BJD (heliocentric light travel time in this branch)
 						x1 = a * (cos(EE) - e);
 						y1 = a * sqrt(1 - e * e) * sin(EE);
 						Ear[0] = x1 * cos(om) - y1 * sin(om);
@@ -7040,7 +7040,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				for (int i = 0; i < 3; i++) {
 					lighttravel0 += Ear[i] * Obj[i];
 				}
-				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun (this branch is heliocentric): HJD = JD + lighttravel.
 			}
 
 		}
@@ -7061,8 +7061,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		dE = 1;
 		dLtof = 0;
 		while (fabs(dE) > 1.e-8) {
-			if (t_in_HJD) {
-				// Correction to calculate Earth position at JD not HJD
+			if (t_in_BJD) {
+				// Correction to calculate Earth position at JD not BJD (heliocentric light travel time in this branch)
 				x1 = a * (cos(EE) - e);
 				y1 = a * sqrt(1 - e * e) * sin(EE);
 				Ear[0] = x1 * cos(om) - y1 * sin(om);
@@ -7094,7 +7094,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			Ehel[1] += Ear[i] * tang[i];
 			lighttravel += Ear[i] * Obj[i];
 		}
-		lighttravel *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+		lighttravel *= (t_in_BJD) ? 0 : au_c; // Light travel time from Earth projection to Sun (this branch is heliocentric): HJD = JD + lighttravel.
 		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
 		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along West wrt extrapolation from t0_par
 

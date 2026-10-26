@@ -1,3 +1,4 @@
+-  **v5.7** - 2026/10/?? - Parallax is computed relative to the solar-system barycenter instead of the Sun: the default ephemeris table is the Earth relative to the barycenter (time scale TT) and input times are BJD_TDB rather than HJD_UTC. Renamed LoadSunTable to LoadRefEphemeris, SetSuntablefile to SetRefEphemerisFile and t_in_HJD to t_in_BJD (old names kept as deprecated aliases).
 -  **v5.6.1** - 2026/10/?? - Fix minor bugs in MultiMag, MultiMagSafe and ComputeParallax.
 -  **v5.6** - 2026/09/24 - Restructuring in complex_multigen preventing array leakage for multipoly. Safer management of nopoly failures. Corrected behaviour for very large sources in BinaryMag2 thanks to Jason Eastman. Added function t0_from_t0_par to translate parameters across different parallax reference times.
 -  **v5.5.1** - 2026/08/20 - Negative dsz/dt allowed in orbital motion.

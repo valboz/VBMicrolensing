@@ -66,8 +66,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Flux of secondary lens is set to zero.");
     vbm.def_readwrite("block_tertiary_lens", &VBMicrolensing::block_tertiary_lens,
         "Block third lens in orbital motion calculation.");
-    vbm.def_readwrite("t_in_HJD", &VBMicrolensing::t_in_HJD,
-        "Set if t is given in HJD");
+    vbm.def_readwrite("t_in_BJD", &VBMicrolensing::t_in_BJD,
+        "True (default) if the input times are BJD_TDB (arrival time at the solar-system barycenter). If False, the input times are the JD of reception at the observer and the light travel time to the barycenter is added internally.");
     vbm.def_readwrite("corrquad", &VBMicrolensing::corrquad,
         "Quadrupole test.");
     vbm.def_readwrite("corrquad2", &VBMicrolensing::corrquad2,
@@ -78,16 +78,16 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
     vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
         """Loads a pre calculated binary table for extended source calculation.""");
-    vbm.def("LoadSunTable", &VBMicrolensing::LoadSunTable,
-        """Loads a Sun ephemeris table for parallax calculation.""");
+    vbm.def("LoadRefEphemeris", &VBMicrolensing::LoadRefEphemeris,
+        """Loads the reference ephemeris table for parallax calculation: the Earth as seen from the solar-system barycenter, in Horizons format (JD, RA, Dec, range, range rate).""");
     vbm.def("SetESPLtablefile", [](char* s) {
         VBMicrolensing::SetESPLtablefile(s);
         },
         """Sets the path to a pre calculated binary table for extended source calculation.""");
-    vbm.def("SetSuntablefile", [](char* s) {
-        VBMicrolensing::SetSuntablefile(s);
+    vbm.def("SetRefEphemerisFile", [](char* s) {
+        VBMicrolensing::SetRefEphemerisFile(s);
         },
-        """Sets the path to a pre calculated Sun ephemeris table to be used in parallax calculations.""");
+        """Sets the path to the reference ephemeris table (Earth relative to the solar-system barycenter) to be used in parallax calculations.""");
     // Maginfication calculations
     vbm.def("PSPLMag", &VBMicrolensing::PSPLMag,
         py::return_value_policy::reference,

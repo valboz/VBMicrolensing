@@ -153,19 +153,19 @@ public:
 	bool turn_off_secondary_lens;
 	bool block_tertiary_lens;
 	bool ESPLoff;
-	bool t_in_HJD;
+	bool t_in_BJD;
 
 	static char ESPLtablefile[1024];
 	static void SetESPLtablefile(char* instring) { strcpy(ESPLtablefile, instring); }
-	static char Suntablefile[1024];
-	static void SetSuntablefile(char* instring) { strcpy(Suntablefile, instring); }
+	static char RefEphemerisFile[1024];
+	static void SetRefEphemerisFile(char* instring) { strcpy(RefEphemerisFile, instring); }
 	double Tol, RelTol, a1, a2, corrquad, corrquad2, safedist;
 	double mass_radius_exponent, mass_luminosity_exponent, lens_mass_luminosity_exponent;
 	int satellite, parallaxsystem, t0_par_fixed, nsat;
 	double t0_par;
 	void t0_from_t0_par(double t0, double tE, double u0, double pai1, double pai2);
 	double t0_out, u0_out, alpha_out, pai1_out, pai2_out, tE_out;
-	bool suntable, parallaxephemeris;
+	bool reftable, parallaxephemeris;
 	int parallaxextrapolation;
 	int minannuli, maxannuli, nannuli, NPS, NPcrit;
 	int newtonstep;
@@ -230,7 +230,7 @@ public:
 
 	// New (v2) light curve functions, operating on arrays
 
-	void LoadSunTable(char* tablefilename);
+	void LoadRefEphemeris(char* tablefilename);
 	void PSPLLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void PSPLLightCurveParallax(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
 	void ESPLLightCurve(double* parameters, double* t_array, double* mag_array, double* y1_array, double* y2_array, int np);
