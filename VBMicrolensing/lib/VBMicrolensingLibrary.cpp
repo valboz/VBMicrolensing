@@ -577,7 +577,7 @@ double VBMicrolensing::ESPLMag2(double u, double rho) {
 
 double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 	double Mag = -1.0, Magold = 0., Tolv = Tol;
-	double tc, rb, lc, rc, cb, u2;
+	double tc, rb, lc, rc, cb, u2, us;
 	int c = 0, flag;
 	double currerr, maxerr;
 	annulus* first, * scan, * scan2;
@@ -590,10 +590,16 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 		first->bin = 0.;
 		first->cum = 0.;
 
-		u2 = u * u;
-		first->Mag = Mag0 = (u2 + 2) / (u * sqrt(u2 + 4));
+		// The radius-0 annulus is seeded with the point-source magnification at u. Its weight
+		// (bin^2 = 0) removes it from Mag, so it only enters the error estimates. It diverges as
+		// u -> 0 (inf/NaN at u = 0, and error bookkeeping swamped for u < ~1e-10 RSv), so evaluate
+		// the seed no closer than 1e-3 RSv: the estimates stay conservative there.
+		us = (u > 1.e-3 * RSv) ? u : 1.e-3 * RSv;
+		u2 = us * us;
+		first->Mag = Mag0 = (u2 + 2) / (us * sqrt(u2 + 4));
 		first->nim = 2;
 		if (astrometry) {
+			u2 = u * u;
 			astrox1 = u * (u2 + 3) / (u2 + 2);
 			first->LDastrox1 = astrox1 * first->Mag;
 		}
@@ -658,7 +664,7 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = ESPLMag(u, RSv * cb);
 			if (astrometry) {
@@ -1328,7 +1334,7 @@ double VBMicrolensing::BinaryMagDark(double a, double q, double y1, double y2, d
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = BinaryMagSafe(a, q, y_1, y_2, RSv * cb, &Images);
 			if (astrometry) {
@@ -3195,7 +3201,7 @@ double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double T
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = MultiMagSafe(y1s, y2s, RSv * cb, &Images);
 			if (astrometry) {
@@ -6294,6 +6300,7 @@ double VBMicrolensing::LDprofile(double r) {
 		break;
 	case LDsquareroot:
 		ret = 3 / (3 - a1 - 0.6 * a2) * (1 - a1 * scr2 - a2 * sscr2);
+		break;
 	case LDquadratic:
 		ret = 3 / (3 - a1 - 0.5 * a2) * (1 - a1 * scr2 - a2 * sscr2);
 		break;
@@ -6313,7 +6320,10 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 		rc = tc * npLD;
 		ic = (int)rc;
 		rc -= ic;
-		cb = rCLDtab[ic] * (1 - rc) + rCLDtab[ic + 1] * rc;
+		// Interpolate r^2, not r: the cumulative flux is linear in r^2 near the center (and wherever
+		// the profile is locally flat), so the annulus radius stays consistent with its flux fraction tc.
+		cb = sqrt(rCLDtab[ic] * rCLDtab[ic] * (1 - rc) + rCLDtab[ic + 1] * rCLDtab[ic + 1] * rc);
+		cumLDcb = tc;
 		break;
 	case LDlinear:
 		lb = left->bin;
@@ -6335,6 +6345,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDsquareroot:
 		lb = left->bin;
@@ -6358,6 +6369,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDquadratic:
 		lb = left->bin;
@@ -6380,6 +6392,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDlog:
 		lb = left->bin;
@@ -6403,6 +6416,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	}
 

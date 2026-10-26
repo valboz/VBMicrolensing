@@ -103,6 +103,7 @@ class VBMicrolensing
 	bool multidark;
 	double* LDtab, * rCLDtab, * CLDtab;
 	double scr2, sscr2;
+	double cumLDcb; // cumulative LD flux fraction within the radius last returned by rCLDprofile
 	int npLD;
 	annulus* annlist;
 	_skiplist_curve** cprec, ** cpres, ** cfoll;
