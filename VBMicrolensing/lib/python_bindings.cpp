@@ -66,8 +66,8 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Flux of secondary lens is set to zero.");
     vbm.def_readwrite("block_tertiary_lens", &VBMicrolensing::block_tertiary_lens,
         "Block third lens in orbital motion calculation.");
-    vbm.def_readwrite("t_in_HJD", &VBMicrolensing::t_in_HJD,
-        "Set if t is given in HJD");
+    vbm.def_readwrite("t_in_BJD", &VBMicrolensing::t_in_BJD,
+        "True (default) if the input times are BJD_TDB (arrival time at the solar-system barycenter). If False, the input times are the JD of reception at the observer and the light travel time to the barycenter is added internally.");
     vbm.def_readwrite("corrquad", &VBMicrolensing::corrquad,
         "Quadrupole test.");
     vbm.def_readwrite("corrquad2", &VBMicrolensing::corrquad2,
@@ -78,16 +78,31 @@ PYBIND11_MODULE(VBMicrolensing, m) {
 
     vbm.def("LoadESPLTable", &VBMicrolensing::LoadESPLTable,
         """Loads a pre calculated binary table for extended source calculation.""");
-    vbm.def("LoadSunTable", &VBMicrolensing::LoadSunTable,
-        """Loads a Sun ephemeris table for parallax calculation.""");
+    vbm.def("LoadRefEphemeris", &VBMicrolensing::LoadRefEphemeris,
+        """Loads the reference ephemeris table for parallax calculation: the Earth as seen from the solar-system barycenter, in Horizons format (JD, RA, Dec, range, range rate).""");
     vbm.def("SetESPLtablefile", [](char* s) {
         VBMicrolensing::SetESPLtablefile(s);
         },
         """Sets the path to a pre calculated binary table for extended source calculation.""");
-    vbm.def("SetSuntablefile", [](char* s) {
-        VBMicrolensing::SetSuntablefile(s);
+    vbm.def("SetRefEphemerisFile", [](char* s) {
+        VBMicrolensing::SetRefEphemerisFile(s);
         },
-        """Sets the path to a pre calculated Sun ephemeris table to be used in parallax calculations.""");
+        """Sets the path to the reference ephemeris table (Earth relative to the solar-system barycenter) to be used in parallax calculations.""");
+    // Deprecated names (before v5.7 the reference was the Sun and input times were HJD).
+    vbm.def_property("t_in_HJD",
+        [](VBMicrolensing& self) { PyErr_WarnEx(PyExc_DeprecationWarning, "t_in_HJD is deprecated: input times are BJD_TDB since v5.7, use t_in_BJD", 1); return self.t_in_BJD; },
+        [](VBMicrolensing& self, bool v) { PyErr_WarnEx(PyExc_DeprecationWarning, "t_in_HJD is deprecated: input times are BJD_TDB since v5.7, use t_in_BJD", 1); self.t_in_BJD = v; },
+        "Deprecated alias of t_in_BJD.");
+    vbm.def("LoadSunTable", [](VBMicrolensing& self, char* s) {
+        PyErr_WarnEx(PyExc_DeprecationWarning, "LoadSunTable is deprecated: use LoadRefEphemeris (the table is relative to the solar-system barycenter since v5.7)", 1);
+        self.LoadRefEphemeris(s);
+        },
+        """Deprecated alias of LoadRefEphemeris.""");
+    vbm.def("SetSuntablefile", [](char* s) {
+        PyErr_WarnEx(PyExc_DeprecationWarning, "SetSuntablefile is deprecated: use SetRefEphemerisFile", 1);
+        VBMicrolensing::SetRefEphemerisFile(s);
+        },
+        """Deprecated alias of SetRefEphemerisFile.""");
     // Maginfication calculations
     vbm.def("PSPLMag", &VBMicrolensing::PSPLMag,
         py::return_value_policy::reference,
