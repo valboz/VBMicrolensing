@@ -122,7 +122,7 @@ If you want to return to the ground do not forget to set VBM.satellite back to 0
 
 If the input time is outside the range of the satellite ephemeris table, `VBM.parallaxextrapolation` is set to 2. This can be used to check that the calculation was performed correctly.
 
-The satellite tables give the position of the spacecraft relative to the Earth and are looked up at the input epoch, so they should be generated in the same time scale as your input times (TT for $BJD_{TDB}$). The difference with respect to a table in UT (69 s) is negligible for the slow motion of a spacecraft relative to the Earth.
+The satellite tables give the position of the spacecraft relative to the Earth and are looked up at the input epoch, so they should be generated in the same time scale as your input times (TT for $BJD_{TDB}$). The difference with respect to a table in UT (69 s) is negligible for the slow motion of a spacecraft relative to the Earth. Since v5.7.1 the light travel time to the barycenter is computed from the spacecraft position (Earth plus spacecraft offset), so both the Earth and the spacecraft are taken at the instant the spacecraft received the light; before, the Earth was taken at its own reception instant and the spacecraft offset at the input epoch, which displaced the observer by up to $10^{-4}$ au for Spitzer (13 light-minutes from the Earth) and $10^{-6}$ au for a spacecraft at L2 (5 light-seconds). On the Kepler-equation path the spacecraft offset is still added at the input epoch.
 
 ## Parallax system
 
