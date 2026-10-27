@@ -6939,7 +6939,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		// Ear is the observer: the Earth, plus the spacecraft offset at the same time if a satellite is selected.
 		// The light travel time to the reference center, and the instant of reception found by the iteration
 		// below, are then those of the spacecraft rather than of the Earth.
-		if (satellite > 0) {
+		if (satellite > 0 && satellite <= nsat) {
 			SatellitePosition(t, Sat);
 			for (int i = 0; i < 3; i++) Ear[i] += Sat[i];
 		}
@@ -6957,7 +6957,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
 				if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 				for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
-				if (satellite > 0) {
+				if (satellite > 0 && satellite <= nsat) {
 					SatellitePosition(told, Sat);
 					for (int i = 0; i < 3; i++) Ear[i] += Sat[i];
 				}
@@ -7182,7 +7182,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	//}
 
 
-	if (!parallaxephemeris && satellite > 0) {
+	if (!parallaxephemeris && satellite > 0 && satellite <= nsat) {
 		// Kepler-equation path (heliocentric, no reception-instant iteration): the spacecraft offset is added at the input epoch, as before
 		SatellitePosition(t, Sat);
 		for (int i = 0; i < 3; i++) {
