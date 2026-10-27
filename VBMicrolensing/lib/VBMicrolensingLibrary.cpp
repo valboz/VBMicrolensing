@@ -6781,6 +6781,45 @@ bool VBMicrolensing::AreCoordinatesSet() {
 	return coordinates_set;
 }
 
+// Offset of the selected satellite from the Earth at time t, linearly interpolated in its table (zero if the
+// table has fewer than three rows). The time is the one the caller needs: the input epoch, or the instant the
+// spacecraft received the light.
+void VBMicrolensing::SatellitePosition(double t, double* Sat) {
+	int ic, left, right, is = satellite - 1;
+	double ty;
+	Sat[0] = Sat[1] = Sat[2] = 0;
+	if (ndatasat[is] > 2) {
+		if (t < tsat[is][0]) {
+			ic = 0;
+			parallaxextrapolation = 2;
+		}
+		else {
+			if (t > tsat[is][ndatasat[is] - 1]) {
+				ic = ndatasat[is] - 2;
+				parallaxextrapolation = 2;
+			}
+			else {
+				left = 0;
+				right = ndatasat[is] - 1;
+				while (right - left > 1) {
+					ic = (right + left) / 2;
+					if (tsat[is][ic] > t) {
+						right = ic;
+					}
+					else {
+						left = ic;
+					}
+				}
+				ic = left;
+			}
+		}
+		ty = (t - tsat[is][ic]) / (tsat[is][ic + 1] - tsat[is][ic]);
+		for (int i = 0; i < 3; i++) {
+			Sat[i] = possat[is][ic][i] * (1 - ty) + possat[is][ic + 1][i] * ty;
+		}
+	}
+}
+
 void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double dtflight = 0.0000993512; // = angle covered by Earth as light covers 1 au.
 	static double au_c = 0.005775518331436995; // au/c in days.
@@ -6792,7 +6831,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double deg = M_PI / 180;
 	static double a, e, inc, L, om, M, EE, dE, dM;
 	static double x1, y1, vx, vy, Ear[3], vEar[3];
-	static double r, sp, ty, Spit, dLtof;
+	static double r, sp, ty, dLtof, Sat[3];
 	int c = 0, ic;
 
 	if (!coordinates_set) {
@@ -6897,6 +6936,13 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
 		if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 		for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+		// Ear is the observer: the Earth, plus the spacecraft offset at the same time if a satellite is selected.
+		// The light travel time to the reference center, and the instant of reception found by the iteration
+		// below, are then those of the spacecraft rather than of the Earth.
+		if (satellite > 0) {
+			SatellitePosition(t, Sat);
+			for (int i = 0; i < 3; i++) Ear[i] += Sat[i];
+		}
 		lighttravel = 0;
 		for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
 		lighttravel *= au_c;
@@ -6911,6 +6957,10 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
 				if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 				for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+				if (satellite > 0) {
+					SatellitePosition(told, Sat);
+					for (int i = 0; i < 3; i++) Ear[i] += Sat[i];
+				}
 				lighttravel = 0;
 				for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
 				lighttravel *= au_c;
@@ -6920,7 +6970,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		Ehel[0] = Ehel[1] = 0;
 		for (int i = 0; i < 3; i++) {
-			Ehel[0] += Ear[i] * rad[i]; // Ehel is the position of Earth relative to the reference center (the solar-system barycenter for the default table) along South and West at time t
+			Ehel[0] += Ear[i] * rad[i]; // Ehel is the position of the observer (Earth, or Earth plus spacecraft) relative to the reference center (the solar-system barycenter for the default table) along South and West at time t
 			Ehel[1] += Ear[i] * tang[i];
 		}
 		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
@@ -7132,39 +7182,12 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	//}
 
 
-	if (satellite > 0 && satellite <= nsat) {
-		if (ndatasat[satellite - 1] > 2) {
-			int left, right;
-			if (t < tsat[satellite - 1][0]) {
-				ic = 0;
-				parallaxextrapolation = 2;
-			}
-			else {
-				if (t > tsat[satellite - 1][ndatasat[satellite - 1] - 1]) {
-					ic = ndatasat[satellite - 1] - 2;
-					parallaxextrapolation = 2;
-				}
-				else {
-					left = 0;
-					right = ndatasat[satellite - 1] - 1;
-					while (right - left > 1) {
-						ic = (right + left) / 2;
-						if (tsat[satellite - 1][ic] > t) {
-							right = ic;
-						}
-						else {
-							left = ic;
-						}
-					}
-					ic = left;
-				}
-			}
-			ty = (t - tsat[satellite - 1][ic]) / (tsat[satellite - 1][ic + 1] - tsat[satellite - 1][ic]);
-			for (int i = 0; i < 3; i++) {
-				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
-				Et[0] += Spit * rad[i];
-				Et[1] += Spit * tang[i];
-			}
+	if (!parallaxephemeris && satellite > 0) {
+		// Kepler-equation path (heliocentric, no reception-instant iteration): the spacecraft offset is added at the input epoch, as before
+		SatellitePosition(t, Sat);
+		for (int i = 0; i < 3; i++) {
+			Et[0] += Sat[i] * rad[i];
+			Et[1] += Sat[i] * tang[i];
 		}
 	}
 }

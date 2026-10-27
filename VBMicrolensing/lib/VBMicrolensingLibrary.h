@@ -111,6 +111,7 @@ class VBMicrolensing
 
 	void ComputeCentroids(double* pr, double t, double* c1s, double* c2s, double* c1l, double* c2l);
 	void ComputeParallax(double, double);
+	void SatellitePosition(double t, double* Sat); // offset of the current satellite from the Earth at time t, in the basis of the ephemeris tables
 	double du_par(double t);
 	double LDprofile(double r);
 	double rCLDprofile(double tc, annulus*, annulus*);
