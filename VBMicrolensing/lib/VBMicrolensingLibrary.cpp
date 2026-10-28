@@ -634,7 +634,8 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 		currerr = scan->err;
 		flag = 0;
 		nannuli = nannold = 1;
-		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag)) || (nannuli < minannuli)) {
+		// Never accept one annulus of a non-flat profile: its error estimate is ~0 when Mag(rho) == Mag0.
+		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag)) || (nannuli < minannuli) || (nannuli < 2 && first->f != first->next->f)) {
 			maxerr = 0;
 			for (scan2 = first->next; scan2; scan2 = scan2->next) {
 #ifdef _PRINT_ERRORS_DARK
@@ -1305,7 +1306,8 @@ double VBMicrolensing::BinaryMagDark(double a, double q, double y1, double y2, d
 		currerr = scan->err;
 		flag = 0;
 		nannuli = nannold = 1;
-		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag) && nannuli < maxannuli) || (nannuli < minannuli)) {
+		// Never accept one annulus of a non-flat profile: its error estimate is ~0 when Mag(rho) == Mag0.
+		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag) && nannuli < maxannuli) || (nannuli < minannuli) || (nannuli < 2 && first->f != first->next->f)) {
 			maxerr = 0;
 			for (scan2 = first->next; scan2; scan2 = scan2->next) {
 #ifdef _PRINT_ERRORS_DARK
@@ -3172,7 +3174,8 @@ double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double T
 		currerr = scan->err;
 		flag = 0;
 		nannuli = nannold = 1;
-		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag) && nannuli < maxannuli) || (nannuli < minannuli)) {
+		// Never accept one annulus of a non-flat profile: its error estimate is ~0 when Mag(rho) == Mag0.
+		while (((flag < nannold + 5) && (currerr > Tolv) && (currerr > RelTol * Mag) && nannuli < maxannuli) || (nannuli < minannuli) || (nannuli < 2 && first->f != first->next->f)) {
 			maxerr = 0;
 			for (scan2 = first->next; scan2; scan2 = scan2->next) {
 #ifdef _PRINT_ERRORS_DARK
