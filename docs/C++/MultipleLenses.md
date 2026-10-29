@@ -31,7 +31,7 @@ VBM.SetLensGeometry(nn,pr); //Initialize the lens configuration
 
 Once the configuration is specified, we can make all calculations we want with the same configuration. If we want to change the lenses configuration, we need to call `SetLensGeometry` again.
 
-Note that we do not impose that the total mass be 1. We remind that the coordinates are in units of the Einstein radius for a unitary mass.
+Note that each input mass is internally normalized by the total mass. The input positions are then interpreted in units of the Einstein radius of the total mass.
 
 ## Multiple lensing with point sources
 
