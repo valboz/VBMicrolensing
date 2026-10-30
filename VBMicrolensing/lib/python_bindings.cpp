@@ -72,7 +72,7 @@ PYBIND11_MODULE(VBMicrolensing, m) {
         "Quadrupole test.");
     vbm.def_readwrite("corrquad2", &VBMicrolensing::corrquad2,
         "Ghost image test.");
-    vbm.def_readwrite("safedist", &VBMicrolensing::corrquad,
+    vbm.def_readwrite("safedist", &VBMicrolensing::safedist,
         "Distance from planetary caustic.");
 
 
