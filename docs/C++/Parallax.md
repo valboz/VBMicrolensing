@@ -28,10 +28,10 @@ The first argument is the name of the file we have just prepared (these are the 
 
 ## Ephemeris table
 
-In order to calculate the parallax effect, we need to track the Earth position around the Sun. By default, VBMicrolensing uses an ephemeris table (provided in the [/VBMicrolensing/data](/VBMicrolensing/data)) that should be loaded before the first parallax computation. 
+In order to calculate the parallax effect, we need to track the Earth position relative to the solar-system barycenter. By default, VBMicrolensing uses an ephemeris table (provided in the [/VBMicrolensing/data](/VBMicrolensing/data)) that should be loaded before the first parallax computation. 
 
 ```
-VBM.LoadSunTable("SunEphemeris.txt");
+VBM.LoadRefEphemeris("SolarSystemBarycenterEphemeris.txt");
 ```
 
 At this point, we are ready for our first calculation.
@@ -56,7 +56,7 @@ double pr[9]; // Array of parameters
 double s, q, u0, alpha, rho, tE, t0, paiN, paiE, t;
 
 VBM.SetObjectCoordinates("OB151212coords.txt", ".");  // Read target coordinates in file
-VBM.LoadSunTable("SunEphemeris.txt"); // Load ephemeris table for parallax calculation
+VBM.LoadRefEphemeris("SolarSystemBarycenterEphemeris.txt"); // Load ephemeris table for parallax calculation
 
 u0 = -0.01; // Impact parameter
 t0 = 7550.4; // Time of closest approach to the center of mass
@@ -122,6 +122,8 @@ If you want to return to the ground do not forget to set VBM.satellite back to 0
 
 If the input time is outside the range of the satellite ephemeris table, `VBM.parallaxextrapolation` is set to 2. This can be used to check that the calculation was performed correctly.
 
+The satellite tables give the position of the spacecraft relative to the Earth and are looked up at the input epoch, so they should be generated in the same time scale as your input times (TT for $BJD_{TDB}$). The difference with respect to a table in UT (69 s) is negligible for the slow motion of a spacecraft relative to the Earth.
+
 ## Parallax system
 
 By default, the parallax components are expressed in the North-East system $(\pi_{E_,N},\pi_{E,E})$. An alternative possibility is to express the parallax vector in the parallel/orthogonal components to the Earth acceleration direction $(\pi_{E,\parallel},\pi_{E,\perp})$. In VBMicrolensing you have both possibilities by setting `VBM.parallaxsystem` to 1 or 0 respectively. The default value is 1, corresponding to the North-East system.
@@ -137,7 +139,7 @@ VBMicrolensing VBM;
 double pars[5];
 double t0, tE, u0, paiN, paiE, mag, mag2, t;
 
-VBM.LoadSunTable("SunEphemeris.txt");
+VBM.LoadRefEphemeris("SolarSystemBarycenterEphemeris.txt");
 VBM.SetObjectCoordinates("18:00:00 -29:00:00");
 VBM.t0_par_fixed = 1;     // Enable t0_par different from t_0
 VBM.t0_par = 11523.0;   // Set t0_par
@@ -182,24 +184,28 @@ Note that for more complicated light curves (binary-lens, binary-source, ...) th
 
 Note that $s$, $q$ and $\rho$ are unaffected, while all other parameters must change.
 
-## JD vs HJD
+## JD vs BJD
 
-When we include parallax, it is important to clarify whether the input time specifications are in JD or HJD. By default, VBMicrolensing assumes that times are given in $HJD' = HJD - 2450000$. However, if you want to calculate a light curve with JD' on your horizontal axis, you should just set `VBM.t_in_HJD = false;` before the execution of the light curve function. All conversions are made by VBMicrolensing internally.
+When we include parallax, it is important to clarify what the input times are. By default, VBMicrolensing assumes that times are given in $BJD' = BJD_{TDB} - 2450000$, where $BJD_{TDB}$ is the arrival time of the light at the solar-system barycenter, in Barycentric Dynamical Time. This is the standard adopted by current pipelines and by the Roman mission. However, if your epochs are the times of reception at the observer (geocentric $JD_{TDB}$), you should just set `VBM.t_in_BJD = false;` before the execution of the light curve function: VBMicrolensing then adds the light travel time from the observer to the barycenter (up to 8.3 minutes) internally. This conversion only accounts for the light travel time; it does not change the time scale, so a JD in UTC is treated as if it were in TDB (the two differ by 69 s at present).
+
+Light curves from before the Roman era are usually tagged in $HJD_{UTC}$ (arrival time at the Sun, in UTC). To convert them, add the offset between TDB and UTC: $BJD_{TDB} = HJD_{UTC} + 69.184$ s for epochs after 2017 January 1 (32.184 s plus the 37 leap seconds accumulated by then; for earlier epochs use the number of leap seconds in force at that date, e.g. 35 s in 2012-2015 and 36 s in 2015-2016, see the IERS Bulletin C). The remaining difference, the light travel time between the Sun and the barycenter, is at most 5 s: it displaces the Earth by $10^{-6}$ au and the trajectory by $5\,\mathrm{s}/t_E$, and can be ignored. A single data set left in $HJD_{UTC}$ can also be modeled as if it were $BJD_{TDB}$: the fitted $t_0$ and $t_{0,par}$ then inherit the 69 s offset and the Earth is displaced by $1.4 \times 10^{-5}$ au (69 s of orbital motion). What should be avoided is mixing conventions within one fit, e.g. ground-based $HJD_{UTC}$ together with Roman $BJD_{TDB}$: the 69 s then act as a relative shift of the trajectory of $69\,\mathrm{s}/t_E$ between the two data sets ($1.3 \times 10^{-5}$ for $t_E = 60$ d, but $8 \times 10^{-4}$ for a one-day event) on top of the $1.4 \times 10^{-5}$ au displacement of the Earth; convert the older data sets instead. Since `t_in_BJD` is an attribute of the VBMicrolensing instance, like `satellite`, it can be set before each light curve call if some data sets are in geocentric JD and others in BJD.
+
+Before v5.7, the reference was the Sun and the input times were $HJD' = HJD_{UTC} - 2450000$ (flag `t_in_HJD`; the old table was tagged in UT). Results obtained with the old convention are reproduced by loading a heliocentric table (see below) and interpreting the input times as $HJD_{UTC}$.
 
 ## Implementation of parallax calculations
 
-In order to calculate the parallax effect, we need to track the Earth position around the Sun. We have two possibilities in VBMicrolensing: using an ephemeris table from [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html), or calculate the Earth position solving the Kepler equation from [orbital elements and their secular changes](https://ssd.jpl.nasa.gov/planets/approx_pos.html).
+In order to calculate the parallax effect, we need to track the Earth position relative to the solar-system barycenter, which is the inertial reference with respect to which the lens and the source move uniformly. We have two possibilities in VBMicrolensing: using an ephemeris table from [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html), or calculate the Earth position solving the Kepler equation from [orbital elements and their secular changes](https://ssd.jpl.nasa.gov/planets/approx_pos.html).
 
 ### Ephemeris table
 
-The ephemeris lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. If the input time is outside the range of the Sun ephemeris table, `VBM.parallaxextrapolation` is set to 1. This can be used to check that the calculation was performed correctly.
+The ephemeris lookup table requires fewer calculations than the Kepler equation and is more accurate. The default ephemeris runs from 1990 to 2050 in steps of one day. If the input time is outside the range of the reference ephemeris table, `VBM.parallaxextrapolation` is set to 1. This can be used to check that the calculation was performed correctly.
 If the user needs a different time window and smaller steps, it is possible to change the ephemeris table to a different file by
 
 ```
-VBM.LoadSunTable("mySunEphemeris.txt");
+VBM.LoadRefEphemeris("myEphemeris.txt");
 ```
 
-The file "mySunEphemeris.txt" should be the output of the [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html) system for a geocentric ephemeris of the Sun. The output columns should be JD, RA, Dec, range, rangedot. The [default table file](/VBMicrolensing/data/SunEphemeris.txt) can be taken as reference.
+The file "myEphemeris.txt" should be the output of the [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html) system for an observer table of the Solar System Barycenter (target body 0) as seen from the geocenter (observer location 500@399), with the time scale set to TT (which coincides with TDB to within 2 ms; `TIME_TYPE='TT'` in the Horizons API). The output columns should be JD, RA, Dec, range, rangedot (quantities 1 and 20, angles in decimal degrees, dates in JD). The [default table file](/VBMicrolensing/data/SolarSystemBarycenterEphemeris.txt) can be taken as reference. VBMicrolensing takes the Earth position as minus the position of the table target, so the same function accepts a heliocentric table (target body 10, the Sun) if you need to reproduce results obtained before v5.7; the input times are then $HJD_{UTC}$ (that table was tagged in UT).
 
 ### Kepler's equation calculation
 
@@ -209,16 +215,16 @@ In alternative, VBMicrolensing can calculate ephemeris dynamically for any time.
 VBM.parallaxephemeris = false;
 ```
 
-The resolution of Kepler equation is slower and retrieves the Earth-Moon barycenter rather than the Earth center. So, it is also less accurate, but provides an alternative reference to check for consistency of parallax calculations. 
+The resolution of Kepler equation is slower and retrieves the Earth-Moon barycenter rather than the Earth center. It is also heliocentric: it does not include the motion of the Sun around the solar-system barycenter (up to 0.01 au), so it differs from the default table by about $10^{-4}$ au, comparable to its own accuracy. On this path the light travel time added when `t_in_BJD` is off is the one from the Earth to the Sun, so the flag keeps its pre-5.7 meaning: the input times are effectively $HJD$ rather than $BJD_{TDB}$, at the $10^{-4}$ au level that separates the two. So, it is less accurate, but provides an alternative reference to check for consistency of parallax calculations. 
 
 ## Terrestrial parallax
 
 Different observers on the Earth surface see slightly different microlensing light curves due to the difference in the observation points. In order to keep this difference into account, you should generate different ephemeris tables for each observers. This is possible in [Horizons](https://ssd.jpl.nasa.gov/horizons/app.html) by changing the observer location. Then, you should separately load the right table before each light curve calculation:
 
 ```
-VBM.LoadSunTable("SunEphemerisfromAfrica.txt");
+VBM.LoadRefEphemeris("EphemerisfromAfrica.txt");
 magAfr = VBM.BinaryLightCurveParallax(pr,t);      // Calculation of light curve with parallax seen from Africa
-VBM.LoadSunTable("SunEphemerisfromChile.txt");
+VBM.LoadRefEphemeris("EphemerisfromChile.txt");
 magChi = VBM.BinaryLightCurveParallax(pr,t);      // Calculation of light curve with parallax seen from Chile
 ```
 

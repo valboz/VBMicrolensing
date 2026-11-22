@@ -253,7 +253,7 @@ public:
 #pragma endregion
 
 char VBMicrolensing::ESPLtablefile[1024] = "placeholder";
-char VBMicrolensing::Suntablefile[1024] = "placeholder";
+char VBMicrolensing::RefEphemerisFile[1024] = "placeholder";
 
 #pragma region Constructor/destructor
 
@@ -278,7 +278,7 @@ VBMicrolensing::VBMicrolensing() {
 	t0old = 0.;
 	Tol = 1.e-2;
 	RelTol = 0;
-	suntable = false;
+	reftable = false;
 	parallaxephemeris = true;
 	tsat = 0;
 	possat = 0;
@@ -332,7 +332,7 @@ VBMicrolensing::VBMicrolensing() {
 	SelectedMethod = Method::Nopoly;
 	turn_off_secondary_source = turn_off_secondary_lens = false;
 	block_tertiary_lens = false;
-	t_in_HJD = true;
+	t_in_BJD = true;
 	parallaxextrapolation = 0;
 	//	testnewcoefs = true;
 }
@@ -348,7 +348,7 @@ VBMicrolensing::~VBMicrolensing() {
 		free(possat);
 		free(ndatasat);
 	}
-	if (suntable) {
+	if (reftable) {
 		for (int j = 0; j < ndataEar; j++) free(posEar[j]);
 		free(posEar);
 	}
@@ -577,7 +577,7 @@ double VBMicrolensing::ESPLMag2(double u, double rho) {
 
 double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 	double Mag = -1.0, Magold = 0., Tolv = Tol;
-	double tc, rb, lc, rc, cb, u2;
+	double tc, rb, lc, rc, cb, u2, us;
 	int c = 0, flag;
 	double currerr, maxerr;
 	annulus* first, * scan, * scan2;
@@ -590,10 +590,16 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 		first->bin = 0.;
 		first->cum = 0.;
 
-		u2 = u * u;
-		first->Mag = Mag0 = (u2 + 2) / (u * sqrt(u2 + 4));
+		// The radius-0 annulus is seeded with the point-source magnification at u. Its weight
+		// (bin^2 = 0) removes it from Mag, so it only enters the error estimates. It diverges as
+		// u -> 0 (inf/NaN at u = 0, and error bookkeeping swamped for u < ~1e-10 RSv), so evaluate
+		// the seed no closer than 1e-3 RSv: the estimates stay conservative there.
+		us = (u > 1.e-3 * RSv) ? u : 1.e-3 * RSv;
+		u2 = us * us;
+		first->Mag = Mag0 = (u2 + 2) / (us * sqrt(u2 + 4));
 		first->nim = 2;
 		if (astrometry) {
+			u2 = u * u;
 			astrox1 = u * (u2 + 3) / (u2 + 2);
 			first->LDastrox1 = astrox1 * first->Mag;
 		}
@@ -658,7 +664,7 @@ double VBMicrolensing::ESPLMagDark(double u, double RSv) {
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = ESPLMag(u, RSv * cb);
 			if (astrometry) {
@@ -1328,7 +1334,7 @@ double VBMicrolensing::BinaryMagDark(double a, double q, double y1, double y2, d
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = BinaryMagSafe(a, q, y_1, y_2, RSv * cb, &Images);
 			if (astrometry) {
@@ -3195,7 +3201,7 @@ double VBMicrolensing::MultiMagDark(double y1s, double y2s, double RSv, double T
 			scan->prev = scan->prev->next;
 			scan->prev->next = scan;
 			scan->prev->bin = cb;
-			scan->prev->cum = tc;
+			scan->prev->cum = cumLDcb;
 			scan->prev->f = LDprofile(cb);
 			scan->prev->Mag = MultiMagSafe(y1s, y2s, RSv * cb, &Images);
 			if (astrometry) {
@@ -3949,7 +3955,8 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	static complex  yc, z, zc, zo, delta, dy, dz, J2, J3, Jalt, Jaltc, JJalt2, LL, J1c2, dzita;
 	static double dlmax = 1.0e-12, dzmax = 1.e-10, dJ2, ob2, cq, Jold, LLold;
 	static int ngood, nplus, nminus, bad, isso, ncrit, igood, iter, iter2;
-	static double mi, tst, isgood;
+	static double mi, tst, isgood, goodpol[MAXM];
+	static complex zpol[MAXM];
 	static _curve* Prov;
 	static _point* scan, * prin, * fifth, * left, * right, * center;
 
@@ -3999,6 +4006,55 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	}
 	if (theta->th >= 0 && (nminus != nplus + n - 1 || nplus == 0)) {
 		ngood = 0;
+	}
+	// Polynomial roots of images very close to a lens (strongly demagnified images,
+	// e.g. near a close pair or a wide companion) can be accurate only to ~1e-5,
+	// more than the size of the image itself. Then the image contour is noise, the error
+	// estimate never converges and MultiMagDark keeps adding annuli.
+	// Polish the accepted roots that do not satisfy the lens equation to dlmax
+	// by Newton on the lens equation. Keep the root as it was if Newton does not converge
+	// or lands on another accepted image.
+	for (int ig = 0; ig < ngood; ig++) {
+		int i = worst[ig];
+		zpol[ig] = zr[i];
+		goodpol[ig] = -1; // Not polished
+		if (good[i] > dlmax) {
+			z = zo = zr[i];
+			zc = conj(z);
+			_MJacobians1
+			LLold = good[i];
+			Jold = Jacs[i];
+			for (iter = 0; iter < 20; iter++) {
+				delta = (conj(LL) - LL * J1c[i]) / Jacs[i];
+				z = zo + delta;
+				zc = conj(z);
+				_MJacobians1
+				tst = abs2(LL);
+				if (!(tst < LLold) || signbit(Jacs[i]) != signbit(Jold)) break;
+				zo = z;
+				LLold = tst;
+			}
+			if (LLold < dlmax) {
+				zpol[ig] = zo;
+				goodpol[ig] = LLold;
+			}
+		}
+	}
+	for (int ig = 0; ig < ngood; ig++) {
+		int i = worst[ig];
+		if (good[i] > dlmax) {
+			if (goodpol[ig] >= 0) {
+				int jg = 0;
+				while (jg < ngood && (jg == ig || abs2(zpol[ig] - zpol[jg]) > dzmax)) jg++;
+				if (jg == ngood) {
+					zr[i] = zpol[ig];
+					good[i] = goodpol[ig];
+				}
+			}
+			z = zr[i]; // Jacobians at the final root
+			zc = conj(z);
+			_MJacobians1
+		}
 	}
 	Prov = new _curve;
 	for (int i = 0; i < ngood; i++) {
@@ -4920,18 +4976,22 @@ void VBMicrolensing::ComputeCentroids(double* pr, double t, double* c1s, double*
 	double paiE, paiL, pairel, muL1, muL2;
 	double c1, c2, c1prov;
 
-	pai2 += 1.01e-10;
-	paiE = sqrt(pai1 * pai1 + pai2 * pai2);
+	// Guard the parallax direction against pai1 = pai2 = 0 with a LOCAL copy:
+	// this function runs once per epoch, and nudging the member pai2 here used
+	// to shift it by 1.01e-10 at every epoch, so later epochs of the same light
+	// curve were computed with a slightly different pi_E than earlier ones.
+	double p1 = pai1, p2 = pai2 + 1.01e-10;
+	paiE = sqrt(p1 * p1 + p2 * p2);
 	pairel = paiE * thetaE;
 	paiL = paiS + pairel; // lens parallax in mas
-	muL1 = muS1 + thetaE * tE_inv * pai1 / paiE - vt0[0] * pairel; // Note that vt0 is in South-West system, hence the "-"
-	muL2 = muS2 + thetaE * tE_inv * pai2 / paiE - vt0[1] * pairel;
+	muL1 = muS1 + thetaE * tE_inv * p1 / paiE - vt0[0] * pairel; // Note that vt0 is in South-West system, hence the "-"
+	muL2 = muS2 + thetaE * tE_inv * p2 / paiE - vt0[1] * pairel;
 	// heliocentric lens proper motion in mas/day
 
 	c1 = c1s[0] * thetaE; // Centroid coordinates come in x1,x2 system of the lens
 	c2 = c2s[0] * thetaE;
 
-	PosAng = atan2(pai2, pai1) - alpha + dPosAng; // Angle between North and axis x1 of the lens system counterclockwise
+	PosAng = atan2(p2, p1) - alpha + dPosAng; // Angle between North and axis x1 of the lens system counterclockwise
 
 	c1prov = c1 * cos(PosAng) - c2 * sin(PosAng);
 	c2 = c1 * sin(PosAng) + c2 * cos(PosAng);
@@ -6290,6 +6350,7 @@ double VBMicrolensing::LDprofile(double r) {
 		break;
 	case LDsquareroot:
 		ret = 3 / (3 - a1 - 0.6 * a2) * (1 - a1 * scr2 - a2 * sscr2);
+		break;
 	case LDquadratic:
 		ret = 3 / (3 - a1 - 0.5 * a2) * (1 - a1 * scr2 - a2 * sscr2);
 		break;
@@ -6309,7 +6370,10 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 		rc = tc * npLD;
 		ic = (int)rc;
 		rc -= ic;
-		cb = rCLDtab[ic] * (1 - rc) + rCLDtab[ic + 1] * rc;
+		// Interpolate r^2, not r: the cumulative flux is linear in r^2 near the center (and wherever
+		// the profile is locally flat), so the annulus radius stays consistent with its flux fraction tc.
+		cb = sqrt(rCLDtab[ic] * rCLDtab[ic] * (1 - rc) + rCLDtab[ic + 1] * rCLDtab[ic + 1] * rc);
+		cumLDcb = tc;
 		break;
 	case LDlinear:
 		lb = left->bin;
@@ -6331,6 +6395,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDsquareroot:
 		lb = left->bin;
@@ -6354,6 +6419,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDquadratic:
 		lb = left->bin;
@@ -6376,6 +6442,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	case LDlog:
 		lb = left->bin;
@@ -6399,6 +6466,7 @@ double VBMicrolensing::rCLDprofile(double tc, annulus* left, annulus* right) {
 				lc = cc;
 			}
 		} while (fabs(cc - tc) > 1.e-5);
+		cumLDcb = cc; // the exact cumulative flux at cb, not the target tc
 		break;
 	}
 
@@ -6482,18 +6550,18 @@ void VBMicrolensing::SetLDprofile(LDprofiles LDval) {
 //////////////////////////////
 //////////////////////////////
 
-void VBMicrolensing::LoadSunTable(char* filename) {
+void VBMicrolensing::LoadRefEphemeris(char* filename) {
 	FILE* f;
 	double RA, Dec, dis, phiprec;
 
 	if ((f = fopen(filename, "r")) != 0) {
-		if (suntable) {
+		if (reftable) {
 			// Removing existing table if any
 			for (int j = 0; j < ndataEar; j++) free(posEar[j]);
 			free(posEar);
-			suntable = false;
+			reftable = false;
 		}
-		// Reading Sun table files
+		// Reading the reference ephemeris table (Earth relative to the solar-system barycenter by default)
 		int flag2 = 0;
 		//		long startpos = 0;
 		char teststring[1000];
@@ -6582,11 +6650,11 @@ void VBMicrolensing::LoadSunTable(char* filename) {
 			}
 		}
 		fclose(f);
-		suntable = true;
+		reftable = true;
 	}
 	else {
-		printf("\nSun ephemeris table not found !");
-		suntable = false;
+		printf("\nReference ephemeris table not found !");
+		reftable = false;
 	}
 }
 
@@ -6763,6 +6831,45 @@ bool VBMicrolensing::AreCoordinatesSet() {
 	return coordinates_set;
 }
 
+// Offset of the selected satellite from the Earth at time t, linearly interpolated in its table (zero if the
+// table has fewer than three rows). The time is the one the caller needs: the input epoch, or the instant the
+// spacecraft received the light.
+void VBMicrolensing::SatellitePosition(double t, double* Sat) {
+	int ic, left, right, is = satellite - 1;
+	double ty;
+	Sat[0] = Sat[1] = Sat[2] = 0;
+	if (ndatasat[is] > 2) {
+		if (t < tsat[is][0]) {
+			ic = 0;
+			parallaxextrapolation = 2;
+		}
+		else {
+			if (t > tsat[is][ndatasat[is] - 1]) {
+				ic = ndatasat[is] - 2;
+				parallaxextrapolation = 2;
+			}
+			else {
+				left = 0;
+				right = ndatasat[is] - 1;
+				while (right - left > 1) {
+					ic = (right + left) / 2;
+					if (tsat[is][ic] > t) {
+						right = ic;
+					}
+					else {
+						left = ic;
+					}
+				}
+				ic = left;
+			}
+		}
+		ty = (t - tsat[is][ic]) / (tsat[is][ic + 1] - tsat[is][ic]);
+		for (int i = 0; i < 3; i++) {
+			Sat[i] = possat[is][ic][i] * (1 - ty) + possat[is][ic + 1][i] * ty;
+		}
+	}
+}
+
 void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double dtflight = 0.0000993512; // = angle covered by Earth as light covers 1 au.
 	static double au_c = 0.005775518331436995; // au/c in days.
@@ -6774,7 +6881,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	static double deg = M_PI / 180;
 	static double a, e, inc, L, om, M, EE, dE, dM;
 	static double x1, y1, vx, vy, Ear[3], vEar[3];
-	static double r, sp, ty, Spit, dLtof;
+	static double r, sp, ty, dLtof, Sat[3];
 	int c = 0, ic;
 
 	if (!coordinates_set) {
@@ -6789,9 +6896,9 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	if (t0_par_fixed == 0) t0_par = t0;
 
 	if (parallaxephemeris) {
-		// Calculation with lookup ephemeris table 
-		if (!suntable) {
-			LoadSunTable(Suntablefile);
+		// Calculation with lookup ephemeris table (Earth relative to the reference center of the table; the solar-system barycenter for the default table)
+		if (!reftable) {
+			LoadRefEphemeris(RefEphemerisFile);
 		}
 		if (t0_par != t0parold) {
 			t0parold = t0_par;
@@ -6799,7 +6906,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			ic = (int)floor(ty);
 			ty -= ic;
 			for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
-			if (t_in_HJD) {
+			if (t_in_BJD) {
 				double told = t0_par, tnew;
 				lighttravel0par = 0;
 				for (int i = 0; i < 3; i++) lighttravel0par += Ear[i] * Obj[i];
@@ -6848,7 +6955,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
 				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
 			}
-			lighttravel0par *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			lighttravel0par *= (t_in_BJD) ? 0 : au_c; // Light travel time from the Earth to the reference center (the solar-system barycenter for the default table): BJD = JD + lighttravel.
 		}
 
 		// Let's also update traveltime for t0 
@@ -6857,7 +6964,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		else {
 			lighttravel0 = 0; //Only non-zero for t in JD
-			if (!t_in_HJD && t0 != t0old) {
+			if (!t_in_BJD && t0 != t0old) {
 				t0old = t0;
 				ty = (t0 - startEar) / stepEar;
 				ic = (int)floor(ty);
@@ -6866,7 +6973,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				for (int i = 0; i < 3; i++) {
 					lighttravel0 += Ear[i] * Obj[i];
 				}
-				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+				lighttravel0 *= au_c; // Light travel time from the Earth to the reference center (the solar-system barycenter for the default table): BJD = JD + lighttravel.
 			}
 
 		}
@@ -6879,10 +6986,17 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
 		if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 		for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+		// Ear is the observer: the Earth, plus the spacecraft offset at the same time if a satellite is selected.
+		// The light travel time to the reference center, and the instant of reception found by the iteration
+		// below, are then those of the spacecraft rather than of the Earth.
+		if (satellite > 0 && satellite <= nsat) {
+			SatellitePosition(t, Sat);
+			for (int i = 0; i < 3; i++) Ear[i] += Sat[i];
+		}
 		lighttravel = 0;
 		for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
 		lighttravel *= au_c;
-		if (t_in_HJD) {
+		if (t_in_BJD) {
 			double told = t, tnew;
 			tnew = t - lighttravel;
 			while (fabs(told - tnew) > 1.e-8) {
@@ -6893,6 +7007,10 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				if (ic < 0) { parallaxextrapolation = 1; ic = 0; ty = 0; }
 				if (ic >= ndataEar) { parallaxextrapolation = 1; ic = ndataEar - 1; ty = 1; }
 				for (int i = 0; i < 3; i++) Ear[i] = posEar[ic][i] * (1 - ty) + posEar[ic + 1][i] * ty;
+				if (satellite > 0 && satellite <= nsat) {
+					SatellitePosition(told, Sat);
+					for (int i = 0; i < 3; i++) Ear[i] += Sat[i];
+				}
 				lighttravel = 0;
 				for (int i = 0; i < 3; i++) lighttravel += Ear[i] * Obj[i];
 				lighttravel *= au_c;
@@ -6902,7 +7020,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		Ehel[0] = Ehel[1] = 0;
 		for (int i = 0; i < 3; i++) {
-			Ehel[0] += Ear[i] * rad[i]; // Ehel is the heliocentric position of Earth along South and West at time t
+			Ehel[0] += Ear[i] * rad[i]; // Ehel is the position of the observer (Earth, or Earth plus spacecraft) relative to the reference center (the solar-system barycenter for the default table) along South and West at time t
 			Ehel[1] += Ear[i] * tang[i];
 		}
 		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
@@ -6928,8 +7046,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			dE = 1;
 			dLtof = 0;
 			while (fabs(dE) > 1.e-8) {
-				if (t_in_HJD) {
-					// Correction to calculate Earth position at JD not HJD
+				if (t_in_BJD) {
+					// Correction to calculate Earth position at JD not BJD (heliocentric light travel time in this branch)
 					x1 = a * (cos(EE) - e);
 					y1 = a * sqrt(1 - e * e) * sin(EE);
 					Ear[0] = x1 * cos(om) - y1 * sin(om);
@@ -6981,7 +7099,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				vt0[0] += vEar[i] * rad[i];          // Earth velocity projected along South at time t0_par
 				vt0[1] += vEar[i] * tang[i];		// Earth velocity projected along West at time t0_par
 			}
-			lighttravel0par *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+			lighttravel0par *= (t_in_BJD) ? 0 : au_c; // Light travel time from Earth projection to Sun (this branch is heliocentric): HJD = JD + lighttravel.
 		}
 
 		// Let's also update traveltime for t0 
@@ -6990,7 +7108,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 		else {
 			lighttravel0 = 0; //Only non-zero for t in JD
-			if (!t_in_HJD && t0 != t0old) {
+			if (!t_in_BJD && t0 != t0old) {
 				t0old = t0;
 				ty = (t0 - 1545) / 36525.0;
 
@@ -7007,8 +7125,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				dE = 1;
 				dLtof = 0;
 				while (fabs(dE) > 1.e-8) {
-					if (t_in_HJD) {
-						// Correction to calculate Earth position at JD not HJD
+					if (t_in_BJD) {
+						// Correction to calculate Earth position at JD not BJD (heliocentric light travel time in this branch)
 						x1 = a * (cos(EE) - e);
 						y1 = a * sqrt(1 - e * e) * sin(EE);
 						Ear[0] = x1 * cos(om) - y1 * sin(om);
@@ -7036,7 +7154,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 				for (int i = 0; i < 3; i++) {
 					lighttravel0 += Ear[i] * Obj[i];
 				}
-				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+				lighttravel0 *= au_c; // Light travel time from Earth projection to Sun (this branch is heliocentric): HJD = JD + lighttravel.
 			}
 
 		}
@@ -7057,8 +7175,8 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		dE = 1;
 		dLtof = 0;
 		while (fabs(dE) > 1.e-8) {
-			if (t_in_HJD) {
-				// Correction to calculate Earth position at JD not HJD
+			if (t_in_BJD) {
+				// Correction to calculate Earth position at JD not BJD (heliocentric light travel time in this branch)
 				x1 = a * (cos(EE) - e);
 				y1 = a * sqrt(1 - e * e) * sin(EE);
 				Ear[0] = x1 * cos(om) - y1 * sin(om);
@@ -7090,7 +7208,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 			Ehel[1] += Ear[i] * tang[i];
 			lighttravel += Ear[i] * Obj[i];
 		}
-		lighttravel *= (t_in_HJD) ? 0 : au_c; // Light travel time from Earth projection to Sun: HJD = JD + lighttravel.
+		lighttravel *= (t_in_BJD) ? 0 : au_c; // Light travel time from Earth projection to Sun (this branch is heliocentric): HJD = JD + lighttravel.
 		Et[0] = Ehel[0] - Et0[0] - vt0[0] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along South wrt extrapolation from t0_par
 		Et[1] = Ehel[1] - Et0[1] - vt0[1] * (t + lighttravel - t0_par - lighttravel0par); // Earth shift along West wrt extrapolation from t0_par
 
@@ -7114,39 +7232,12 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 	//}
 
 
-	if (satellite > 0 && satellite <= nsat) {
-		if (ndatasat[satellite - 1] > 2) {
-			int left, right;
-			if (t < tsat[satellite - 1][0]) {
-				ic = 0;
-				parallaxextrapolation = 2;
-			}
-			else {
-				if (t > tsat[satellite - 1][ndatasat[satellite - 1] - 1]) {
-					ic = ndatasat[satellite - 1] - 2;
-					parallaxextrapolation = 2;
-				}
-				else {
-					left = 0;
-					right = ndatasat[satellite - 1] - 1;
-					while (right - left > 1) {
-						ic = (right + left) / 2;
-						if (tsat[satellite - 1][ic] > t) {
-							right = ic;
-						}
-						else {
-							left = ic;
-						}
-					}
-					ic = left;
-				}
-			}
-			ty = (t - tsat[satellite - 1][ic]) / (tsat[satellite - 1][ic + 1] - tsat[satellite - 1][ic]);
-			for (int i = 0; i < 3; i++) {
-				Spit = possat[satellite - 1][ic][i] * (1 - ty) + possat[satellite - 1][ic + 1][i] * ty;
-				Et[0] += Spit * rad[i];
-				Et[1] += Spit * tang[i];
-			}
+	if (!parallaxephemeris && satellite > 0 && satellite <= nsat) {
+		// Kepler-equation path (heliocentric, no reception-instant iteration): the spacecraft offset is added at the input epoch, as before
+		SatellitePosition(t, Sat);
+		for (int i = 0; i < 3; i++) {
+			Et[0] += Sat[i] * rad[i];
+			Et[1] += Sat[i] * tang[i];
 		}
 	}
 }
