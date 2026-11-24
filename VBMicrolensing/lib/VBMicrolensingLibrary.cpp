@@ -286,7 +286,7 @@ VBMicrolensing::VBMicrolensing() {
 	ndatasat = 0;
 	satellite = 0;
 	parallaxsystem = 1;
-	t0_par_fix 5.7.1ed = 0;
+	t0_par_fixed = 0;
 	coordinates_set = false;
 	t0_par = 7000;
 	minannuli = 1;
@@ -1869,7 +1869,7 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 		if (_selectionimage)
 #endif
 		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
-		if (fabs(scurve->parabstart) > mi) scurve->parabstart = 0; //////// Proposed fix 5.7.1 5.7.1
+		if (fabs(scurve->parabstart) > mi) scurve->parabstart = 0; //////// Proposed fix 5.7.1
 		theta->prev->Mag -= ((scan->dJ > 0) ? -1 : 1) * (pref + scurve->parabstart);
 		theta->prev->maxerr += err;
 
@@ -5865,7 +5865,7 @@ void VBMicrolensing::BinSourceBinLensXallarap(double* pr, double* ts, double* ma
 
 
 
-	if (t0_par_fix 5.7.1ed == 0) t0_par = pr[6];
+	if (t0_par_fixed == 0) t0_par = pr[6];
 
 
 	for (int i = 0; i < np; i++) {
@@ -6741,7 +6741,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		return;
 	}
 
-	if (t0_par_fix 5.7.1ed == 0) t0_par = t0;
+	if (t0_par_fixed == 0) t0_par = t0;
 
 	if (parallaxephemeris) {
 		// Calculation with lookup ephemeris table (Earth relative to the reference center of the table; the solar-system barycenter for the default table)
@@ -6807,7 +6807,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 
 		// Let's also update traveltime for t0 
-		if (t0_par_fix 5.7.1ed == 0) {
+		if (t0_par_fixed == 0) {
 			lighttravel0 = lighttravel0par;
 		}
 		else {
@@ -6951,7 +6951,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 
 		// Let's also update traveltime for t0 
-		if (t0_par_fix 5.7.1ed == 0) {
+		if (t0_par_fixed == 0) {
 			lighttravel0 = lighttravel0par;
 		}
 		else {
