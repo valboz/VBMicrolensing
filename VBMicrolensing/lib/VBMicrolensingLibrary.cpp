@@ -286,7 +286,7 @@ VBMicrolensing::VBMicrolensing() {
 	ndatasat = 0;
 	satellite = 0;
 	parallaxsystem = 1;
-	t0_par_fixed = 0;
+	t0_par_fix 5.7.1ed = 0;
 	coordinates_set = false;
 	t0_par = 7000;
 	minannuli = 1;
@@ -1743,7 +1743,8 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 	static std::minstd_rand engine{ std::random_device{}() };
 
 	_theta* theta;
-	static double th, mi, cmp, cmp2, cmp_2, dx2, avgx2, avgx1, avg2x1, pref, d2x2, dx1, d2x1, avgwedgex1, avgwedgex2, parab1, parab2;
+	static double th, mi, cmp, cmp2, cmp_2, cmp3, pref, err, parab1, parab2;
+	static double dx2, avgx2, avgx1, avg2x1, d2x2, dx1, d2x1, avgwedgex1, avgwedgex2;
 
 	int nprec = 0, npres, nfoll = 0, issoc[2], ij;
 
@@ -1841,46 +1842,37 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 		cmp = sqrt(mi / cmp2);   // Delta theta tilde
 
 		cmp_2 = cmp * cmp;
-		mi = cmp_2 * cmp * 0.04166666667;
-		//		parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
-		parab1 = mi * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
+		cmp3 = cmp_2 * cmp * 0.04166666667;
+		//		parab1 = cmp3 / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+		parab1 = cmp3 * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scurve->parabstart = 0.5 * (parab1 + parab2);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: created image:
 		if (astrometry) {
-			avgwedgex1 = -(-scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = -(-scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = -(-scan->x1 * scan->ds + scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = -(-scan->x2 * scan->ds + scan2->x2 * scan2->ds) * cmp3;
 			dx2 = -(-scan->d.im + scan2->d.im);
 			d2x2 = dx2 * dx2;
 			dx1 = -(-scan->d.re + scan2->d.re);
 			d2x1 = dx1 * dx1;
-			scurve->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scurve->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scurve->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scurve->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scurve->parabstart, (scan->ds + scan2->ds) * mi / 2, fabs(scurve->parabstart) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp);
-#endif
 
-		mi = fabs((parab1 - parab2) * 0.5) + fabs(scurve->parabstart) * (cmp_2 * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp;
+		err = fabs((parab1 - parab2) * 0.5) + fabs(scurve->parabstart) * (cmp_2 * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp;
 #ifdef _noparab
-		mi = fabs(scurve->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scurve->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scurve->parabstart = 0.;
 #endif
 
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scurve->parabstart) > mi) scurve->parabstart = 0; //////// Proposed fix 5.7.1 5.7.1
 		theta->prev->Mag -= ((scan->dJ > 0) ? -1 : 1) * (pref + scurve->parabstart);
-		theta->prev->maxerr += mi;
+		theta->prev->maxerr += err;
 
-#ifdef _ERRORS_ANALYTIC
-		char filnam[32];
-		sprintf(filnam, "%02dprev.txt", NPS);
-		FILE* f = fopen(filnam, "a+");
-		fprintf(f, "%.15le %.15le %.15le\n", -((scan->dJ > 0) ? -1 : 1) * (pref), -((scan->dJ > 0) ? -1 : 1) * (scurve->parabstart), mi);
-		fclose(f);
-#endif
 		scurve2->parabstart = -scurve->parabstart;
 
 		if (astrometry) {
@@ -1920,44 +1912,36 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 		cmp2 = fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
 		cmp = sqrt(mi / cmp2);
 		cmp_2 = cmp * cmp;
-		mi = cmp_2 * cmp * 0.04166666666667;
-		//		parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
-		parab1 = -mi * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
+		cmp3 = cmp_2 * cmp * 0.04166666666667;
+		//		parab1 = -cmp3 / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
+		parab1 = -cmp3 * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: destructed image:
 		if (astrometry) {
-			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * cmp3;
 			dx2 = -(scan->d.im - scan2->d.im);
 			d2x2 = dx2 * dx2;
 			dx1 = -(scan->d.re - scan2->d.re);
 			d2x1 = dx1 * dx1;
-			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds) * mi / 2, fabs(scan->parab) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2 * cmp * cmp2) * cmp);
-#endif
 
-		mi = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab) * (cmp * cmp * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
+		err = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab) * (cmp * cmp * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
 #ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scan->parab = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scan->parab) > mi) scan->parab = 0; //////// Proposed fix 5.7.1
 		theta->prev->Mag += ((scan->dJ > 0) ? -1 : 1) * (pref + scan->parab);
-#ifdef _ERRORS_ANALYTIC
-		char filnam[32];
-		sprintf(filnam, "%02dprev.txt", NPS);
-		FILE* f = fopen(filnam, "a+");
-		fprintf(f, "%.15le %.15le %.15le\n", ((scan->dJ > 0) ? -1 : 1) * (pref), ((scan->dJ > 0) ? -1 : 1) * (scan->parab), mi);
-		fclose(f);
-#endif
+
 		if (astrometry) {
 			dx2 = scan2->x2 - scan->x2;
 			avgx1 = scan->x1 + scan2->x1;
@@ -1966,7 +1950,7 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 			theta->prev->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
 			theta->prev->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
 		}
-		theta->prev->maxerr += mi;
+		theta->prev->maxerr += err;
 		scan2->parab = -scan->parab;
 		if (astrometry) {
 			scan2->parabastrox2 = -scan->parabastrox2;
@@ -2008,44 +1992,36 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 		cmp2 = mi / fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
-		mi = cmp_2 * cmp * 0.0416666666666667;  ////// (1/24 cube(delta Teta))
+		cmp3 = cmp_2 * cmp * 0.0416666666666667;  ////// (1/24 cube(delta Teta))
 		//		parab1 = mi/(1/scan->ds + 1/scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
-		parab1 = mi * (scan->ds + scan2->ds); // Vecchia Correzione parabolica
+		parab1 = cmp3 * (scan->ds + scan2->ds); // Vecchia Correzione parabolica
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: ordinary image:
 		if (astrometry) {
-			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * cmp3;
 			dx2 = scan->d.im + scan2->d.im;
 			d2x2 = dx2 * dx2;
 			dx1 = scan->d.re + scan2->d.re;
 			d2x1 = dx1 * dx1;
-			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds) * mi / 2, fabs(scan->parab) * (cmp2) / 10, fabs(scan->parab) * (1.5 * fabs(cmp2 / (cmp * cmp) - 1)));
-#endif
 
-		mi = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab * (cmp2 * 0.1 + 1.5 * fabs(cmp2 / (cmp_2)-1)));
+		err = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab * (cmp2 * 0.1 + 1.5 * fabs(cmp2 / (cmp_2)-1)));
 #ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scan->parab = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scan->parab) > mi) scan->parab = 0; /////// Proposed fix 5.7.1
 		theta->prev->Mag += ((scan->dJ > 0) ? -1 : 1) * (pref + scan->parab);
-#ifdef _ERRORS_ANALYTIC
-		char filnam[32];
-		sprintf(filnam, "%02dprev.txt", NPS);
-		FILE* f = fopen(filnam, "a+");
-		fprintf(f, "%.15le %.15le %.15le\n", ((scan->dJ > 0) ? -1 : 1) * (pref), ((scan->dJ > 0) ? -1 : 1) * (scan->parab), mi);
-		fclose(f);
-#endif
+
 		if (astrometry) {
 			dx2 = scan2->x2 - scan->x2;
 			avgx1 = scan->x1 + scan2->x1;
@@ -2054,7 +2030,7 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 			theta->prev->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
 			theta->prev->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
 		}
-		theta->prev->maxerr += mi;
+		theta->prev->maxerr += err;
 
 
 
@@ -2119,42 +2095,35 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 			cmp2 = fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
 			cmp = sqrt(mi / cmp2);
 			cmp_2 = cmp * cmp;
-			mi = cmp_2 * cmp * 0.04166666666666667;
+			cmp3 = cmp_2 * cmp * 0.04166666666666667;
 			//			parab1 = mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
-			parab1 = mi * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
+			parab1 = cmp3 * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
 			parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 			cfoll[issoc[0]]->parabstart = 0.5 * (parab1 + parab2);
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: created image:
 			if (astrometry) {
-				avgwedgex1 = (scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
-				avgwedgex2 = (scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+				avgwedgex1 = (scan->x1 * scan->ds - scan2->x1 * scan2->ds) * cmp3;
+				avgwedgex2 = (scan->x2 * scan->ds - scan2->x2 * scan2->ds) * cmp3;
 				dx2 = -(-scan->d.im + scan2->d.im);
 				d2x2 = dx2 * dx2;
 				dx1 = -(-scan->d.re + scan2->d.re);
 				d2x1 = dx1 * dx1;
-				cfoll[issoc[0]]->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-				cfoll[issoc[0]]->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+				cfoll[issoc[0]]->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+				cfoll[issoc[0]]->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 			}
-#ifdef _PRINT_ERRORS
-			printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, cfoll[issoc[0]]->parabstart, (scan->ds + scan2->ds) * mi / 2, fabs(cfoll[issoc[0]]->parabstart) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp);
-#endif
-			mi = fabs((parab1 - parab2) * 0.5) + fabs(cfoll[issoc[0]]->parabstart) * (cmp * cmp * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2.0 * cmp * cmp2) * cmp;
+
+			err = fabs((parab1 - parab2) * 0.5) + fabs(cfoll[issoc[0]]->parabstart) * (cmp * cmp * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2.0 * cmp * cmp2) * cmp;
 #ifdef _noparab
-			mi = fabs(cfoll[issoc[0]]->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+			err = fabs(cfoll[issoc[0]]->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 			cfoll[issoc[0]]->parabstart = 0.;
 #endif
 #ifdef _selectimage
 			if (_selectionimage)
 #endif
-				pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+			if (fabs(cfoll[issoc[0]]->parabstart) > mi) cfoll[issoc[0]]->parabstart = 0;
 			theta->Mag -= ((scan->dJ > 0) ? -1 : 1) * (pref + cfoll[issoc[0]]->parabstart);
-#ifdef _ERRORS_ANALYTIC
-			char filnam[32];
-			sprintf(filnam, "%02dfoll.txt", NPS);
-			FILE* f = fopen(filnam, "a+");
-			fprintf(f, "%.15le %.15le %.15le\n", -((scan->dJ > 0) ? -1 : 1) * (pref), -((scan->dJ > 0) ? -1 : 1) * (cfoll[issoc[0]]->parabstart), mi);
-			fclose(f);
-#endif
+
 			if (astrometry) {
 				dx2 = scan2->x2 - scan->x2;
 				avgx1 = scan->x1 + scan2->x1;
@@ -2163,7 +2132,7 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 				theta->astrox1 += ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + cfoll[issoc[0]]->parabastrox1);
 				theta->astrox2 -= ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + cfoll[issoc[0]]->parabastrox2);
 			}
-			theta->maxerr += mi;
+			theta->maxerr += err;
 
 			cfoll[issoc[1]]->parabstart = -cfoll[issoc[0]]->parabstart;
 			if (astrometry) {
@@ -2204,44 +2173,34 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 			cmp2 = fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
 			cmp = sqrt(mi / cmp2);
 			cmp_2 = cmp * cmp;
-			mi = cmp_2 * cmp * 0.0416666666667;
+			cmp3 = cmp_2 * cmp * 0.0416666666667;
 			//			parab1 = -mi / (1 / scan->ds - 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
-			parab1 = -mi * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
+			parab1 = -cmp3 * (scan->ds - scan2->ds); // Vecchia Correzione parabolica
 			parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 			scan->parab = 0.5 * (parab1 + parab2);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: destructed image:
 			if (astrometry) {
-				avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
-				avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+				avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * cmp3;
+				avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * cmp3;
 				dx2 = -(scan->d.im - scan2->d.im);
 				d2x2 = dx2 * dx2;
 				dx1 = -(scan->d.re - scan2->d.re);
 				d2x1 = dx1 * dx1;
-				scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-				scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+				scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+				scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 			}
 
-#ifdef _PRINT_ERRORS
-			printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds) * mi / 2, fabs(scan->parab) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2 * cmp * cmp2) * cmp);
-#endif
-
-			mi = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab) * (cmp * cmp * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
+			err = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab) * (cmp * cmp * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
 #ifdef _noparab
-			mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+			err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 			scan->parab = 0.;
 #endif
 #ifdef _selectimage
 			if (_selectionimage)
 #endif
-				pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+			if (fabs(scan->parab) > mi) scan->parab = 0;
 			theta->Mag += ((scan->dJ > 0) ? -1 : 1) * (pref + scan->parab);
-#ifdef _ERRORS_ANALYTIC
-			char filnam[32];
-			sprintf(filnam, "%02dfoll.txt", NPS);
-			FILE* f = fopen(filnam, "a+");
-			fprintf(f, "%.15le %.15le %.15le\n", ((scan->dJ > 0) ? -1 : 1) * (pref), ((scan->dJ > 0) ? -1 : 1) * (scan->parab), mi);
-			fclose(f);
-#endif
 			if (astrometry) {
 				dx2 = scan2->x2 - scan->x2;
 				avgx1 = scan->x1 + scan2->x1;
@@ -2250,7 +2209,7 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 				theta->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
 				theta->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
 			}
-			theta->maxerr += mi;
+			theta->maxerr += err;
 			scan2->parab = -scan->parab;
 			if (astrometry) {
 				scan2->parabastrox2 = -scan->parabastrox2;
@@ -2287,37 +2246,35 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 			cmp2 = mi / fabs(scan->d.re * scan2->d.re + scan->d.im * scan2->d.im);
 			cmp = (scan->theta->th - scan2->theta->th);
 			cmp_2 = cmp * cmp;
-			mi = cmp_2 * cmp * 0.041666666667;
+			cmp3 = cmp_2 * cmp * 0.041666666667;
 			//			parab1 = mi / (1 / scan->ds + 1 / scan2->ds); // Vecchia Correzione parabolica CON MEDIA ARMONICA!
-			parab1 = mi * (scan->ds + scan2->ds); // Vecchia Correzione parabolica
+			parab1 = cmp3 * (scan->ds + scan2->ds); // Vecchia Correzione parabolica
 			// Nuova correzione parabolica
 			parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 			scan->parab = 0.5 * (parab1 + parab2);
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////astro: ordinary image:
 			if (astrometry) {
-				avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
-				avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+				avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * cmp3;
+				avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * cmp3;
 				dx2 = scan->d.im + scan2->d.im;
 				d2x2 = dx2 * dx2;
 				dx1 = scan->d.re + scan2->d.re;
 				d2x1 = dx1 * dx1;
-				scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-				scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+				scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+				scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 			}
 
-#ifdef _PRINT_ERRORS
-			printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds) * mi / 2, fabs(scan->parab) * (cmp2) / 10, fabs(scan->parab) * (1.5 * fabs(cmp2 / (cmp * cmp) - 1)));
-#endif
 
-			mi = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab * (cmp2 * 0.1 + 1.5 * fabs(cmp2 / (cmp_2)-1)));
+			err = fabs((parab1 - parab2) * 0.5) + fabs(scan->parab * (cmp2 * 0.1 + 1.5 * fabs(cmp2 / (cmp_2)-1)));
 #ifdef _noparab
-			mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+			err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 			scan->parab = 0.;
 #endif
 #ifdef _selectimage
 			if (_selectionimage)
 #endif
-				pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+			if (fabs(scan->parab) > mi) scan->parab = 0;
 			theta->Mag += ((scan->dJ > 0) ? -1 : 1) * (pref + scan->parab);
 			if (astrometry) {
 				dx2 = scan2->x2 - scan->x2;
@@ -2327,14 +2284,8 @@ void VBMicrolensing::OrderImages(_sols_for_skiplist_curve* Sols, _curve* Newpts)
 				theta->astrox1 -= ((scan->dJ > 0) ? -1 : 1) * (avg2x1 * dx2 * 0.125 + scan->parabastrox1);
 				theta->astrox2 += ((scan->dJ > 0) ? -1 : 1) * (pref * avgx2 * 0.25 + scan->parabastrox2);
 			}
-			theta->maxerr += mi;
-#ifdef _ERRORS_ANALYTIC
-			char filnam[32];
-			sprintf(filnam, "%02dfoll.txt", NPS);
-			FILE* f = fopen(filnam, "a+");
-			fprintf(f, "%.15le %.15le %.15le\n", ((scan->dJ > 0) ? -1 : 1) * (pref), ((scan->dJ > 0) ? -1 : 1) * (scan->parab), mi);
-			fclose(f);
-#endif
+			theta->maxerr += err;
+
 			cpres[issoc[0]]->join(cfoll[issoc[1]]);
 
 			npres--;
@@ -2779,7 +2730,7 @@ double VBMicrolensing::MultiMag(double y1s, double y2s, double RSv, double Tol, 
 #endif
 
 #ifdef _PRINT_TIMES
-			tim1 = Environment::TickCount;
+		tim1 = Environment::TickCount;
 		GM += tim1 - tim0;
 #endif
 		stheta = Thetas->insert(2.0 * M_PI + thoff);
@@ -3955,8 +3906,7 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	static complex  yc, z, zc, zo, delta, dy, dz, J2, J3, Jalt, Jaltc, JJalt2, LL, J1c2, dzita;
 	static double dlmax = 1.0e-12, dzmax = 1.e-10, dJ2, ob2, cq, Jold, LLold;
 	static int ngood, nplus, nminus, bad, isso, ncrit, igood, iter, iter2;
-	static double mi, tst, isgood, goodpol[MAXM];
-	static complex zpol[MAXM];
+	static double mi, tst, isgood;
 	static _curve* Prov;
 	static _point* scan, * prin, * fifth, * left, * right, * center;
 
@@ -4007,55 +3957,6 @@ _curve* VBMicrolensing::NewImagesmultipoly(_theta* theta) {
 	if (theta->th >= 0 && (nminus != nplus + n - 1 || nplus == 0)) {
 		ngood = 0;
 	}
-	// Polynomial roots of images very close to a lens (strongly demagnified images,
-	// e.g. near a close pair or a wide companion) can be accurate only to ~1e-5,
-	// more than the size of the image itself. Then the image contour is noise, the error
-	// estimate never converges and MultiMagDark keeps adding annuli.
-	// Polish the accepted roots that do not satisfy the lens equation to dlmax
-	// by Newton on the lens equation. Keep the root as it was if Newton does not converge
-	// or lands on another accepted image.
-	for (int ig = 0; ig < ngood; ig++) {
-		int i = worst[ig];
-		zpol[ig] = zr[i];
-		goodpol[ig] = -1; // Not polished
-		if (good[i] > dlmax) {
-			z = zo = zr[i];
-			zc = conj(z);
-			_MJacobians1
-			LLold = good[i];
-			Jold = Jacs[i];
-			for (iter = 0; iter < 20; iter++) {
-				delta = (conj(LL) - LL * J1c[i]) / Jacs[i];
-				z = zo + delta;
-				zc = conj(z);
-				_MJacobians1
-				tst = abs2(LL);
-				if (!(tst < LLold) || signbit(Jacs[i]) != signbit(Jold)) break;
-				zo = z;
-				LLold = tst;
-			}
-			if (LLold < dlmax) {
-				zpol[ig] = zo;
-				goodpol[ig] = LLold;
-			}
-		}
-	}
-	for (int ig = 0; ig < ngood; ig++) {
-		int i = worst[ig];
-		if (good[i] > dlmax) {
-			if (goodpol[ig] >= 0) {
-				int jg = 0;
-				while (jg < ngood && (jg == ig || abs2(zpol[ig] - zpol[jg]) > dzmax)) jg++;
-				if (jg == ngood) {
-					zr[i] = zpol[ig];
-					good[i] = goodpol[ig];
-				}
-			}
-			z = zr[i]; // Jacobians at the final root
-			zc = conj(z);
-			_MJacobians1
-		}
-	}
 	Prov = new _curve;
 	for (int i = 0; i < ngood; i++) {
 		z = zr[worst[i]];
@@ -4102,7 +4003,8 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 	static std::minstd_rand engine{ std::random_device{}() };
 
 	static _theta* theta;
-	static double th, mi, cmp, cmp2, cmp_2, er3, dx2, avgx2, avgx1, avg2x1, pref, d2x2, dx1, d2x1, avgwedgex1, avgwedgex2, parab1, parab2;
+	static double th, mi, cmp, cmp2, cmp_2, cmp3, err, parab1, parab2;
+	static double er3, dx2, avgx2, avgx1, avg2x1, pref, d2x2, dx1, d2x1, avgwedgex1, avgwedgex2;
 	static int nprec, npres, npres2, nfoll, issoc[2], ij;
 
 	nprec = nfoll = 0;
@@ -4217,36 +4119,35 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		er3 = mi * mi * mi * samplingfactor;
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
-		mi = cmp_2 * cmp * 0.0416666666666667;
-		parab1 = (scan->ds + scan2->ds) * mi; // Vecchia Correzione parabolica
+		cmp3 = cmp_2 * cmp * 0.0416666666666667;
+		parab1 = (scan->ds + scan2->ds) * cmp3; // Vecchia Correzione parabolica
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		if (astrometry) {
-			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * cmp3;
 			dx2 = scan->d.im + scan2->d.im;
 			d2x2 = dx2 * dx2;
 			dx1 = scan->d.re + scan2->d.re;
 			d2x1 = dx1 * dx1;
-			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds) * mi / 2, fabs(scan->parab) * (cmp2) / 10, fabs(scan->parab) * (1.5 * fabs(cmp2 / (cmp * cmp) - 1)));
-#endif
+		//err = fabs((parab1 - parab2) * 0.5) + fabs(scurve->parabstart) * (cmp_2 * 0.1) + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp;
 
-		mi = fabs((scan->ds - scan2->ds) * mi * 0.5) + fabs(scan->parab * 1.5 * fabs(cmp2 / (cmp_2)-1)) + er3;
+		err = fabs((scan->ds - scan2->ds) * cmp3 * 0.5) + fabs(scan->parab * 1.5 * fabs(cmp2 / (cmp_2)-1)) + er3;
 #ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scan->parab = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scan->parab) > mi) scan->parab = 0;
 		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
-		scan->err = mi;
+		scan->err = err;
 		theta->prev->Mag += scan->Mag;
 		if (astrometry) {
 			dx2 = scan2->x2 - scan->x2;
@@ -4337,37 +4238,34 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		cmp_2 = mi / cmp2;
 		er3 = sqrt(mi * mi * mi) * samplingfactor;
 		cmp = sqrt(cmp_2);
-		mi = cmp_2 * cmp * 0.04166666667;
-		parab1 = -(-scan->ds + scan2->ds) * mi;
+		cmp3 = cmp_2 * cmp * 0.04166666667;
+		parab1 = -(-scan->ds + scan2->ds) * cmp3;
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scurve->parabstart = 0.5 * (parab1 + parab2);
 
 		if (astrometry) {
-			avgwedgex1 = -(-scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = -(-scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = -(-scan->x1 * scan->ds + scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = -(-scan->x2 * scan->ds + scan2->x2 * scan2->ds) * cmp3;
 			dx2 = -(-scan->d.im + scan2->d.im);
 			d2x2 = dx2 * dx2;
 			dx1 = -(-scan->d.re + scan2->d.re);
 			d2x1 = dx1 * dx1;
-			scurve->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scurve->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scurve->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scurve->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
 
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scurve->parabstart, (scan->ds + scan2->ds) * mi / 2, fabs(scurve->parabstart) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp);
-#endif
-
-		mi = fabs((scan->ds + scan2->ds) * mi * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2. * cmp * cmp2) * cmp;
+		err = fabs((scan->ds + scan2->ds) * cmp3 * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2. * cmp * cmp2) * cmp;
 #ifdef _noparab
-		mi = fabs(scurve->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scurve->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scurve->parabstart = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scurve->parabstart) > mi) scurve->partneratstart = 0;
 		scurve->Magstart = -(((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scurve->parabstart));
-		scurve->errstart = mi;
+		scurve->errstart = err;
 		scurve2->parabstart = -scurve->parabstart;
 		scurve2->Magstart = 0;
 		scurve2->errstart = 0;
@@ -4431,18 +4329,8 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 
 		scurve->parabstart = 0;
 
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, 0, 0, 0, 0, 0);
-#endif
 
-#ifdef _noparab
-		mi = fabs(scurve->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
-		scurve->parabstart = 0.;
-#endif
-#ifdef _selectimage
-		if (_selectionimage)
-#endif
-			scurve->Magstart = 0;
+		scurve->Magstart = 0;
 		scurve->errstart = 0;
 	}
 
@@ -4480,36 +4368,34 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		er3 = sqrt(mi * mi * mi) * samplingfactor;
 		cmp_2 = mi / cmp2;
 		cmp = sqrt(cmp_2);
-		mi = cmp_2 * cmp * 0.04166666666667;
-		parab1 = -(scan->ds - scan2->ds) * mi;
+		cmp3 = cmp_2 * cmp * 0.04166666666667;
+		parab1 = -(scan->ds - scan2->ds) * cmp3;
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		if (astrometry) {
-			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * cmp3;
 			dx2 = -(scan->d.im - scan2->d.im);
 			d2x2 = dx2 * dx2;
 			dx1 = -(scan->d.re - scan2->d.re);
 			d2x1 = dx1 * dx1;
-			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds) * mi / 2, fabs(scan->parab) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2 * cmp * cmp2) * cmp);
-#endif
 
-		mi = fabs((scan->ds + scan2->ds) * mi * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
+		err = fabs((scan->ds + scan2->ds) * cmp3 * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
 #ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scan->parab = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scan->parab) > mi) scan->parab = 0;
 		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
-		scan->err = mi;
+		scan->err = err;
 		scan2->Mag = 0;
 		scan2->err = 0;
 		theta->prev->Mag += scan->Mag;
@@ -4564,18 +4450,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 
 		scan->parab = 0;
 
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, 0, 0, 0, 0, 0);
-#endif
-
-#ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
-		scan->parab = 0.;
-#endif
-#ifdef _selectimage
-		if (_selectionimage)
-#endif
-			scan->Mag = 0;
+		scan->Mag = 0;
 		scan->err = 0;
 
 		nprec--;
@@ -4613,36 +4488,34 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		er3 = mi * mi * mi * samplingfactor;
 		cmp = (scan->theta->th - scan2->theta->th);
 		cmp_2 = cmp * cmp;
-		mi = cmp_2 * cmp * 0.041666666667;
-		parab1 = (scan->ds + scan2->ds) * mi; // Vecchia Correzione parabolica
+		cmp3 = cmp_2 * cmp * 0.041666666667;
+		parab1 = (scan->ds + scan2->ds) * cmp3; // Vecchia Correzione parabolica
 		// Nuova correzione parabolica
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im - scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re - scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		if (astrometry) {
-			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = (scan->x1 * scan->ds + scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = (scan->x2 * scan->ds + scan2->x2 * scan2->ds) * cmp3;
 			dx2 = scan->d.im + scan2->d.im;
 			d2x2 = dx2 * dx2;
 			dx1 = scan->d.re + scan2->d.re;
 			d2x1 = dx1 * dx1;
-			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds - scan2->ds) * mi / 2, fabs(scan->parab) * (cmp2) / 10, fabs(scan->parab) * (1.5 * fabs(cmp2 / (cmp * cmp) - 1)));
-#endif
 
-		mi = fabs((scan->ds - scan2->ds) * mi * 0.5) + fabs(scan->parab * 1.5 * fabs(cmp2 / (cmp_2)-1)) + er3;
+		err = fabs((scan->ds - scan2->ds) * cmp3 * 0.5) + fabs(scan->parab * 1.5 * fabs(cmp2 / (cmp_2)-1)) + er3;
 #ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scan->parab = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scan->parab) > mi) scan->parab = 0;
 		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
-		scan->err = mi;
+		scan->err = err;
 		theta->Mag += scan->Mag;
 		if (astrometry) {
 			dx2 = scan2->x2 - scan->x2;
@@ -4714,34 +4587,33 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		er3 = sqrt(mi * mi * mi) * samplingfactor;
 		cmp_2 = mi / cmp2;
 		cmp = sqrt(cmp_2);
-		mi = cmp_2 * cmp * 0.04166666666666667;
-		parab1 = (scan->ds - scan2->ds) * mi;
+		cmp3 = cmp_2 * cmp * 0.04166666666666667;
+		parab1 = (scan->ds - scan2->ds) * cmp3;
 		parab2 = -0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		cfoll[issoc[0]]->parabstart = 0.5 * (parab1 + parab2);
 		if (astrometry) {
-			avgwedgex1 = (scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = (scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = (scan->x1 * scan->ds - scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = (scan->x2 * scan->ds - scan2->x2 * scan2->ds) * cmp3;
 			dx2 = -(-scan->d.im + scan2->d.im);
 			d2x2 = dx2 * dx2;
 			dx1 = -(-scan->d.re + scan2->d.re);
 			d2x1 = dx1 * dx1;
-			cfoll[issoc[0]]->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			cfoll[issoc[0]]->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			cfoll[issoc[0]]->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			cfoll[issoc[0]]->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, cfoll[issoc[0]]->parabstart, (scan->ds + scan2->ds) * mi / 2, fabs(cfoll[issoc[0]]->parabstart) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2 * cmp * cmp2) * cmp);
-#endif
-		mi = fabs((scan->ds + scan2->ds) * mi * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2.0 * cmp * cmp2) * cmp;
+
+		err = fabs((scan->ds + scan2->ds) * cmp3 * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) - 2.0 * cmp * cmp2) * cmp;
 #ifdef _noparab
-		mi = fabs(cfoll[issoc[0]]->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(cfoll[issoc[0]]->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		cfoll[issoc[0]]->parabstart = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(cfoll[issoc[0]]->parabstart) > mi) cfoll[issoc[0]]->parabstart = 0;
 		cfoll[issoc[0]]->Magstart = -(((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + cfoll[issoc[0]]->parabstart));
-		cfoll[issoc[0]]->errstart = mi;
+		cfoll[issoc[0]]->errstart = err;
 		cfoll[issoc[1]]->Magstart = 0;
 		cfoll[issoc[1]]->errstart = 0;
 		theta->Mag += cfoll[issoc[0]]->Magstart;
@@ -4799,18 +4671,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		scan = cfoll[0]->first;
 
 		cfoll[0]->parabstart = 0;
-
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, 0, 0, 0, 0, 0);
-#endif
-#ifdef _noparab
-		mi = fabs(cfoll[issoc[0]]->parabstart) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
-		cfoll[issoc[0]]->parabstart = 0.;
-#endif
-#ifdef _selectimage
-		if (_selectionimage)
-#endif
-			cfoll[0]->Magstart = 0;
+		cfoll[0]->Magstart = 0;
 		cfoll[0]->errstart = 0;
 
 		Sols->append(cfoll[0]);
@@ -4852,35 +4713,33 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 		er3 = sqrt(mi * mi * mi) * samplingfactor;
 		cmp_2 = mi / cmp2;
 		cmp = sqrt(cmp_2);
-		mi = cmp_2 * cmp * 0.0416666666667;
-		parab1 = -(scan->ds - scan2->ds) * mi;
+		cmp3 = cmp_2 * cmp * 0.0416666666667;
+		parab1 = -(scan->ds - scan2->ds) * cmp3;
 		parab2 = 0.0833333333 * ((scan2->x1 - scan->x1) * (scan2->d.im + scan->d.im) - (scan2->x2 - scan->x2) * (scan2->d.re + scan->d.re)) * cmp;
 		scan->parab = 0.5 * (parab1 + parab2);
 		if (astrometry) {
-			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * mi;
-			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * mi;
+			avgwedgex1 = -(scan->x1 * scan->ds - scan2->x1 * scan2->ds) * cmp3;
+			avgwedgex2 = -(scan->x2 * scan->ds - scan2->x2 * scan2->ds) * cmp3;
 			dx2 = -(scan->d.im - scan2->d.im);
 			d2x2 = dx2 * dx2;
 			dx1 = -(scan->d.re - scan2->d.re);
 			d2x1 = dx1 * dx1;
-			scan->parabastrox1 = -0.125 * d2x1 * dx2 * mi - avgwedgex1;
-			scan->parabastrox2 = -0.125 * d2x2 * dx1 * mi + avgwedgex2;
+			scan->parabastrox1 = -0.125 * d2x1 * dx2 * cmp3 - avgwedgex1;
+			scan->parabastrox2 = -0.125 * d2x2 * dx1 * cmp3 + avgwedgex2;
 		}
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2, scan->parab, (scan->ds + scan2->ds) * mi / 2, fabs(scan->parab) * (cmp * cmp) / 10, 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2 * cmp * cmp2) * cmp);
-#endif
 
-		mi = fabs((scan->ds + scan2->ds) * mi * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
+		err = fabs((scan->ds + scan2->ds) * cmp3 * 0.5) + er3 + 1.5 * fabs(((scan->d.re - scan2->d.re) * (scan->x1 - scan2->x1) + (scan->d.im - scan2->d.im) * (scan->x2 - scan2->x2)) + 2.0 * cmp * cmp2) * cmp;
 #ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
+		err = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
 		scan->parab = 0.;
 #endif
 #ifdef _selectimage
 		if (_selectionimage)
 #endif
-			pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		pref = (scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5;
+		if (fabs(scan->parab) > mi) scan->parab = 0;
 		scan->Mag = ((scan->dJ > 0) ? -1 : 1) * ((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) * 0.5 + scan->parab);
-		scan->err = mi;
+		scan->err = err;
 		scan2->Mag = 0;
 		scan2->err = 0;
 		theta->Mag += scan->Mag;
@@ -4937,18 +4796,7 @@ void VBMicrolensing::OrderMultipleImages(_sols_for_skiplist_curve* Sols, _curve*
 
 		scan->parab = 0;
 
-#ifdef _PRINT_ERRORS
-		printf("\n%le %le %le %le %le %le %le %le", scan->x1, scan->x2, scan->dJ, 0, 0, 0, 0, 0);
-#endif
-
-#ifdef _noparab
-		mi = fabs(scan->parab) * 2 + 0 * fabs((scan->x2 + scan2->x2) * (scan2->x1 - scan->x1) / 2 * cmp * cmp / 6);
-		scan->parab = 0.;
-#endif
-#ifdef _selectimage
-		if (_selectionimage)
-#endif
-			scan->Mag = 0;
+		scan->Mag = 0;
 		scan->err = 0;
 
 		npres--;
@@ -6017,7 +5865,7 @@ void VBMicrolensing::BinSourceBinLensXallarap(double* pr, double* ts, double* ma
 
 
 
-	if (t0_par_fixed == 0) t0_par = pr[6];
+	if (t0_par_fix 5.7.1ed == 0) t0_par = pr[6];
 
 
 	for (int i = 0; i < np; i++) {
@@ -6893,7 +6741,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		return;
 	}
 
-	if (t0_par_fixed == 0) t0_par = t0;
+	if (t0_par_fix 5.7.1ed == 0) t0_par = t0;
 
 	if (parallaxephemeris) {
 		// Calculation with lookup ephemeris table (Earth relative to the reference center of the table; the solar-system barycenter for the default table)
@@ -6959,7 +6807,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 
 		// Let's also update traveltime for t0 
-		if (t0_par_fixed == 0) {
+		if (t0_par_fix 5.7.1ed == 0) {
 			lighttravel0 = lighttravel0par;
 		}
 		else {
@@ -7103,7 +6951,7 @@ void VBMicrolensing::ComputeParallax(double t, double t0) {
 		}
 
 		// Let's also update traveltime for t0 
-		if (t0_par_fixed == 0) {
+		if (t0_par_fix 5.7.1ed == 0) {
 			lighttravel0 = lighttravel0par;
 		}
 		else {
